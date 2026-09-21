@@ -17,38 +17,14 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
-  <!-- [화면 A: 수파베이스 연동 설정 모달 (최초 1회)] -->
-  <div id="configModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
-      <div class="flex items-center gap-2 mb-3 text-blue-600">
-        <i data-lucide="database" class="w-6 h-6"></i>
-        <h3 class="text-xl font-bold">수파베이스 연동 설정</h3>
-      </div>
-      <p class="text-xs text-slate-500 mb-4">수파베이스 대시보드에서 복사한 Project URL과 anon Key를 입력해줘. 브라우저에 안전하게 저장돼.</p>
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-semibold mb-1 text-slate-600">Project URL</label>
-          <input type="text" id="cfgUrl" placeholder="https://xyzcompany.supabase.co" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold mb-1 text-slate-600">anon Public Key</label>
-          <input type="password" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6Ik..." class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-      </div>
-      <div class="mt-6 flex justify-end gap-2">
-        <button onclick="saveSupabaseConfig()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition">연동 저장하기</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- [화면 B: 로그인 / 회원가입 화면] -->
+  <!-- [화면 1: 로그인 / 회원가입 화면] -->
   <div id="authScreen" class="flex min-h-screen items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-100 max-w-md w-full p-8">
       <div class="text-center mb-6">
         <div class="inline-flex p-3 bg-blue-50 text-blue-600 rounded-xl mb-3">
           <i data-lucide="graduation-cap" class="w-8 h-8"></i>
         </div>
-        <h1 class="text-2xl font-black text-slate-800">3학년 2반 진학 상담 플랫폼</h1>
+        <h1 class="text-2xl font-black text-slate-800">3학년 2반 진학 플랫폼</h1>
         <p class="text-xs text-slate-500 mt-1">대입 12장 수시 관리 및 1:1 진학 상담 포털</p>
       </div>
 
@@ -69,9 +45,6 @@
           <input type="password" id="loginPw" required placeholder="••••••••" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
         <button type="submit" id="loginSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm shadow-md transition">로그인</button>
-        <div class="text-center pt-2">
-          <button type="button" onclick="openConfigModal()" class="text-xs text-slate-400 hover:text-slate-600 underline">수파베이스 DB 연동키 설정</button>
-        </div>
       </form>
 
       <!-- 회원가입 폼 -->
@@ -100,21 +73,21 @@
           <label class="block text-xs font-semibold text-slate-600 mb-1">비밀번호 (6자 이상)</label>
           <input type="password" id="regPw" required minlength="6" placeholder="••••••••" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
-        <!-- 교사 마스터 코드 (선생님이 최초 가입할 때 즉시 승인) -->
+        <!-- 교사 마스터 코드 -->
         <div id="masterCodeField" class="hidden bg-amber-50 p-3 rounded-lg border border-amber-200">
           <label class="block text-xs font-bold text-amber-800 mb-1">교사용 관리자 마스터 코드</label>
           <input type="password" id="regMasterCode" placeholder="기본코드: TEACHER302" class="w-full px-3 py-1.5 text-sm border border-amber-300 rounded focus:ring-2 focus:ring-amber-500 outline-none bg-white">
           <p class="text-[10px] text-amber-700 mt-1">※ 정확히 입력하면 대기 없이 즉시 담임 관리자로 승인됩니다.</p>
         </div>
         <p class="text-[11px] text-slate-500 bg-slate-100 p-2 rounded leading-relaxed">
-          💡 <strong>별도의 이메일 인증 링크는 없습니다.</strong> 학생/학부모는 가입 신청 즉시 대기 상태가 되며, 담임교사 승인 후 로그인할 수 있습니다.
+          💡 <strong>별도의 이메일 인증 링크는 없습니다.</strong> 가입 신청 즉시 대기 상태가 되며 담임교사 승인 후 로그인할 수 있습니다.
         </p>
         <button type="submit" id="regSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm shadow-md transition">가입 신청 완료</button>
       </form>
     </div>
   </div>
 
-  <!-- [화면 C: 메인 시스템 (로그인 성공 시 표시)] -->
+  <!-- [화면 2: 메인 시스템] -->
   <div id="mainScreen" class="hidden">
     <!-- 상단 네비게이션 바 -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
@@ -162,12 +135,12 @@
     <!-- 메인 컨텐츠 영역 -->
     <main class="max-w-7xl mx-auto px-4 py-6">
 
-      <!-- 1. [교사] 가입 신청 승인 관리 화면 -->
+      <!-- 1. [교사] 가입 신청 승인 관리 -->
       <section id="view-approval" class="view-panel hidden space-y-4">
         <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200">
           <div>
             <h2 class="text-lg font-bold text-slate-800">회원 가입 승인 및 권한 부여</h2>
-            <p class="text-xs text-slate-500">학생이나 학부모가 가입 신청하면 이곳에 뜹니다. 승인 시 역할을 부여할 수 있습니다.</p>
+            <p class="text-xs text-slate-500">학생이나 학부모가 가입 신청하면 이곳에 뜹니다. 승인 시 역할을 지정할 수 있습니다.</p>
           </div>
           <button onclick="loadPendingUsers()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1">
             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
@@ -194,7 +167,7 @@
         </div>
       </section>
 
-      <!-- 2. [교사] 대시보드 화면 -->
+      <!-- 2. [교사] 대시보드 -->
       <section id="view-dashboard" class="view-panel space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
@@ -227,7 +200,6 @@
           </div>
         </div>
 
-        <!-- 실시간 접수된 상담 요청 목록 -->
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
             <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i> 실시간 학생 상담 신청 현황
@@ -249,14 +221,12 @@
             </select>
           </div>
         </div>
-
-        <!-- 선택된 학생의 12장 카드 렌더링 컨테이너 -->
         <div id="teacherCardsContainer" class="space-y-6">
           <p class="text-center text-slate-400 py-12 bg-white rounded-xl border">상단에서 학생을 선택하면 학생이 작성한 12장 원서가 실시간으로 나타납니다.</p>
         </div>
       </section>
 
-      <!-- 4. [학생 전용] 내 12장 원서 직접 작성/저장 화면 -->
+      <!-- 4. [학생 전용] 내 12장 원서 직접 작성/저장 -->
       <section id="view-myCards" class="view-panel hidden space-y-6">
         <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
           <div>
@@ -268,7 +238,6 @@
           </button>
         </div>
 
-        <!-- 수시 6장 -->
         <div>
           <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-blue-600"></span> 일반 4년제 수시 6장 (지원 6회 제한)
@@ -276,7 +245,6 @@
           <div id="studentSusiGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
         </div>
 
-        <!-- 특목대 6장 -->
         <div>
           <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-purple-600"></span> 특수목적대(과기원, 사관학교, 전문대 등 6회 제한 외)
@@ -285,7 +253,7 @@
         </div>
       </section>
 
-      <!-- 5. [학생 전용] 1:1 상담 신청 화면 -->
+      <!-- 5. [학생 전용] 1:1 상담 신청 -->
       <section id="view-myCounsel" class="view-panel hidden space-y-4">
         <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <h2 class="text-lg font-bold text-slate-800 mb-1">담임선생님 1:1 상담 신청</h2>
@@ -325,7 +293,7 @@
         </div>
       </section>
 
-      <!-- 6. [공통] 학사 및 상담 캘린더 화면 -->
+      <!-- 6. [공통] 학사 및 상담 캘린더 -->
       <section id="view-calendar" class="view-panel hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200">
           <div class="flex justify-between items-center mb-4">
@@ -338,7 +306,6 @@
               <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-blue-500 rounded-full"></span> 학사일정</span>
             </div>
           </div>
-          <!-- 간단 그리드 달력 -->
           <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs bg-slate-100 p-2 rounded-t-lg">
             <div class="text-rose-500">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-500">토</div>
           </div>
@@ -350,44 +317,19 @@
   </div>
 
   <script>
-    // --- 1. 전역 상태 및 수파베이스 클라이언트 초기화 ---
-    let supabaseClient = null;
+    // =================================================================
+    // 💡 [선생님 설정 영역]: 따옴표('') 안에 수파베이스 정보를 넣어주세요!
+    // =================================================================
+    const SB_URL = 'https://vmkfmwbzsdlietprgtyt.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZta2Ztd2J6c2RsaWV0cHJndHl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQxMjIsImV4cCI6MjEwNTUwMDEyMn0.eqkdTi2LzOkVA715lyy2VMfiNio4umT-LwImPv7LaWQ
+';
+    // =================================================================
+
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
     let currentUser = null;
     let currentProfile = null;
 
-    // 수파베이스 초기화
-    function initSupabase() {
-      const url = localStorage.getItem('sb_url');
-      const key = localStorage.getItem('sb_key');
-      if (url && key) {
-        supabaseClient = supabase.createClient(url, key);
-        checkSession();
-      } else {
-        openConfigModal();
-      }
-    }
-
-    function openConfigModal() {
-      document.getElementById('configModal').classList.remove('hidden');
-      document.getElementById('cfgUrl').value = localStorage.getItem('sb_url') || '';
-      document.getElementById('cfgKey').value = localStorage.getItem('sb_key') || '';
-    }
-
-    function saveSupabaseConfig() {
-      const url = document.getElementById('cfgUrl').value.trim();
-      const key = document.getElementById('cfgKey').value.trim();
-      if (!url || !key) return alert('URL과 Key를 모두 입력해줘.');
-      localStorage.setItem('sb_url', url);
-      localStorage.setItem('sb_key', key);
-      document.getElementById('configModal').classList.add('hidden');
-      supabaseClient = supabase.createClient(url, key);
-      alert('수파베이스 DB와 성공적으로 연결되었어!');
-      checkSession();
-    }
-
-    // --- 2. 로그인 세션 및 권한 체크 ---
     async function checkSession() {
-      if (!supabaseClient) return;
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
         currentUser = session.user;
@@ -434,11 +376,8 @@
       }
     }
 
-    // --- 3. 회원가입 신청 핸들러 ---
     async function handleRegister(e) {
       e.preventDefault();
-      if (!supabaseClient) return openConfigModal();
-
       const role = document.getElementById('regRole').value;
       const name = document.getElementById('regName').value.trim();
       const email = document.getElementById('regEmail').value.trim();
@@ -446,7 +385,6 @@
       const studentNo = document.getElementById('regStudentNo').value.trim();
       const masterCode = document.getElementById('regMasterCode').value.trim();
 
-      // 교사 마스터 코드 일치 시 즉시 승인 및 관리자 권한 부여
       const isTeacherMaster = (role === 'teacher' && masterCode === 'TEACHER302');
       const isApproved = isTeacherMaster;
       const assignedRole = isTeacherMaster ? 'admin' : role;
@@ -455,12 +393,7 @@
       regBtn.innerText = '가입 신청 처리 중...';
       regBtn.disabled = true;
 
-      // Supabase Auth 회원 생성
-      const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-        email: email,
-        password: pw
-      });
-
+      const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password: pw });
       if (authError) {
         alert('가입 에러: ' + authError.message);
         regBtn.innerText = '가입 신청 완료';
@@ -468,7 +401,6 @@
         return;
       }
 
-      // 프로필 테이블 레코드 등록
       if (authData.user) {
         await supabaseClient.from('profiles').insert([{
           id: authData.user.id,
@@ -490,11 +422,8 @@
       regBtn.disabled = false;
     }
 
-    // --- 4. 로그인 핸들러 ---
     async function handleLogin(e) {
       e.preventDefault();
-      if (!supabaseClient) return openConfigModal();
-
       const email = document.getElementById('loginEmail').value.trim();
       const pw = document.getElementById('loginPw').value;
       const btn = document.getElementById('loginSubmitBtn');
@@ -509,7 +438,6 @@
         return;
       }
 
-      // 프로필 승인 상태 확인
       const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', data.user.id).single();
       if (!profile || !profile.is_approved) {
         alert('담임선생님의 가입 승인이 아직 완료되지 않았어. 승인 후 다시 로그인해줘!');
@@ -577,7 +505,6 @@
       lucide.createIcons();
     }
 
-    // --- 5. [교사용] 가입 승인 및 역할 부여 기능 ---
     async function loadPendingUsers() {
       const { data: list } = await supabaseClient.from('profiles').select('*').eq('is_approved', false).order('created_at', { ascending: false });
       const tbody = document.getElementById('pendingUserTableBody');
@@ -625,13 +552,12 @@
     }
 
     async function rejectUser(userId) {
-      if (confirm('정말 이 가입 신청을 반려(삭제)할까?')) {
+      if (confirm('이 가입 신청을 반려(삭제)할까?')) {
         await supabaseClient.from('profiles').delete().eq('id', userId);
         loadPendingUsers();
       }
     }
 
-    // --- 6. [학생용] 12장 카드 입력 및 실시간 저장 ---
     function renderStudent12CardInputs() {
       const sGrid = document.getElementById('studentSusiGrid');
       const spGrid = document.getElementById('studentSpecialGrid');
@@ -716,7 +642,6 @@
       alert('12장 지원 카드가 담임선생님 DB에 실시간 저장되었어!');
     }
 
-    // --- 7. [학생용] 상담 신청 제출 ---
     async function submitCounselRequest(e) {
       e.preventDefault();
       const date = document.getElementById('counselDate').value;
@@ -739,7 +664,6 @@
       document.getElementById('counselDetail').value = '';
     }
 
-    // --- 8. [교사용] 학생 12장 카드 및 상담 조회 ---
     async function loadStudentListForTeacher() {
       const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student').eq('is_approved', true).order('student_no');
       const select = document.getElementById('teacherStudentSelect');
@@ -838,17 +762,13 @@
       renderCalendar();
     }
 
-    // --- 9. 학사 달력 렌더링 ---
     async function renderCalendar() {
       const grid = document.getElementById('calendarGrid');
       let events = [];
-      if (supabaseClient) {
-        const { data } = await supabaseClient.from('calendar_events').select('*');
-        if (data) events = data;
-      }
+      const { data } = await supabaseClient.from('calendar_events').select('*');
+      if (data) events = data;
 
       let cells = '';
-      // 9월 1일 화요일 시작 기준 (빈칸 2개)
       for (let b = 0; b < 2; b++) cells += '<div class="bg-white min-h-[70px] p-1 opacity-50"></div>';
 
       for (let day = 1; day <= 30; day++) {
@@ -870,9 +790,8 @@
       grid.innerHTML = cells;
     }
 
-    // 초기 구동
     window.addEventListener('DOMContentLoaded', () => {
-      initSupabase();
+      checkSession();
       lucide.createIcons();
     });
   </script>
