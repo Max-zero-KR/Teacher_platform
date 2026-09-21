@@ -30,7 +30,7 @@
           <i data-lucide="graduation-cap" class="w-8 h-8"></i>
         </div>
         <h1 class="text-2xl font-black text-slate-800 tracking-tight">고3 대입·학급 진학 플랫폼</h1>
-        <p class="text-xs text-slate-500 mt-1">입시상담카드 수시 관리 및 1:1 진학 상담·학급 포털</p>
+        <p class="text-xs text-slate-500 mt-1">입시상담카드 수시·정시 관리 및 1:1 진학 상담·학급 포털</p>
       </div>
 
       <div class="flex border-b mb-6 text-sm">
@@ -126,9 +126,6 @@
           </div>
         </div>
 
-        <!-- ======================================================= -->
-        <!-- 💡 정리된 상단바 (커서를 올리면 하위 카테고리 표시) -->
-        <!-- ======================================================= -->
         <nav id="navMenu" class="hidden lg:flex items-center gap-1 text-sm font-medium">
           <!-- 1. 메인 홈 -->
           <button onclick="changeView('home')" class="nav-btn px-3 py-2 rounded-lg text-blue-600 bg-blue-50 font-bold flex items-center gap-1" data-view="home">
@@ -144,7 +141,6 @@
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
             </button>
 
-            <!-- 드롭다운 메뉴 -->
             <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-48 hidden group-hover:block z-50">
               <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
                 <button onclick="changeView(isCurrentTeacher() ? 'teacherSurvey' : 'studentSurvey')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between">
@@ -166,25 +162,20 @@
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
             </button>
 
-            <!-- 드롭다운 메뉴 -->
             <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-52 hidden group-hover:block z-50">
               <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
-                <!-- 1) 입시상담카드 (구 12장 상담카드) -->
                 <button onclick="changeView(isCurrentTeacher() ? 'counselList' : 'myCards')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
                   <i data-lucide="award" class="w-3.5 h-3.5 text-blue-600"></i>
                   <span>입시상담카드</span>
                 </button>
-                <!-- 2) 모의고사 분석 -->
                 <button onclick="changeView(isCurrentTeacher() ? 'teacherMock' : 'studentMock')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
                   <i data-lucide="line-chart" class="w-3.5 h-3.5 text-indigo-500"></i>
                   <span>모의고사 분석</span>
                 </button>
-                <!-- 3) 입시일정정리 (면접·논술·실기) -->
                 <button onclick="changeView('schedules')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
                   <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-amber-500"></i>
                   <span>입시일정정리 (면접·논술·실기)</span>
                 </button>
-                <!-- 4) 최저충족여부 (2합/3합/4합 / 버림·반올림) -->
                 <button onclick="changeView('minimumCheck')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
                   <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i>
                   <span>최저충족여부 (2·3·4합 분석)</span>
@@ -267,28 +258,36 @@
               </div>
             </div>
 
+            <!-- 학생 홈 대시보드 요약 (수시 6장 + 특목 6장 + 정시 3장 + 상담) -->
             <div id="studentHomeSummary" class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 hidden">
               <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
                 <i data-lucide="target" class="w-5 h-5 text-indigo-600"></i> 내 대입 지원 현황 요약
               </h3>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div class="p-3.5 bg-blue-50/70 rounded-xl border border-blue-100">
-                  <span class="text-xs text-slate-500 font-semibold">수시 6장 입력 완료</span>
+                  <span class="text-xs text-slate-500 font-semibold">수시 6장</span>
                   <div class="flex items-baseline gap-1 mt-1">
                     <span id="homeSusiFilledCount" class="text-2xl font-black text-blue-600">0</span>
                     <span class="text-xs text-slate-400">/ 6장</span>
                   </div>
                 </div>
                 <div class="p-3.5 bg-purple-50/70 rounded-xl border border-purple-100">
-                  <span class="text-xs text-slate-500 font-semibold">특목/전문대 작성</span>
+                  <span class="text-xs text-slate-500 font-semibold">특목/전문대</span>
                   <div class="flex items-baseline gap-1 mt-1">
                     <span id="homeSpecFilledCount" class="text-2xl font-black text-purple-600">0</span>
                     <span class="text-xs text-slate-400">/ 6장</span>
                   </div>
                 </div>
+                <div class="p-3.5 bg-amber-50/70 rounded-xl border border-amber-100">
+                  <span class="text-xs text-slate-500 font-semibold">정시 (가/나/다)</span>
+                  <div class="flex items-baseline gap-1 mt-1">
+                    <span id="homeJeongsiFilledCount" class="text-2xl font-black text-amber-600">0</span>
+                    <span class="text-xs text-slate-400">/ 3장</span>
+                  </div>
+                </div>
                 <div class="p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-100">
-                  <span class="text-xs text-slate-500 font-semibold">1:1 상담 신청 상태</span>
-                  <div class="mt-1 font-bold text-sm" id="homeMyCounselStatus">신청 내역 없음</div>
+                  <span class="text-xs text-slate-500 font-semibold">1:1 상담 상태</span>
+                  <div class="mt-1 font-bold text-xs" id="homeMyCounselStatus">신청 내역 없음</div>
                 </div>
               </div>
               <div class="pt-2 flex flex-wrap gap-2 text-xs">
@@ -489,9 +488,9 @@
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
           <div>
             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <i data-lucide="award" class="w-5 h-5 text-blue-600"></i> 입시지도 : 학생별 입시상담카드 (수시 12장 지원 현황)
+              <i data-lucide="award" class="w-5 h-5 text-blue-600"></i> 입시지도 : 학생별 입시상담카드 (수시 12장 + 정시 3장 지원 현황)
             </h2>
-            <p class="text-xs text-slate-400">학생이 입력한 일반 수시 6장과 특목·전문대 6장 원서가 실시간으로 연동됩니다.</p>
+            <p class="text-xs text-slate-400">학생이 입력한 일반 수시 6장, 특목·전문대 6장, 정시 3장이 실시간으로 연동됩니다.</p>
           </div>
           <div class="flex items-center gap-2">
             <label class="text-xs font-semibold text-slate-600">학생 선택:</label>
@@ -748,7 +747,6 @@
             </div>
           </div>
 
-          <!-- 일정 필터 탭 -->
           <div class="flex flex-wrap gap-2 text-xs border-b pb-3">
             <button onclick="filterExamSchedules('all')" id="schedFilter_all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition">전체 보기</button>
             <button onclick="filterExamSchedules('interview')" id="schedFilter_interview" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1">
@@ -765,7 +763,6 @@
             </button>
           </div>
 
-          <!-- 일정 카드 목록 컨테이너 -->
           <div id="examScheduleListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
             <p class="col-span-full text-center text-slate-400 py-16">등록된 입시 일정이 없습니다. 상단의 [+ 새 입시 일정 등록]을 눌러 면접, 논술, 실기 일정을 입력해보세요.</p>
           </div>
@@ -788,7 +785,6 @@
               <p class="text-xs text-slate-500 mt-0.5">회차별 모의고사 성적을 바탕으로 2합, 3합, 4합 합산 및 탐구 반영 방식(상위 1과목, 2과목 버림, 2과목 반올림)을 정밀 계산합니다.</p>
             </div>
 
-            <!-- 교사용 학생 선택기 -->
             <div id="minCheckStudentSelectWrapper" class="hidden items-center gap-2">
               <label class="text-xs font-bold text-slate-600">학생 선택:</label>
               <select id="minCheckStudentSelect" onchange="renderMinimumCheckAnalysis()" class="px-3 py-1.5 border rounded-lg text-sm bg-slate-50 font-bold text-blue-600 outline-none">
@@ -797,7 +793,6 @@
             </div>
           </div>
 
-          <!-- 요약 안내 카드 -->
           <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200 p-4 rounded-xl text-xs text-slate-700 space-y-1 leading-relaxed">
             <p class="font-bold text-emerald-900 flex items-center gap-1.5">
               <i data-lucide="info" class="w-4 h-4 text-emerald-600"></i> 탐구 영역 산출 기준 안내
@@ -809,7 +804,6 @@
             </ul>
           </div>
 
-          <!-- 메인 분석 표: 회차별 2합, 3합, 4합 (버림 / 반올림 / 상위1과목) -->
           <div class="space-y-3">
             <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
               <i data-lucide="table" class="w-4 h-4 text-blue-600"></i> [전체 모의고사 회차별] 2합 · 3합 · 4합 종합 분석표
@@ -844,7 +838,6 @@
             </div>
           </div>
 
-          <!-- 입시상담카드(수시 6장) 지망 대학별 최저 충족 실시간 시뮬레이터 -->
           <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
             <div class="flex flex-wrap justify-between items-center gap-2">
               <div>
@@ -873,13 +866,13 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 8. [학생: 입시상담카드] 내 12장 원서함 -->
+      <!-- 8. [학생: 입시상담카드] 내 15장 원서함 (수시6 + 특목6 + 정시3) -->
       <!-- ======================================================= -->
       <section id="view-myCards" class="view-panel hidden space-y-6">
         <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
           <div>
             <h2 class="font-bold text-blue-900 text-base flex items-center gap-2">
-              <i data-lucide="award" class="w-5 h-5 text-blue-600"></i> 입시지도 : 내 입시상담카드 (수시 6장 + 특목·전문대 6장)
+              <i data-lucide="award" class="w-5 h-5 text-blue-600"></i> 입시지도 : 내 입시상담카드 (수시 6장 + 특목·전문대 6장 + 정시 3장)
             </h2>
             <p class="text-xs text-blue-700 mt-0.5">작성 후 [전체 카드 저장하기]를 누르면 담임선생님 교무실 화면에 실시간으로 반영됩니다.</p>
           </div>
@@ -888,6 +881,7 @@
           </button>
         </div>
 
+        <!-- 1) 수시 6장 -->
         <div>
           <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-blue-600"></span> 일반 4년제 수시 6장 (지원 6회 제한)
@@ -895,11 +889,20 @@
           <div id="studentSusiGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
         </div>
 
+        <!-- 2) 특목 / 전문대 6장 -->
         <div>
           <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-purple-600"></span> 특수목적대 (과기원, 사관학교, 전문대 등 6회 제한 외)
           </h3>
           <div id="studentSpecialGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+        </div>
+
+        <!-- 3) 정시 3장 (가군 / 나군 / 다군) -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span> 정시 일반 3장 (가군 · 나군 · 다군)
+          </h3>
+          <div id="studentJeongsiGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
         </div>
       </section>
 
@@ -1258,7 +1261,6 @@
     let studentChartInstance = null;
     let teacherChartInstance = null;
 
-    // 입시 일정 메모리/로컬 백업 캐시 (Supabase 테이블 미생성 대비 안정적 fallback)
     let currentSchedules = [];
     let activeScheduleFilter = 'all';
 
@@ -1632,8 +1634,12 @@
         const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', currentUser.id);
         const susiCount = cards ? cards.filter(c => c.slot_type === 'susi' && c.university).length : 0;
         const specCount = cards ? cards.filter(c => c.slot_type === 'special' && c.university).length : 0;
+        const jeongsiCount = cards ? cards.filter(c => c.slot_type === 'jeongsi' && c.university).length : 0;
+
         document.getElementById('homeSusiFilledCount').innerText = susiCount;
         document.getElementById('homeSpecFilledCount').innerText = specCount;
+        const jCntEl = document.getElementById('homeJeongsiFilledCount');
+        if (jCntEl) jCntEl.innerText = jeongsiCount;
 
         const { data: counsel } = await supabaseClient.from('counsel_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(1);
         const counselStatusEl = document.getElementById('homeMyCounselStatus');
@@ -1648,7 +1654,7 @@
           }
         } else {
           counselStatusEl.innerText = '신청 내역 없음';
-          counselStatusEl.className = 'mt-1 font-bold text-sm text-slate-500';
+          counselStatusEl.className = 'mt-1 font-bold text-xs text-slate-500';
         }
       }
 
@@ -1925,14 +1931,13 @@
     }
 
     async function loadExamSchedules() {
-      // 1. Supabase 시도 -> 없으면 로컬스토리지 백업 데이터 활용
       let queryTargetUserId = currentUser ? currentUser.id : null;
       if (isCurrentTeacher()) {
         const selVal = document.getElementById('scheduleStudentSelect')?.value;
         if (selVal && selVal !== 'all') {
           queryTargetUserId = selVal;
         } else {
-          queryTargetUserId = null; // 전체
+          queryTargetUserId = null;
         }
       }
 
@@ -2002,14 +2007,12 @@
         created_at: new Date().toISOString()
       };
 
-      // Supabase 저장 시도
       try {
         await supabaseClient.from('admission_schedules').insert([newRecord]);
       } catch (e) {
         console.warn('Supabase 테이블 저장 패스(로컬 동기화):', e);
       }
 
-      // 로컬 스토리지 동기화 백업
       const raw = localStorage.getItem('local_admission_schedules');
       let all = raw ? JSON.parse(raw) : [];
       all.push(newRecord);
@@ -2071,7 +2074,6 @@
         return;
       }
 
-      // 날짜 오름차순 정렬
       list.sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date));
 
       container.innerHTML = list.map(item => `
@@ -2137,12 +2139,11 @@
 
       tbody.innerHTML = '<tr><td colspan="12" class="p-8 text-center text-slate-400">모의고사 성적을 정밀 분석하고 있습니다...</td></tr>';
 
-      // 1. 해당 학생의 모든 모의고사 성적 로드
       const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', targetUserId);
       const rounds = ['3월학평', '5월학평', '6월모평', '7월학평', '9월모평', '10월학평', '수능'];
 
       let rowsHtml = '';
-      const roundAnalysisMap = {}; // 회차별 계산 결과 캐시 (수시 카드 판정용)
+      const roundAnalysisMap = {};
 
       rounds.forEach(round => {
         const rScores = (scores || []).filter(s => s.exam_round === round);
@@ -2154,31 +2155,25 @@
         const t1 = rScores.find(s => s.subject_key === 'tam1')?.grade ?? null;
         const t2 = rScores.find(s => s.subject_key === 'tam2')?.grade ?? null;
 
-        // 점수가 전혀 입력되지 않은 회차
         if (kor === null && mat === null && eng === null && t1 === null && t2 === null) {
-          return; // 미응시/미입력 회차는 건너뜀
+          return;
         }
 
-        // 탐구 3가지 방식 계산
-        // 1) 상위 1과목
         let tamTop1 = null;
         if (t1 !== null && t2 !== null) tamTop1 = Math.min(t1, t2);
         else if (t1 !== null) tamTop1 = t1;
         else if (t2 !== null) tamTop1 = t2;
 
-        // 2) 2과목 버림(절사)
         let tamFloor = null;
         if (t1 !== null && t2 !== null) tamFloor = Math.floor((t1 + t2) / 2);
         else if (t1 !== null) tamFloor = t1;
         else if (t2 !== null) tamFloor = t2;
 
-        // 3) 2과목 반올림
         let tamRound = null;
         if (t1 !== null && t2 !== null) tamRound = Math.round((t1 + t2) / 2);
         else if (t1 !== null) tamRound = t1;
         else if (t2 !== null) tamRound = t2;
 
-        // 2합, 3합, 4합 계산 헬퍼 함수
         function calcBestSums(tamGrade) {
           const subjects = [];
           if (kor !== null) subjects.push({ name: '국', grade: kor });
@@ -2201,9 +2196,7 @@
 
         roundAnalysisMap[round] = { kor, mat, eng, t1, t2, his, tamTop1, tamFloor, tamRound, top1Sums, floorSums, roundSums };
 
-        // 3개 행 (상위 1과목, 2과목 버림, 2과목 반올림) 생성
         rowsHtml += `
-          <!-- 1) 탐구 상위 1과목 행 -->
           <tr class="hover:bg-blue-50/30 transition border-t-2 border-slate-300">
             <td rowspan="3" class="p-3 font-black text-slate-800 border-r bg-slate-50 align-middle">
               <span class="text-sm text-blue-600 block">${round}</span>
@@ -2230,7 +2223,6 @@
             </td>
           </tr>
 
-          <!-- 2) 탐구 2과목 버림(절사) 행 -->
           <tr class="hover:bg-amber-50/30 transition border-t border-slate-100">
             <td class="p-2 border-r text-xs font-semibold text-slate-700 text-left pl-3">
               <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>탐구 2과목 <b class="text-amber-700">[버림]</b>
@@ -2250,7 +2242,6 @@
             </td>
           </tr>
 
-          <!-- 3) 탐구 2과목 반올림 행 -->
           <tr class="hover:bg-purple-50/30 transition border-t border-slate-100">
             <td class="p-2 border-r text-xs font-semibold text-slate-700 text-left pl-3">
               <span class="inline-block w-2 h-2 rounded-full bg-purple-500 mr-1.5"></span>탐구 2과목 <b class="text-purple-700">[반올림]</b>
@@ -2278,7 +2269,6 @@
         tbody.innerHTML = rowsHtml;
       }
 
-      // 2. 수시 6장 최저 충족 실시간 판정기 렌더링
       const simRound = document.getElementById('minCheckSimRoundSelect')?.value || '9월모평';
       const roundData = roundAnalysisMap[simRound];
 
@@ -2298,17 +2288,15 @@
         } else if (!roundData) {
           statusHtml = `<span class="px-2 py-1 bg-slate-100 text-slate-400 rounded text-xs">${simRound} 미응시</span>`;
         } else {
-          // 최저 기준 자동 파싱 (예: "3합 7", "2합 5", "4합 8")
           const match = criteria.match(/([2-4])\s*합\s*([0-9]{1,2})/);
           if (match) {
-            const reqCount = parseInt(match[1]); // 2, 3, 4
-            const targetSum = parseInt(match[2]); // 7, 5 등
+            const reqCount = parseInt(match[1]);
+            const targetSum = parseInt(match[2]);
 
-            // 우선 탐구 상위 1과목 기준으로 판정
             const bestSumObj = reqCount === 2 ? roundData.top1Sums.sum2 : (reqCount === 3 ? roundData.top1Sums.sum3 : roundData.top1Sums.sum4);
 
             if (bestSumObj && bestSumObj.val !== null) {
-              const diff = targetSum - bestSumObj.val; // 양수이면 여유(충족), 음수이면 부족
+              const diff = targetSum - bestSumObj.val;
               if (diff >= 0) {
                 statusHtml = `
                   <div class="space-y-1">
@@ -2357,12 +2345,14 @@
     }
 
     // =================================================================
-    // 💡 원서 12장 및 모의고사, 기초조사서 기능들
+    // 💡 원서 15장 (수시 6 + 특목 6 + 정시 3) 및 모의고사, 기초조사서 기능들
     // =================================================================
     function renderStudent12CardInputs() {
       const sGrid = document.getElementById('studentSusiGrid');
       const spGrid = document.getElementById('studentSpecialGrid');
+      const jGrid = document.getElementById('studentJeongsiGrid');
 
+      // 1) 수시 6장
       sGrid.innerHTML = [1,2,3,4,5,6].map(i => `
         <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-xs space-y-2">
           <div class="font-bold text-blue-600">수시 지원 ${i}지망</div>
@@ -2373,6 +2363,7 @@
         </div>
       `).join('');
 
+      // 2) 특목/전문대 6장
       spGrid.innerHTML = [1,2,3,4,5,6].map(i => `
         <div class="bg-white p-3 rounded-xl border border-purple-200 shadow-sm text-xs space-y-2">
           <div class="font-bold text-purple-600">특목/전문대 ${i}지망</div>
@@ -2382,6 +2373,27 @@
           <input type="text" id="spec_memo_${i}" placeholder="비고/특이사항" class="w-full px-2 py-1.5 border rounded">
         </div>
       `).join('');
+
+      // 3) 정시 3장 (가/나/다)
+      const jeongsiLabels = [
+        { num: 1, name: '정시 (가)' },
+        { num: 2, name: '정시 (나)' },
+        { num: 3, name: '정시 (다)' }
+      ];
+
+      if (jGrid) {
+        jGrid.innerHTML = jeongsiLabels.map(j => `
+          <div class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm text-xs space-y-2">
+            <div class="font-bold text-amber-600 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${j.name}
+            </div>
+            <input type="text" id="jeongsi_univ_${j.num}" placeholder="대학교 (예: 연세대)" class="w-full px-2 py-1.5 border rounded">
+            <input type="text" id="jeongsi_dept_${j.num}" placeholder="모집단위 (예: 경영학과)" class="w-full px-2 py-1.5 border rounded">
+            <input type="text" id="jeongsi_type_${j.num}" placeholder="전형 (예: 수능 일반)" class="w-full px-2 py-1.5 border rounded">
+            <input type="text" id="jeongsi_memo_${j.num}" placeholder="대학환산점수 / 비고 (예: 712.5점)" class="w-full px-2 py-1.5 border rounded bg-amber-50/30">
+          </div>
+        `).join('');
+      }
     }
 
     async function loadStudentExisting12Cards() {
@@ -2397,11 +2409,20 @@
             if (d) d.value = c.department || '';
             if (t) t.value = c.admission_type || '';
             if (m) m.value = c.min_criteria || '';
-          } else {
+          } else if (c.slot_type === 'special') {
             const u = document.getElementById(`spec_univ_${c.slot_num}`);
             const d = document.getElementById(`spec_dept_${c.slot_num}`);
             const t = document.getElementById(`spec_type_${c.slot_num}`);
             const m = document.getElementById(`spec_memo_${c.slot_num}`);
+            if (u) u.value = c.university || '';
+            if (d) d.value = c.department || '';
+            if (t) t.value = c.admission_type || '';
+            if (m) m.value = c.memo || '';
+          } else if (c.slot_type === 'jeongsi') {
+            const u = document.getElementById(`jeongsi_univ_${c.slot_num}`);
+            const d = document.getElementById(`jeongsi_dept_${c.slot_num}`);
+            const t = document.getElementById(`jeongsi_type_${c.slot_num}`);
+            const m = document.getElementById(`jeongsi_memo_${c.slot_num}`);
             if (u) u.value = c.university || '';
             if (d) d.value = c.department || '';
             if (t) t.value = c.admission_type || '';
@@ -2438,9 +2459,28 @@
         });
       }
 
+      // 정시 3장 (1: 가, 2: 나, 3: 다)
+      for (let i = 1; i <= 3; i++) {
+        const u = document.getElementById(`jeongsi_univ_${i}`);
+        const d = document.getElementById(`jeongsi_dept_${i}`);
+        const t = document.getElementById(`jeongsi_type_${i}`);
+        const m = document.getElementById(`jeongsi_memo_${i}`);
+        records.push({
+          user_id: currentUser.id,
+          student_no: currentProfile.student_no,
+          student_name: currentProfile.name,
+          slot_type: 'jeongsi',
+          slot_num: i,
+          university: u ? u.value.trim() : '',
+          department: d ? d.value.trim() : '',
+          admission_type: t ? t.value.trim() : '',
+          memo: m ? m.value.trim() : ''
+        });
+      }
+
       await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
       await supabaseClient.from('applications_12').insert(records);
-      alert('입시상담카드 내용이 성공적으로 저장되었습니다!');
+      alert('입시상담카드(수시·특목·정시) 내용이 성공적으로 저장되었습니다!');
       loadHomeDashboardData();
       renderMinimumCheckAnalysis();
     }
@@ -2479,6 +2519,9 @@
       const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', studentId);
       const susiList = cards ? cards.filter(c => c.slot_type === 'susi') : [];
       const specList = cards ? cards.filter(c => c.slot_type === 'special') : [];
+      const jeongsiList = cards ? cards.filter(c => c.slot_type === 'jeongsi') : [];
+
+      const jeongsiNames = { 1: '정시 (가)', 2: '정시 (나)', 3: '정시 (다)' };
 
       container.innerHTML = `
         <div class="bg-white p-5 rounded-xl border border-slate-200">
@@ -2509,6 +2552,25 @@
                   <div class="text-slate-700">학과: ${c.department || '-'}</div>
                   <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
                   <div class="text-slate-400">비고: ${c.memo || '-'}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-amber-200">
+          <h3 class="font-bold text-amber-700 text-sm mb-3 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span> 정시 3장 (가 · 나 · 다 군) 지망 현황
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${[1, 2, 3].map(num => {
+              const c = jeongsiList.find(x => x.slot_num === num) || {};
+              return `
+                <div class="p-3 bg-amber-50/40 rounded-lg border border-amber-200 text-xs">
+                  <div class="font-bold text-amber-700 mb-1">${jeongsiNames[num]}: ${c.university || '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                  <div class="text-slate-700">학과: ${c.department || '-'}</div>
+                  <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
+                  <div class="text-slate-600">환산점수/비고: ${c.memo || '-'}</div>
                 </div>
               `;
             }).join('')}
