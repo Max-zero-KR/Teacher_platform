@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>고3 담임·학생 진학 플랫폼</title>
-  <!-- Tailwind CSS & Lucide Icons -->
+  <!-- Tailwind CSS, Lucide Icons, Chart.js, Supabase JS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -28,13 +28,11 @@
         <p class="text-xs text-slate-500 mt-1">대입 12장 수시 관리 및 1:1 진학 상담 포털</p>
       </div>
 
-      <!-- 탭 전환: 로그인 vs 회원가입 -->
       <div class="flex border-b mb-6 text-sm">
         <button id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 py-2.5 text-center font-bold tab-active">로그인</button>
         <button id="tabRegisterBtn" onclick="switchAuthTab('register')" class="flex-1 py-2.5 text-center font-medium text-slate-400">회원가입 신청</button>
       </div>
 
-      <!-- 로그인 폼 -->
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">아이디 (학생: 학번 / 교사: 아이디)</label>
@@ -47,7 +45,6 @@
         <button type="submit" id="loginSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm shadow-md transition">로그인</button>
       </form>
 
-      <!-- 회원가입 폼 (마스터 코드 필드 완전 삭제) -->
       <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3 hidden">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">구분 (역할)</label>
@@ -58,13 +55,11 @@
           </select>
         </div>
 
-        <!-- 학생용 아이디: 학번 -->
         <div id="studentNoField">
-          <label class="block text-xs font-semibold text-slate-600 mb-1">학번 5자리 (로그인 아이디가 됩니다)</label>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">학번 5자리 (로그인 아이디)</label>
           <input type="text" id="regStudentNo" placeholder="예: 30201" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
 
-        <!-- 교사/학부모용 자유 아이디 -->
         <div id="customIdField" class="hidden">
           <label class="block text-xs font-semibold text-slate-600 mb-1">희망 아이디 (영문 또는 숫자)</label>
           <input type="text" id="regCustomId" placeholder="예: teacher1, kor_cjh" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -81,7 +76,7 @@
         </div>
 
         <p class="text-[11px] text-slate-500 bg-slate-100 p-2.5 rounded-lg leading-relaxed">
-          💡 <strong>가입 신청 안내</strong><br>신청 후 담임선생님이 승인하면 바로 로그인할 수 있습니다.
+          💡 가입 신청 후 담임선생님이 승인하면 로그인할 수 있습니다.
         </p>
         <button type="submit" id="regSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm shadow-md transition">가입 신청 완료</button>
       </form>
@@ -90,7 +85,7 @@
 
   <!-- [화면 2: 메인 시스템] -->
   <div id="mainScreen" class="hidden">
-    <!-- 상단 네비게이션 바 -->
+    <!-- 네비게이션 헤더 -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -101,7 +96,6 @@
           </div>
         </div>
 
-        <!-- 메뉴 탭 -->
         <nav id="navMenu" class="hidden md:flex items-center gap-1 text-sm font-medium">
           <!-- 교사 메뉴 -->
           <div id="teacherNav" class="flex items-center gap-1">
@@ -110,17 +104,22 @@
               회원 관리 <span id="pendingCountBadge" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
             </button>
             <button onclick="changeView('counselList')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="counselList">12장 상담카드</button>
+            <button onclick="changeView('teacherSurvey')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="teacherSurvey">기초조사서</button>
+            <button onclick="changeView('teacherMock')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="teacherMock">모의고사 분석</button>
+            <button onclick="changeView('album')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="album">학급 앨범</button>
             <button onclick="changeView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="calendar">학사 달력</button>
           </div>
-          <!-- 학생 전용 메뉴 -->
+          <!-- 학생 메뉴 -->
           <div id="studentNav" class="hidden flex items-center gap-1">
             <button onclick="changeView('myCards')" class="nav-btn px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 font-bold" data-view="myCards">내 12장 원서</button>
+            <button onclick="changeView('studentSurvey')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="studentSurvey">내 기본조사</button>
+            <button onclick="changeView('studentMock')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="studentMock">모의고사 성적</button>
             <button onclick="changeView('myCounsel')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="myCounsel">1:1 상담 신청</button>
+            <button onclick="changeView('album')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="album">학급 앨범</button>
             <button onclick="changeView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="calendar">학사 일정</button>
           </div>
         </nav>
 
-        <!-- 사용자 정보 및 로그아웃 -->
         <div class="flex items-center gap-3">
           <div class="text-right">
             <div id="headerUserName" class="text-sm font-bold text-slate-800">-</div>
@@ -133,63 +132,10 @@
       </div>
     </header>
 
-    <!-- 메인 컨텐츠 영역 -->
+    <!-- 메인 뷰 컨테이너 -->
     <main class="max-w-7xl mx-auto px-4 py-6">
 
-      <!-- 1. [교사] 회원 관리 및 계정 수정 -->
-      <section id="view-approval" class="view-panel hidden space-y-6">
-        <!-- 1-1. 승인 대기 목록 -->
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-          <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-            <div>
-              <h2 class="text-base font-bold text-slate-800">가입 승인 대기 목록</h2>
-              <p class="text-xs text-slate-500">학생이나 교사가 가입 신청하면 이곳에 대기합니다.</p>
-            </div>
-            <button onclick="loadUsersData()" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-1">
-              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
-            </button>
-          </div>
-          <table class="w-full text-left border-collapse text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
-              <tr>
-                <th class="p-3">신청일</th>
-                <th class="p-3">아이디 (학번)</th>
-                <th class="p-3">이름</th>
-                <th class="p-3">신청구분</th>
-                <th class="p-3">승인 역할 지정</th>
-                <th class="p-3 text-right">처리</th>
-              </tr>
-            </thead>
-            <tbody id="pendingUserTableBody" class="divide-y divide-slate-100">
-              <tr><td colspan="6" class="p-6 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 1-2. 현재 등록된 전체 회원 목록 (정보 수정 / 비밀번호 변경) -->
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-          <div class="p-4 border-b border-slate-200 bg-slate-50">
-            <h2 class="text-base font-bold text-slate-800">등록된 회원 목록 (아이디 / 비밀번호 변경)</h2>
-            <p class="text-xs text-slate-500">이미 승인된 학생과 교사의 계정 정보를 직접 수정하거나 비밀번호를 초기화할 수 있습니다.</p>
-          </div>
-          <table class="w-full text-left border-collapse text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
-              <tr>
-                <th class="p-3">구분</th>
-                <th class="p-3">아이디(학번)</th>
-                <th class="p-3">이름</th>
-                <th class="p-3">현재 권한</th>
-                <th class="p-3 text-right">계정 관리</th>
-              </tr>
-            </thead>
-            <tbody id="approvedUserTableBody" class="divide-y divide-slate-100">
-              <tr><td colspan="5" class="p-6 text-center text-slate-400">등록된 회원이 없습니다.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 2. [교사] 대시보드 -->
+      <!-- 1. [교사] 대시보드 -->
       <section id="view-dashboard" class="view-panel space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
@@ -232,6 +178,57 @@
         </div>
       </section>
 
+      <!-- 2. [교사] 회원 관리 및 계정 수정 -->
+      <section id="view-approval" class="view-panel hidden space-y-6">
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+            <div>
+              <h2 class="text-base font-bold text-slate-800">가입 승인 대기 목록</h2>
+              <p class="text-xs text-slate-500">신청 후 승인해야 로그인 권한이 부여됩니다.</p>
+            </div>
+            <button onclick="loadUsersData()" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-1">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
+            </button>
+          </div>
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
+              <tr>
+                <th class="p-3">신청일</th>
+                <th class="p-3">아이디 (학번)</th>
+                <th class="p-3">이름</th>
+                <th class="p-3">신청구분</th>
+                <th class="p-3">승인 역할 지정</th>
+                <th class="p-3 text-right">처리</th>
+              </tr>
+            </thead>
+            <tbody id="pendingUserTableBody" class="divide-y divide-slate-100">
+              <tr><td colspan="6" class="p-6 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-200 bg-slate-50">
+            <h2 class="text-base font-bold text-slate-800">등록된 회원 목록 (아이디 / 비밀번호 변경)</h2>
+            <p class="text-xs text-slate-500">학생이나 교사의 계정 정보 및 분실 비밀번호를 강제 재설정할 수 있습니다.</p>
+          </div>
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
+              <tr>
+                <th class="p-3">구분</th>
+                <th class="p-3">아이디(학번)</th>
+                <th class="p-3">이름</th>
+                <th class="p-3">현재 권한</th>
+                <th class="p-3 text-right">계정 관리</th>
+              </tr>
+            </thead>
+            <tbody id="approvedUserTableBody" class="divide-y divide-slate-100">
+              <tr><td colspan="5" class="p-6 text-center text-slate-400">등록된 회원이 없습니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- 3. [교사] 학생별 12장 상담카드 모아보기 -->
       <section id="view-counselList" class="view-panel hidden space-y-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
@@ -248,7 +245,253 @@
         </div>
       </section>
 
-      <!-- 4. [학생 전용] 내 12장 원서 직접 작성/저장 -->
+      <!-- 4. [신규: 기본조사] 학생 직접 작성 / 교사 전체 열람 분기 -->
+      <!-- 4-A. 학생 전용 기본조사 입력폼 -->
+      <section id="view-studentSurvey" class="view-panel hidden space-y-6">
+        <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="border-b pb-4">
+            <h2 class="text-lg font-bold text-slate-800">3학년 2반 기초조사서 작성</h2>
+            <p class="text-xs text-slate-500 mt-1">학생 기초 인적사항과 선택과목을 정확하게 입력해줘. (담임선생님만 열람 가능)</p>
+          </div>
+
+          <form id="studentSurveyForm" onsubmit="saveStudentSurvey(event)" class="space-y-5 text-xs">
+            <!-- 부모님 정보 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">아버지 성함</label>
+                <input type="text" id="surv_father_name" class="w-full px-3 py-2 border rounded-lg bg-white outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">아버지 연락처</label>
+                <input type="tel" id="surv_father_phone" placeholder="010-0000-0000" class="w-full px-3 py-2 border rounded-lg bg-white outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">어머니 성함</label>
+                <input type="text" id="surv_mother_name" class="w-full px-3 py-2 border rounded-lg bg-white outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">어머니 연락처</label>
+                <input type="tel" id="surv_mother_phone" placeholder="010-0000-0000" class="w-full px-3 py-2 border rounded-lg bg-white outline-none">
+              </div>
+            </div>
+
+            <!-- 학생 본인 정보 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">학생 본인 연락처</label>
+                <input type="tel" id="surv_student_phone" placeholder="010-0000-0000" required class="w-full px-3 py-2 border rounded-lg outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">형제/자매 관계</label>
+                <input type="text" id="surv_siblings" placeholder="예: 2남 1녀 중 둘째" class="w-full px-3 py-2 border rounded-lg outline-none">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block font-semibold text-slate-600 mb-1">실거주 주소</label>
+                <input type="text" id="surv_address" placeholder="도로명 주소 및 상세 주소" class="w-full px-3 py-2 border rounded-lg outline-none">
+              </div>
+            </div>
+
+            <!-- 진로 및 특이사항 -->
+            <div class="space-y-4">
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">희망 진로 / 진학 희망 학과</label>
+                <input type="text" id="surv_career" placeholder="예: 초등교사, 컴퓨터공학과, 공공인재학부" class="w-full px-3 py-2 border rounded-lg outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">담임선생님께 전달할 특이사항 (건강, 배려사항 등)</label>
+                <textarea id="surv_notes" rows="3" placeholder="지병, 복용 약물, 알레르기 또는 담임선생님이 상담 시 꼭 알아야 할 내용을 자유롭게 적어줘." class="w-full px-3 py-2 border rounded-lg outline-none"></textarea>
+              </div>
+            </div>
+
+            <!-- 수능 선택과목 (혼선 방지 체크박스/라디오) -->
+            <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-100 space-y-4">
+              <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-blue-600"></i> 2026 수능 응시 선택과목 지정
+              </h3>
+              
+              <!-- 국어 선택 -->
+              <div>
+                <p class="font-bold text-slate-700 mb-1.5">국어 영역 선택 (택 1)</p>
+                <div class="flex gap-4">
+                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_kor" value="화법과 작문" checked> 화법과 작문</label>
+                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_kor" value="언어와 매체"> 언어와 매체</label>
+                </div>
+              </div>
+
+              <!-- 수학 선택 -->
+              <div>
+                <p class="font-bold text-slate-700 mb-1.5">수학 영역 선택 (택 1)</p>
+                <div class="flex gap-4">
+                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_math" value="확률과 통계" checked> 확률과 통계</label>
+                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_math" value="미적분"> 미적분</label>
+                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_math" value="기하"> 기하</label>
+                </div>
+              </div>
+
+              <!-- 탐구 영역 선택 (최대 2개 체크) -->
+              <div>
+                <div class="flex justify-between items-center mb-1.5">
+                  <p class="font-bold text-slate-700">탐구 영역 선택 (사탐/과탐 구분 없이 최대 2과목 체크)</p>
+                  <span id="tamCountDisplay" class="text-blue-600 font-bold">0 / 2 선택됨</span>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 bg-white p-3 rounded-lg border">
+                  <div class="text-[11px] font-bold text-amber-700 col-span-full border-b pb-1">사회탐구 9과목</div>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="생활과 윤리" onchange="validateTamCount(this)"> 생활과 윤리</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="윤리와 사상" onchange="validateTamCount(this)"> 윤리와 사상</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="한국지리" onchange="validateTamCount(this)"> 한국지리</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="세계지리" onchange="validateTamCount(this)"> 세계지리</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="동아시아사" onchange="validateTamCount(this)"> 동아시아사</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="세계사" onchange="validateTamCount(this)"> 세계사</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="경제" onchange="validateTamCount(this)"> 경제</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="정치와 법" onchange="validateTamCount(this)"> 정치와 법</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="사회·문화" onchange="validateTamCount(this)"> 사회·문화</label>
+
+                  <div class="text-[11px] font-bold text-cyan-700 col-span-full border-b pb-1 mt-2">과학탐구 8과목</div>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="물리학Ⅰ" onchange="validateTamCount(this)"> 물리학Ⅰ</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="화학Ⅰ" onchange="validateTamCount(this)"> 화학Ⅰ</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="생명과학Ⅰ" onchange="validateTamCount(this)"> 생명과학Ⅰ</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="지구과학Ⅰ" onchange="validateTamCount(this)"> 지구과학Ⅰ</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="물리학Ⅱ" onchange="validateTamCount(this)"> 물리학Ⅱ</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="화학Ⅱ" onchange="validateTamCount(this)"> 화학Ⅱ</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="생명과학Ⅱ" onchange="validateTamCount(this)"> 생명과학Ⅱ</label>
+                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="지구과학Ⅱ" onchange="validateTamCount(this)"> 지구과학Ⅱ</label>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" id="surveySaveBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm transition">
+              기초조사서 저장 완료
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 4-B. [교사용] 학생 기초조사서 모아보기 -->
+      <section id="view-teacherSurvey" class="view-panel hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
+          <h2 class="text-lg font-bold text-slate-800">학생 기초조사서 열람</h2>
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-semibold text-slate-600">학생 선택:</label>
+            <select id="surveyStudentSelect" onchange="loadStudentSurveyForTeacher()" class="px-3 py-1.5 border rounded-lg text-sm bg-slate-50 font-bold text-blue-600 outline-none">
+              <option value="">학생을 선택하세요</option>
+            </select>
+          </div>
+        </div>
+        <div id="surveyTeacherDetailCard" class="bg-white p-6 rounded-xl border border-slate-200">
+          <p class="text-center text-slate-400 py-12">상단에서 학생을 선택하면 해당 학생의 기초 인적사항과 선택과목이 표시됩니다.</p>
+        </div>
+      </section>
+
+      <!-- 5. [신규: 모의고사 관리] 학생용 입력 및 성적표 + 추이 그래프 -->
+      <section id="view-studentMock" class="view-panel hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-800">내 모의고사 성적표 관리</h2>
+              <p class="text-xs text-slate-500">회차별 성적을 기록하면 아래에서 백분위 변동 그래프를 한눈에 볼 수 있어.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-600">시험 회차:</span>
+              <select id="mockRoundSelect" onchange="loadStudentMockScoresForRound()" class="px-3 py-1.5 border rounded-lg text-sm font-bold text-blue-600 bg-slate-50">
+                <option value="3월학평">2026 고3 3월 학평</option>
+                <option value="5월학평">2026 고3 5월 학평</option>
+                <option value="6월모평">2026 대평원 6월 모평</option>
+                <option value="7월학평">2026 고3 7월 학평</option>
+                <option value="9월모평" selected>2026 대평원 9월 모평</option>
+                <option value="10월학평">2026 고3 10월 학평</option>
+                <option value="수능">2026 대입 수능</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 성적 입력 테이블 -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 border-b text-slate-600 font-semibold">
+                <tr>
+                  <th class="p-2.5">영역</th>
+                  <th class="p-2.5">선택 세부과목</th>
+                  <th class="p-2.5 w-24">원점수</th>
+                  <th class="p-2.5 w-24">표준점수</th>
+                  <th class="p-2.5 w-24">백분위(%)</th>
+                  <th class="p-2.5 w-24">누적백분위(%)</th>
+                  <th class="p-2.5 w-20">등급</th>
+                </tr>
+              </thead>
+              <tbody id="mockInputTableBody" class="divide-y divide-slate-100">
+                <!-- 동적으로 랜더링 -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex justify-end">
+            <button onclick="saveMockScores()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shadow transition">
+              현재 회차 성적 저장하기
+            </button>
+          </div>
+        </div>
+
+        <!-- 성적 변동 꺾은선 그래프 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i data-lucide="trending-up" class="w-4 h-4 text-blue-600"></i> 영역별 백분위 변동 추이 (3월 ~ 10월/수능)
+          </h3>
+          <div class="h-72 w-full">
+            <canvas id="studentMockChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5-B. [교사용] 모의고사 분석 및 차트 조회 -->
+      <section id="view-teacherMock" class="view-panel hidden space-y-6">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
+          <h2 class="text-lg font-bold text-slate-800">학생별 모의고사 성적 & 추이 그래프</h2>
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-semibold text-slate-600">학생 선택:</label>
+            <select id="mockStudentSelect" onchange="loadStudentMockForTeacher()" class="px-3 py-1.5 border rounded-lg text-sm bg-slate-50 font-bold text-blue-600 outline-none">
+              <option value="">학생을 선택하세요</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="teacherMockContainer" class="space-y-6">
+          <p class="text-center text-slate-400 py-12 bg-white rounded-xl border">상단에서 학생을 선택하면 모의고사 성적 추이와 회차별 상세 점수가 나타납니다.</p>
+        </div>
+      </section>
+
+      <!-- 6. [신규: 학급 앨범] 폴더 생성, 다중 업로드, 라이트박스 뷰어 -->
+      <section id="view-album" class="view-panel hidden space-y-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="camera" class="w-5 h-5 text-blue-600"></i> 3-2 학급 앨범
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">폴더를 만들고 우리 반의 순간들을 사진으로 기록해 봐.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openNewFolderModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1">
+              <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i> 새 폴더 만들기
+            </button>
+            <label class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg cursor-pointer transition flex items-center gap-1 shadow">
+              <i data-lucide="upload" class="w-3.5 h-3.5"></i> 사진 여러 장 올리기
+              <input type="file" id="albumMultiUpload" multiple accept="image/*" class="hidden" onchange="handleMultiPhotoUpload(event)">
+            </label>
+          </div>
+        </div>
+
+        <!-- 폴더 탭 리스트 -->
+        <div id="albumFolderTabs" class="flex gap-2 overflow-x-auto pb-2 text-xs">
+          <!-- 렌더링 영역 -->
+        </div>
+
+        <!-- 사진 그리드 -->
+        <div id="albumPhotosGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <p class="col-span-full text-center text-slate-400 py-16">선택된 폴더에 등록된 사진이 없습니다.</p>
+        </div>
+      </section>
+
+      <!-- 7. [학생 전용] 내 12장 원서 직접 작성/저장 -->
       <section id="view-myCards" class="view-panel hidden space-y-6">
         <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
           <div>
@@ -275,7 +518,7 @@
         </div>
       </section>
 
-      <!-- 5. [학생 전용] 1:1 상담 신청 -->
+      <!-- 8. [학생 전용] 1:1 상담 신청 -->
       <section id="view-myCounsel" class="view-panel hidden space-y-4">
         <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <h2 class="text-lg font-bold text-slate-800 mb-1">담임선생님 1:1 상담 신청</h2>
@@ -315,7 +558,7 @@
         </div>
       </section>
 
-      <!-- 6. [공통] 학사 및 상담 캘린더 -->
+      <!-- 9. [공통] 학사 및 상담 캘린더 -->
       <section id="view-calendar" class="view-panel hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200">
           <div class="flex justify-between items-center mb-4">
@@ -338,38 +581,69 @@
     </main>
   </div>
 
-  <!-- [계정 정보 및 비밀번호 변경 모달] -->
+  <!-- [모달 1: 계정 정보 및 비밀번호 변경 모달] -->
   <div id="editUserModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
       <div class="flex justify-between items-center">
-        <h3 class="font-bold text-slate-800 text-base" id="modalUserName">회원 계정 정보 수정</h3>
+        <h3 class="font-bold text-slate-800 text-base" id="modalUserName">회원 계정 수정</h3>
         <button onclick="closeEditUserModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-
       <input type="hidden" id="modalUserId">
-
       <div class="space-y-3 text-xs">
         <div>
           <label class="block font-semibold text-slate-600 mb-1">아이디 / 학번</label>
-          <input type="text" id="modalUserRawId" class="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="text" id="modalUserRawId" class="w-full px-3 py-2 border rounded-lg outline-none">
         </div>
         <div>
           <label class="block font-semibold text-slate-600 mb-1">새 비밀번호 (6자 이상)</label>
-          <input type="password" id="modalUserPw" placeholder="변경하지 않으려면 빈칸 유지" class="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-          <p class="text-[10px] text-slate-400 mt-1">※ 빈칸으로 두면 기존 비밀번호가 그대로 유지됩니다.</p>
+          <input type="password" id="modalUserPw" placeholder="변경하지 않으려면 빈칸" class="w-full px-3 py-2 border rounded-lg outline-none">
         </div>
       </div>
-
       <div class="flex gap-2 pt-2">
-        <button onclick="closeEditUserModal()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition">취소</button>
-        <button onclick="submitUserEdit()" id="modalSaveBtn" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition">저장하기</button>
+        <button onclick="closeEditUserModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">취소</button>
+        <button onclick="submitUserEdit()" id="modalSaveBtn" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold">저장하기</button>
       </div>
     </div>
   </div>
 
+  <!-- [모달 2: 학급 앨범 새 폴더 생성] -->
+  <div id="newFolderModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-4">
+      <h3 class="font-bold text-slate-800 text-sm">새 앨범 폴더 추가</h3>
+      <input type="text" id="newFolderName" placeholder="예: 봄 소풍, 9월 모평 응원" class="w-full px-3 py-2 border rounded-lg text-xs outline-none">
+      <div class="flex gap-2">
+        <button onclick="closeNewFolderModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">취소</button>
+        <button onclick="createAlbumFolder()" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold">폴더 생성</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [모달 3: 학급 앨범 사진 확대 뷰어 (라이트박스 슬라이드)] -->
+  <div id="photoLightboxModal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center hidden select-none">
+    <button onclick="closePhotoLightbox()" class="absolute top-4 right-4 text-white hover:text-slate-300 p-2 z-10">
+      <i data-lucide="x" class="w-8 h-8"></i>
+    </button>
+    
+    <!-- 이전 버튼 -->
+    <button onclick="navigateLightbox(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 hover:bg-white/25 p-3 rounded-full transition z-10">
+      <i data-lucide="chevron-left" class="w-8 h-8"></i>
+    </button>
+
+    <!-- 사진 영역 -->
+    <div class="max-w-4xl max-h-[85vh] p-2 flex flex-col items-center justify-center">
+      <img id="lightboxImage" src="" alt="확대 사진" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl">
+      <p id="lightboxCounter" class="text-slate-300 text-xs mt-3 font-medium">1 / 1</p>
+    </div>
+
+    <!-- 다음 버튼 -->
+    <button onclick="navigateLightbox(1)" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 hover:bg-white/25 p-3 rounded-full transition z-10">
+      <i data-lucide="chevron-right" class="w-8 h-8"></i>
+    </button>
+  </div>
+
   <script>
     // =================================================================
-    // 💡 [선생님 설정 영역]: 수파베이스 정보
+    // 💡 Supabase 접속 정보
     // =================================================================
     const SB_URL = 'https://vmkfmwbzsdlietprgtyt.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZta2Ztd2J6c2RsaWV0cHJndHl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQxMjIsImV4cCI6MjEwNTUwMDEyMn0.eqkdTi2LzOkVA715lyy2VMfiNio4umT-LwImPv7LaWQ';
@@ -378,6 +652,15 @@
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
     let currentUser = null;
     let currentProfile = null;
+
+    // 앨범 라이트박스 상태 관리
+    let currentAlbumPhotos = [];
+    let currentLightboxIdx = 0;
+    let activeFolderId = null;
+
+    // 모의고사 차트 인스턴스
+    let studentChartInstance = null;
+    let teacherChartInstance = null;
 
     function toAuthEmail(rawId) {
       const clean = rawId.trim().toLowerCase();
@@ -419,7 +702,6 @@
       const role = document.getElementById('regRole').value;
       const sField = document.getElementById('studentNoField');
       const cField = document.getElementById('customIdField');
-
       if (role === 'student') {
         sField.classList.remove('hidden');
         cField.classList.add('hidden');
@@ -452,10 +734,7 @@
       regBtn.disabled = true;
 
       const authEmail = toAuthEmail(rawId);
-      const { data: authData, error: authError } = await supabaseClient.auth.signUp({ 
-        email: authEmail, 
-        password: pw 
-      });
+      const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: authEmail, password: pw });
 
       if (authError) {
         alert('가입 에러: 이미 등록된 아이디이거나 비밀번호 규격(6자 이상)을 확인해줘.');
@@ -471,9 +750,8 @@
           name: name,
           role: role,
           student_no: studentNo,
-          is_approved: false // 모든 신청은 관리자 승인 대기
+          is_approved: false
         }]);
-
         alert(`가입 신청 완료! 아이디는 [${rawId}]야. 담임선생님이 승인하면 로그인할 수 있어.`);
         switchAuthTab('login');
       }
@@ -490,10 +768,7 @@
       btn.disabled = true;
 
       const authEmail = toAuthEmail(rawId);
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ 
-        email: authEmail, 
-        password: pw 
-      });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email: authEmail, password: pw });
 
       if (error) {
         alert('로그인 실패: 아이디(학번) 또는 비밀번호를 다시 확인해줘.');
@@ -532,14 +807,19 @@
         changeView('dashboard');
         loadUsersData();
         loadCounselRequestsForTeacher();
-        loadStudentListForTeacher();
+        loadTeacherStudentSelects();
       } else {
         document.getElementById('teacherNav').classList.add('hidden');
         document.getElementById('studentNav').classList.remove('hidden');
         changeView('myCards');
         renderStudent12CardInputs();
         loadStudentExisting12Cards();
+        loadMySurveyData();
+        renderMockScoreInputs();
+        loadStudentMockScoresForRound();
+        renderStudentMockChart(currentUser.id, 'studentMockChart');
       }
+      loadAlbumFolders();
       renderCalendar();
       lucide.createIcons();
     }
@@ -569,9 +849,449 @@
       lucide.createIcons();
     }
 
-    // 회원 목록 로드 (대기 목록 + 전체 가입 회원 목록)
+    // =================================================================
+    // 💡 [기능 1] 학급 앨범 로직 (다중 업로드, 폴더, 슬라이드 뷰어)
+    // =================================================================
+    async function loadAlbumFolders() {
+      const { data: folders } = await supabaseClient.from('album_folders').select('*').order('created_at', { ascending: true });
+      const tabContainer = document.getElementById('albumFolderTabs');
+      
+      if (!folders || folders.length === 0) {
+        // 기본 폴더 하나 생성
+        const { data: newF } = await supabaseClient.from('album_folders').insert([{ name: '기본 앨범' }]).select().single();
+        if (newF) activeFolderId = newF.id;
+        loadAlbumFolders();
+        return;
+      }
+
+      if (!activeFolderId && folders.length > 0) {
+        activeFolderId = folders[0].id;
+      }
+
+      tabContainer.innerHTML = folders.map(f => `
+        <button onclick="selectAlbumFolder('${f.id}')" class="px-4 py-2 rounded-xl font-bold whitespace-nowrap transition flex items-center gap-1.5 ${f.id === activeFolderId ? 'bg-blue-600 text-white shadow' : 'bg-white border text-slate-600 hover:bg-slate-50'}">
+          <i data-lucide="folder" class="w-3.5 h-3.5"></i> ${f.name}
+        </button>
+      `).join('');
+      lucide.createIcons();
+      loadAlbumPhotos();
+    }
+
+    function selectAlbumFolder(folderId) {
+      activeFolderId = folderId;
+      loadAlbumFolders();
+    }
+
+    async function loadAlbumPhotos() {
+      if (!activeFolderId) return;
+      const { data: photos } = await supabaseClient.from('album_photos').select('*').eq('folder_id', activeFolderId).order('created_at', { ascending: false });
+      const grid = document.getElementById('albumPhotosGrid');
+      currentAlbumPhotos = photos || [];
+
+      if (!photos || photos.length === 0) {
+        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-16">이 폴더에 등록된 사진이 없습니다. [사진 여러 장 올리기]를 눌러 업로드해 봐.</p>';
+        return;
+      }
+
+      grid.innerHTML = photos.map((p, idx) => `
+        <div onclick="openPhotoLightbox(${idx})" class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden border cursor-pointer shadow-sm hover:shadow-md transition">
+          <img src="${p.photo_url}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+          <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-end p-2">
+            <span class="text-[11px] text-white font-medium truncate">${new Date(p.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openNewFolderModal() {
+      document.getElementById('newFolderName').value = '';
+      document.getElementById('newFolderModal').classList.remove('hidden');
+    }
+    function closeNewFolderModal() {
+      document.getElementById('newFolderModal').classList.add('hidden');
+    }
+
+    async function createAlbumFolder() {
+      const name = document.getElementById('newFolderName').value.trim();
+      if (!name) return alert('폴더 이름을 입력해줘.');
+      const { data } = await supabaseClient.from('album_folders').insert([{ name }]).select().single();
+      if (data) {
+        activeFolderId = data.id;
+        closeNewFolderModal();
+        loadAlbumFolders();
+      }
+    }
+
+    async function handleMultiPhotoUpload(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      if (!activeFolderId) return alert('사진을 올릴 폴더를 먼저 선택해줘.');
+
+      const uploadBtn = e.target.parentElement;
+      const originHtml = uploadBtn.innerHTML;
+      uploadBtn.innerText = `업로드 중 (0/${files.length})...`;
+
+      let successCount = 0;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext = file.name.split('.').pop();
+        const filePath = `${activeFolderId}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+
+        const { error: upErr } = await supabaseClient.storage.from('class-album').upload(filePath, file);
+        if (!upErr) {
+          const { data: { publicUrl } } = supabaseClient.storage.from('class-album').getPublicUrl(filePath);
+          await supabaseClient.from('album_photos').insert([{
+            folder_id: activeFolderId,
+            photo_url: publicUrl,
+            caption: file.name
+          }]);
+          successCount++;
+        }
+        uploadBtn.innerText = `업로드 중 (${i+1}/${files.length})...`;
+      }
+
+      alert(`${successCount}장의 사진이 성공적으로 등록되었어!`);
+      uploadBtn.innerHTML = originHtml;
+      e.target.value = '';
+      loadAlbumPhotos();
+    }
+
+    // 라이트박스 뷰어
+    function openPhotoLightbox(index) {
+      currentLightboxIdx = index;
+      updateLightboxContent();
+      document.getElementById('photoLightboxModal').classList.remove('hidden');
+    }
+
+    function closePhotoLightbox() {
+      document.getElementById('photoLightboxModal').classList.add('hidden');
+    }
+
+    function navigateLightbox(step) {
+      if (currentAlbumPhotos.length === 0) return;
+      currentLightboxIdx = (currentLightboxIdx + step + currentAlbumPhotos.length) % currentAlbumPhotos.length;
+      updateLightboxContent();
+    }
+
+    function updateLightboxContent() {
+      if (currentAlbumPhotos.length === 0) return;
+      const photo = currentAlbumPhotos[currentLightboxIdx];
+      document.getElementById('lightboxImage').src = photo.photo_url;
+      document.getElementById('lightboxCounter').innerText = `${currentLightboxIdx + 1} / ${currentAlbumPhotos.length}`;
+    }
+
+    // 키보드 화살표 사진 넘기기 이벤트
+    window.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('photoLightboxModal');
+      if (modal && !modal.classList.contains('hidden')) {
+        if (e.key === 'ArrowLeft') navigateLightbox(-1);
+        if (e.key === 'ArrowRight') navigateLightbox(1);
+        if (e.key === 'Escape') closePhotoLightbox();
+      }
+    });
+
+    // =================================================================
+    // 💡 [기능 2] 기본조사서 로직 (선택과목 체크박스 & 권한 분리)
+    // =================================================================
+    function validateTamCount(currentBox) {
+      const checkedTams = document.querySelectorAll('input[name="sel_tam"]:checked');
+      document.getElementById('tamCountDisplay').innerText = `${checkedTams.length} / 2 선택됨`;
+      if (checkedTams.length > 2) {
+        alert('탐구 영역은 최대 2과목까지만 선택할 수 있어.');
+        currentBox.checked = false;
+        document.getElementById('tamCountDisplay').innerText = `2 / 2 선택됨`;
+      }
+    }
+
+    async function loadMySurveyData() {
+      const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', currentUser.id).single();
+      if (data) {
+        document.getElementById('surv_father_name').value = data.father_name || '';
+        document.getElementById('surv_father_phone').value = data.father_phone || '';
+        document.getElementById('surv_mother_name').value = data.mother_name || '';
+        document.getElementById('surv_mother_phone').value = data.mother_phone || '';
+        document.getElementById('surv_student_phone').value = data.student_phone || '';
+        document.getElementById('surv_siblings').value = data.siblings || '';
+        document.getElementById('surv_address').value = data.address || '';
+        document.getElementById('surv_career').value = data.career_hope || '';
+        document.getElementById('surv_notes').value = data.special_notes || '';
+
+        const subj = data.selected_subjects || {};
+        if (subj.korean) {
+          const r = document.querySelector(`input[name="sel_kor"][value="${subj.korean}"]`);
+          if (r) r.checked = true;
+        }
+        if (subj.math) {
+          const r = document.querySelector(`input[name="sel_math"][value="${subj.math}"]`);
+          if (r) r.checked = true;
+        }
+        if (subj.tams && Array.isArray(subj.tams)) {
+          document.querySelectorAll('input[name="sel_tam"]').forEach(cb => {
+            cb.checked = subj.tams.includes(cb.value);
+          });
+          document.getElementById('tamCountDisplay').innerText = `${subj.tams.length} / 2 선택됨`;
+        }
+      }
+    }
+
+    async function saveStudentSurvey(e) {
+      e.preventDefault();
+      const kor = document.querySelector('input[name="sel_kor"]:checked')?.value;
+      const math = document.querySelector('input[name="sel_math"]:checked')?.value;
+      const tams = Array.from(document.querySelectorAll('input[name="sel_tam"]:checked')).map(c => c.value);
+
+      const surveyObj = {
+        user_id: currentUser.id,
+        father_name: document.getElementById('surv_father_name').value.trim(),
+        father_phone: document.getElementById('surv_father_phone').value.trim(),
+        mother_name: document.getElementById('surv_mother_name').value.trim(),
+        mother_phone: document.getElementById('surv_mother_phone').value.trim(),
+        student_phone: document.getElementById('surv_student_phone').value.trim(),
+        siblings: document.getElementById('surv_siblings').value.trim(),
+        address: document.getElementById('surv_address').value.trim(),
+        career_hope: document.getElementById('surv_career').value.trim(),
+        special_notes: document.getElementById('surv_notes').value.trim(),
+        selected_subjects: { korean: kor, math: math, tams: tams },
+        updated_at: new Date()
+      };
+
+      const { error } = await supabaseClient.from('student_surveys').upsert(surveyObj);
+      if (error) alert('기초조사서 저장 실패: ' + error.message);
+      else alert('기초조사서가 담임선생님께 안전하게 전달·저장되었어!');
+    }
+
+    async function loadStudentSurveyForTeacher() {
+      const studentId = document.getElementById('surveyStudentSelect').value;
+      const card = document.getElementById('surveyTeacherDetailCard');
+      if (!studentId) {
+        card.innerHTML = '<p class="text-center text-slate-400 py-12">상단에서 학생을 선택해줘.</p>';
+        return;
+      }
+
+      const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', studentId).single();
+      if (!data) {
+        card.innerHTML = '<p class="text-center text-slate-400 py-12">이 학생은 아직 기초조사서를 작성하지 않았습니다.</p>';
+        return;
+      }
+
+      const subj = data.selected_subjects || {};
+      card.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
+            <div><span class="text-slate-400 font-semibold">아버지:</span> <b class="text-slate-700">${data.father_name || '-'}</b> (${data.father_phone || '-'})</div>
+            <div><span class="text-slate-400 font-semibold">어머니:</span> <b class="text-slate-700">${data.mother_name || '-'}</b> (${data.mother_phone || '-'})</div>
+            <div><span class="text-slate-400 font-semibold">학생 연락처:</span> <b class="text-blue-600">${data.student_phone || '-'}</b></div>
+            <div><span class="text-slate-400 font-semibold">형제관계:</span> <b class="text-slate-700">${data.siblings || '-'}</b></div>
+            <div class="md:col-span-2"><span class="text-slate-400 font-semibold">실거주 주소:</span> <b class="text-slate-700">${data.address || '-'}</b></div>
+          </div>
+
+          <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+            <h4 class="font-bold text-blue-900 mb-2">선택과목 지정 내역</h4>
+            <div class="flex gap-4">
+              <span class="px-2.5 py-1 bg-white rounded border font-semibold">국어: <b class="text-blue-600">${subj.korean || '-'}</b></span>
+              <span class="px-2.5 py-1 bg-white rounded border font-semibold">수학: <b class="text-blue-600">${subj.math || '-'}</b></span>
+              <span class="px-2.5 py-1 bg-white rounded border font-semibold">탐구: <b class="text-purple-600">${(subj.tams || []).join(', ') || '-'}</b></span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div><span class="text-slate-400 font-semibold">진로희망:</span> <p class="font-bold text-slate-800 bg-slate-50 p-2.5 rounded-lg">${data.career_hope || '-'}</p></div>
+            <div><span class="text-slate-400 font-semibold">특이사항 (담임 공유):</span> <p class="text-slate-700 bg-amber-50 p-3 rounded-lg border border-amber-200 whitespace-pre-line">${data.special_notes || '등록된 특이사항 없음'}</p></div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =================================================================
+    // 💡 [기능 3] 모의고사 관리 & 백분위 변동 꺾은선 차트 (Chart.js)
+    // =================================================================
+    const SUBJECT_ROWS = [
+      { key: 'korean', name: '국어', options: ['화법과 작문', '언어와 매체'] },
+      { key: 'math', name: '수학', options: ['확률과 통계', '미적분', '기하'] },
+      { key: 'english', name: '영어', options: ['영어(절대)'] },
+      { key: 'history', name: '한국사', options: ['한국사(절대)'] },
+      { key: 'tam1', name: '탐구1', options: ['생활과 윤리','윤리와 사상','한국지리','세계지리','동아시아사','세계사','경제','정치와 법','사회·문화','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학Ⅱ','화학Ⅱ','생명과학Ⅱ','지구과학Ⅱ'] },
+      { key: 'tam2', name: '탐구2', options: ['사회·문화','생활과 윤리','윤리와 사상','한국지리','세계지리','동아시아사','세계사','경제','정치와 법','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학Ⅱ','화학Ⅱ','생명과학Ⅱ','지구과학Ⅱ'] }
+    ];
+
+    function renderMockScoreInputs() {
+      const tbody = document.getElementById('mockInputTableBody');
+      tbody.innerHTML = SUBJECT_ROWS.map(s => `
+        <tr>
+          <td class="p-2.5 font-bold text-slate-700">${s.name}</td>
+          <td class="p-2.5">
+            <select id="mock_subj_${s.key}" class="px-2 py-1 border rounded bg-white font-medium">
+              ${s.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+            </select>
+          </td>
+          <td class="p-2.5"><input type="number" id="mock_raw_${s.key}" placeholder="0~100" class="w-full px-2 py-1 border rounded"></td>
+          <td class="p-2.5"><input type="number" id="mock_std_${s.key}" placeholder="표점" class="w-full px-2 py-1 border rounded"></td>
+          <td class="p-2.5"><input type="number" step="0.01" id="mock_pct_${s.key}" placeholder="백분위" class="w-full px-2 py-1 border rounded font-bold text-blue-600"></td>
+          <td class="p-2.5"><input type="number" step="0.01" id="mock_cumpct_${s.key}" placeholder="누적" class="w-full px-2 py-1 border rounded"></td>
+          <td class="p-2.5"><input type="number" id="mock_grd_${s.key}" placeholder="등급" min="1" max="9" class="w-full px-2 py-1 border rounded font-bold"></td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadStudentMockScoresForRound() {
+      const round = document.getElementById('mockRoundSelect').value;
+      const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', currentUser.id).eq('exam_round', round);
+
+      SUBJECT_ROWS.forEach(s => {
+        document.getElementById(`mock_raw_${s.key}`).value = '';
+        document.getElementById(`mock_std_${s.key}`).value = '';
+        document.getElementById(`mock_pct_${s.key}`).value = '';
+        document.getElementById(`mock_cumpct_${s.key}`).value = '';
+        document.getElementById(`mock_grd_${s.key}`).value = '';
+      });
+
+      if (scores) {
+        scores.forEach(row => {
+          const s = SUBJECT_ROWS.find(item => item.key === row.subject_key);
+          if (s) {
+            const selSubj = document.getElementById(`mock_subj_${s.key}`);
+            if (selSubj) selSubj.value = row.subject_name;
+            document.getElementById(`mock_raw_${s.key}`).value = row.raw_score ?? '';
+            document.getElementById(`mock_std_${s.key}`).value = row.standard_score ?? '';
+            document.getElementById(`mock_pct_${s.key}`).value = row.percentile ?? '';
+            document.getElementById(`mock_cumpct_${s.key}`).value = row.cum_percentile ?? '';
+            document.getElementById(`mock_grd_${s.key}`).value = row.grade ?? '';
+          }
+        });
+      }
+    }
+
+    async function saveMockScores() {
+      const round = document.getElementById('mockRoundSelect').value;
+      const records = [];
+
+      SUBJECT_ROWS.forEach(s => {
+        const subjName = document.getElementById(`mock_subj_${s.key}`).value;
+        const raw = document.getElementById(`mock_raw_${s.key}`).value;
+        const std = document.getElementById(`mock_std_${s.key}`).value;
+        const pct = document.getElementById(`mock_pct_${s.key}`).value;
+        const cumpct = document.getElementById(`mock_cumpct_${s.key}`).value;
+        const grd = document.getElementById(`mock_grd_${s.key}`).value;
+
+        if (raw || std || pct || grd) {
+          records.push({
+            user_id: currentUser.id,
+            exam_round: round,
+            subject_key: s.key,
+            subject_name: subjName,
+            raw_score: raw ? parseInt(raw) : null,
+            standard_score: std ? parseInt(std) : null,
+            percentile: pct ? parseFloat(pct) : null,
+            cum_percentile: cumpct ? parseFloat(cumpct) : null,
+            grade: grd ? parseInt(grd) : null
+          });
+        }
+      });
+
+      if (records.length === 0) return alert('입력된 점수가 없습니다.');
+
+      await supabaseClient.from('mock_scores').delete().eq('user_id', currentUser.id).eq('exam_round', round);
+      const { error } = await supabaseClient.from('mock_scores').insert(records);
+
+      if (error) alert('성적 저장 실패: ' + error.message);
+      else {
+        alert(`${round} 모의고사 성적이 성공적으로 저장되었어!`);
+        renderStudentMockChart(currentUser.id, 'studentMockChart');
+      }
+    }
+
+    async function renderStudentMockChart(userId, canvasId) {
+      const rounds = ['3월학평', '5월학평', '6월모평', '7월학평', '9월모평', '10월학평', '수능'];
+      const { data: allScores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', userId);
+
+      const korData = [];
+      const mathData = [];
+      const tam1Data = [];
+      const tam2Data = [];
+
+      rounds.forEach(r => {
+        const rScores = allScores ? allScores.filter(s => s.exam_round === r) : [];
+        const k = rScores.find(s => s.subject_key === 'korean');
+        const m = rScores.find(s => s.subject_key === 'math');
+        const t1 = rScores.find(s => s.subject_key === 'tam1');
+        const t2 = rScores.find(s => s.subject_key === 'tam2');
+
+        korData.push(k ? k.percentile : null);
+        mathData.push(m ? m.percentile : null);
+        tam1Data.push(t1 ? t1.percentile : null);
+        tam2Data.push(t2 ? t2.percentile : null);
+      });
+
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+
+      if (canvasId === 'studentMockChart' && studentChartInstance) studentChartInstance.destroy();
+      if (canvasId === 'teacherMockChartCanvas' && teacherChartInstance) teacherChartInstance.destroy();
+
+      const newChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: rounds,
+          datasets: [
+            { label: '국어 백분위', data: korData, borderColor: '#2563eb', backgroundColor: '#2563eb', tension: 0.2, spanGaps: true },
+            { label: '수학 백분위', data: mathData, borderColor: '#dc2626', backgroundColor: '#dc2626', tension: 0.2, spanGaps: true },
+            { label: '탐구1 백분위', data: tam1Data, borderColor: '#16a34a', backgroundColor: '#16a34a', tension: 0.2, spanGaps: true },
+            { label: '탐구2 백분위', data: tam2Data, borderColor: '#9333ea', backgroundColor: '#9333ea', tension: 0.2, spanGaps: true }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { min: 0, max: 100, title: { display: true, text: '백분위 (%)' } }
+          }
+        }
+      });
+
+      if (canvasId === 'studentMockChart') studentChartInstance = newChart;
+      else teacherChartInstance = newChart;
+    }
+
+    async function loadStudentMockForTeacher() {
+      const studentId = document.getElementById('mockStudentSelect').value;
+      const container = document.getElementById('teacherMockContainer');
+      if (!studentId) {
+        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해줘.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="bg-white p-5 rounded-xl border shadow-sm">
+          <h3 class="font-bold text-slate-800 text-sm mb-3">회차별 백분위 변동 추이</h3>
+          <div class="h-64 w-full">
+            <canvas id="teacherMockChartCanvas"></canvas>
+          </div>
+        </div>
+      `;
+      renderStudentMockChart(studentId, 'teacherMockChartCanvas');
+    }
+
+    // =================================================================
+    // 💡 [기타 공통] 회원 관리, 상담, 12장 카드, 달력
+    // =================================================================
+    async function loadTeacherStudentSelects() {
+      const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student').eq('is_approved', true).order('student_no');
+      const optHtml = '<option value="">학생을 선택하세요</option>' + (students || []).map(s => `
+        <option value="${s.id}">${s.student_no ? s.student_no + ' ' : ''}${s.name}</option>
+      `).join('');
+
+      const tSel = document.getElementById('teacherStudentSelect');
+      const sSel = document.getElementById('surveyStudentSelect');
+      const mSel = document.getElementById('mockStudentSelect');
+      const statS = document.getElementById('statStudents');
+
+      if (tSel) tSel.innerHTML = optHtml;
+      if (sSel) sSel.innerHTML = optHtml;
+      if (mSel) mSel.innerHTML = optHtml;
+      if (statS) statS.innerText = (students ? students.length : 0) + '명';
+    }
+
     async function loadUsersData() {
-      // 1. 승인 대기자 로드
       const { data: pendingList } = await supabaseClient.from('profiles').select('*').eq('is_approved', false).order('created_at', { ascending: false });
       const pendingTbody = document.getElementById('pendingUserTableBody');
       const badge = document.getElementById('pendingCountBadge');
@@ -608,7 +1328,6 @@
         `).join('');
       }
 
-      // 2. 승인된 전체 회원 로드 (수정 가능 목록)
       const { data: approvedList } = await supabaseClient.from('profiles').select('*').eq('is_approved', true).order('role');
       const approvedTbody = document.getElementById('approvedUserTableBody');
 
@@ -641,7 +1360,7 @@
       await supabaseClient.from('profiles').update({ is_approved: true, role: selectedRole }).eq('id', userId);
       alert('승인 및 권한 부여가 완료되었어.');
       loadUsersData();
-      loadStudentListForTeacher();
+      loadTeacherStudentSelects();
     }
 
     async function rejectUser(userId) {
@@ -651,7 +1370,6 @@
       }
     }
 
-    // 모달 열기
     function openEditUserModal(userId, currentRawId, name) {
       document.getElementById('modalUserId').value = userId;
       document.getElementById('modalUserRawId').value = currentRawId;
@@ -665,7 +1383,6 @@
       document.getElementById('editUserModal').classList.add('hidden');
     }
 
-    // 아이디 & 비밀번호 변경 제출
     async function submitUserEdit() {
       const userId = document.getElementById('modalUserId').value;
       const newRawId = document.getElementById('modalUserRawId').value.trim();
@@ -678,22 +1395,19 @@
       saveBtn.innerText = '저장 중...';
       saveBtn.disabled = true;
 
-      // 1단계에서 만든 RPC 함수 호출
       const { error } = await supabaseClient.rpc('admin_update_user_credentials', {
         target_user_id: userId,
         new_raw_id: newRawId,
         new_password: newPw || null
       });
 
-      if (error) {
-        alert('계정 정보 수정 실패: ' + error.message);
-      } else {
+      if (error) alert('계정 정보 수정 실패: ' + error.message);
+      else {
         alert('아이디 / 비밀번호 변경이 성공적으로 적용되었어!');
         closeEditUserModal();
         loadUsersData();
-        loadStudentListForTeacher();
+        loadTeacherStudentSelects();
       }
-
       saveBtn.innerText = '저장하기';
       saveBtn.disabled = false;
     }
@@ -802,18 +1516,6 @@
 
       alert('상담 신청서가 제출되었어! 담임선생님이 확인 후 승인하실 거야.');
       document.getElementById('counselDetail').value = '';
-    }
-
-    async function loadStudentListForTeacher() {
-      const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student').eq('is_approved', true).order('student_no');
-      const select = document.getElementById('teacherStudentSelect');
-      const statS = document.getElementById('statStudents');
-      if (students) {
-        statS.innerText = students.length + '명';
-        select.innerHTML = '<option value="">학생을 선택하세요</option>' + students.map(s => `
-          <option value="${s.id}">${s.student_no ? s.student_no + ' ' : ''}${s.name}</option>
-        `).join('');
-      }
     }
 
     async function loadStudent12CardsForTeacher() {
