@@ -70,7 +70,7 @@
             <option value="9">3학년 9반</option>
             <option value="10">3학년 10반</option>
           </select>
-          <p id="classAutoHint" class="text-[11px] text-slate-400 mt-1">※ 학생은 학번(예: 30201)을 입력하면 해당 반으로 자동 지정됩니다.</p>
+          <p id="classAutoHint" class="text-[11px] text-slate-400 mt-1">※ 학생은 학번(예: 30201)을 입력하면 해당 반으로 자동 지정돼.</p>
         </div>
 
         <div id="studentNoField">
@@ -131,7 +131,9 @@
             <button onclick="changeView('approval')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1" data-view="approval">
               회원 관리 <span id="pendingCountBadge" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
             </button>
-            <button onclick="changeView('counselRequests')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="counselRequests">상담 신청 목록</button>
+            <button onclick="changeView('counselRequests')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1" data-view="counselRequests">
+              상담 신청 관리 <span id="counselNavBadge" class="hidden bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+            </button>
             <button onclick="changeView('counselList')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="counselList">12장 상담카드</button>
             <button onclick="changeView('teacherSurvey')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="teacherSurvey">기초조사서</button>
             <button onclick="changeView('teacherMock')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="teacherMock">모의고사 분석</button>
@@ -219,7 +221,7 @@
                 </div>
                 <div class="p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-100">
                   <span class="text-xs text-slate-500 font-semibold">1:1 상담 신청 상태</span>
-                  <div class="mt-1 font-bold text-sm text-emerald-700" id="homeMyCounselStatus">신청 내역 없음</div>
+                  <div class="mt-1 font-bold text-sm" id="homeMyCounselStatus">신청 내역 없음</div>
                 </div>
               </div>
               <div class="pt-2 flex flex-wrap gap-2 text-xs">
@@ -244,7 +246,6 @@
                   <span class="text-[11px] font-semibold text-rose-600">가입 승인 대기</span>
                   <p id="homeTeacherStatPending" class="text-xl font-black text-rose-700 mt-1">0명</p>
                 </div>
-                <!-- 수정: 클릭 시 12장 카드가 아닌 '상담 신청 목록'으로 바로 이동 -->
                 <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer hover:bg-blue-100/70 transition" onclick="changeView('counselRequests')">
                   <span class="text-[11px] font-semibold text-blue-600">미확인 상담 신청</span>
                   <p id="homeTeacherStatCounsel" class="text-xl font-black text-blue-700 mt-1">0건</p>
@@ -375,30 +376,35 @@
       <!-- 2. [교사] 학생 1:1 상담 신청 내역 확인 및 승인 관리 -->
       <!-- ======================================================= -->
       <section id="view-counselRequests" class="view-panel hidden space-y-4">
-        <div class="bg-white p-5 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3 shadow-sm">
           <div>
             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
               <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i> 학생 1:1 상담 신청 내역
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">학생들이 작성한 상담 일시, 주제 및 구체적인 고민 내용을 확인하고 접수할 수 있습니다.</p>
+            <p class="text-xs text-slate-500 mt-0.5">학생들의 신청 일시와 고민 내용을 검토하고 접수하거나 거절(사유 안내)할 수 있습니다.</p>
           </div>
-          <button onclick="loadTeacherCounselRequests()" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-1">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
-          </button>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border">
+              💡 동일 시간 중복 신청은 <span class="text-rose-600 font-bold">⚠️ 시간 겹침</span> 뱃지로 표시됩니다.
+            </span>
+            <button onclick="loadTeacherCounselRequests()" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
+            </button>
+          </div>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-sm">
-              <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs whitespace-nowrap">
                 <tr>
                   <th class="p-3 w-28">희망 날짜</th>
-                  <th class="p-3 w-28">희망 교시/시간</th>
+                  <th class="p-3 w-40">희망 시간/교시</th>
                   <th class="p-3 w-32">학생(학번)</th>
-                  <th class="p-3 w-48">상담 주제</th>
-                  <th class="p-3">고민 및 질문 내용</th>
-                  <th class="p-3 w-20 text-center">상태</th>
-                  <th class="p-3 w-28 text-right">처리</th>
+                  <th class="p-3 w-44">상담 주제</th>
+                  <th class="p-3 min-w-[220px]">고민 및 질문 내용</th>
+                  <th class="p-3 w-28 text-center">상태</th>
+                  <th class="p-3 w-36 text-center">처리</th>
                 </tr>
               </thead>
               <tbody id="teacherCounselTableBody" class="divide-y divide-slate-100 text-xs">
@@ -1065,7 +1071,7 @@
       const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: authEmail, password: pw });
 
       if (authError) {
-        alert('가입 에러: 이미 등록된 아이디이거나 비밀번호 규격(6자 이상)을 확인해주세요.');
+        alert('가입 에러: 이미 등록된 아이디이거나 비밀번호 규격(6자 이상)을 확인해줘.');
         regBtn.innerText = '가입 신청 완료';
         regBtn.disabled = false;
         return;
@@ -1184,7 +1190,7 @@
         document.getElementById('studentHomeSummary').classList.add('hidden');
         loadUsersData();
         loadTeacherStudentSelects();
-        loadTeacherCounselRequests(); // 상담 신청 목록 자동 로드
+        loadTeacherCounselRequests();
       } else {
         document.getElementById('teacherNav').classList.add('hidden');
         document.getElementById('studentNav').classList.remove('hidden');
@@ -1252,7 +1258,7 @@
     }
 
     async function handleLogout() {
-      if (confirm('로그아웃 하시겠습니까?')) {
+      if (confirm('로그아웃 할까요?')) {
         await supabaseClient.auth.signOut();
         currentUser = null;
         currentProfile = null;
@@ -1320,10 +1326,17 @@
         const { data: counsel } = await supabaseClient.from('counsel_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(1);
         const counselStatusEl = document.getElementById('homeMyCounselStatus');
         if (counsel && counsel.length > 0) {
-          const statusText = counsel[0].status === 'confirmed' ? '담임선생님 확인완료' : '신청완료 (확인대기)';
-          counselStatusEl.innerText = `${counsel[0].target_date} [${statusText}]`;
+          const c = counsel[0];
+          if (c.status === 'confirmed') {
+            counselStatusEl.innerHTML = `<span class="text-emerald-600 font-bold">${c.target_date} (${c.target_period}) [확정]</span>`;
+          } else if (c.status === 'rejected') {
+            counselStatusEl.innerHTML = `<span class="text-rose-600 font-bold" title="거절 사유가 등록되었습니다.">${c.target_date} [신청 거절됨]</span>`;
+          } else {
+            counselStatusEl.innerHTML = `<span class="text-amber-600 font-bold">${c.target_date} (${c.target_period}) [대기중]</span>`;
+          }
         } else {
           counselStatusEl.innerText = '신청 내역 없음';
+          counselStatusEl.className = 'mt-1 font-bold text-sm text-slate-500';
         }
       }
 
@@ -1335,7 +1348,16 @@
 
         let counselQ = supabaseClient.from('counsel_requests').select('id', { count: 'exact' }).eq('status', 'pending');
         const { count: counselCnt } = await counselQ;
-        document.getElementById('homeTeacherStatCounsel').innerText = (counselCnt || 0) + '건';
+        const cCount = counselCnt || 0;
+        document.getElementById('homeTeacherStatCounsel').innerText = cCount + '건';
+
+        const navBadge = document.getElementById('counselNavBadge');
+        if (cCount > 0) {
+          navBadge.innerText = cCount;
+          navBadge.classList.remove('hidden');
+        } else {
+          navBadge.classList.add('hidden');
+        }
 
         let pendingQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('is_approved', false);
         const { count: pendingCnt } = await pendingQ;
@@ -1394,13 +1416,13 @@
         author_name: currentProfile.name
       }]);
 
-      alert('담임 알림이 등록되었어!');
+      alert('담임 알림이 등록되었습니다!');
       closeNewNoticeModal();
       loadHomeDashboardData();
     }
 
     // =================================================================
-    // 💡 [교사용] 1:1 상담 신청 목록 로드 및 접수/확인 처리
+    // 💡 [교사용] 1:1 상담 신청 목록 로드 및 접수/거절/일정중복 처리
     // =================================================================
     async function loadTeacherCounselRequests() {
       const tbody = document.getElementById('teacherCounselTableBody');
@@ -1417,31 +1439,100 @@
         return;
       }
 
-      tbody.innerHTML = list.map(item => `
-        <tr class="hover:bg-slate-50 transition">
-          <td class="p-3 font-bold text-slate-800">${item.target_date || '-'}</td>
-          <td class="p-3 font-semibold text-blue-600">${item.target_period || '-'}</td>
-          <td class="p-3 font-bold text-slate-800">${item.student_name || '-'} <span class="text-slate-400 text-[11px] font-normal">(${item.student_no || '-'})</span></td>
-          <td class="p-3 font-semibold text-slate-700">${item.topic || '-'}</td>
-          <td class="p-3 text-slate-600 whitespace-pre-wrap leading-relaxed max-w-md">${item.detail || '-'}</td>
-          <td class="p-3 text-center">
-            <span class="px-2 py-0.5 rounded text-[11px] font-bold ${item.status === 'pending' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
-              ${item.status === 'pending' ? '미확인' : '확인 완료'}
-            </span>
-          </td>
-          <td class="p-3 text-right">
-            ${item.status === 'pending' 
-              ? `<button onclick="confirmCounselRequest('${item.id}', '${item.target_date}', '${item.target_period}', '${item.student_name}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition shadow-sm">접수/일정등록</button>`
-              : `<span class="text-slate-400 text-xs">처리 완료</span>`
-            }
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = list.map(item => {
+        // 동일 날짜 & 시간 중복 신청 건수 계산 (취소/거절된 것은 제외)
+        const conflictCount = list.filter(x => 
+          x.target_date === item.target_date && 
+          x.target_period === item.target_period && 
+          x.status !== 'rejected'
+        ).length;
+
+        // 상태 뱃지 설정
+        let statusBadge = '';
+        if (item.status === 'confirmed') {
+          statusBadge = '<span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 whitespace-nowrap">확인 완료</span>';
+        } else if (item.status === 'rejected') {
+          statusBadge = '<span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 whitespace-nowrap">거절(반려)</span>';
+        } else {
+          statusBadge = '<span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 whitespace-nowrap">미확인</span>';
+        }
+
+        // 처리 버튼 영역
+        let actionButtons = '';
+        if (item.status === 'pending') {
+          actionButtons = `
+            <div class="inline-flex items-center gap-1.5 justify-center whitespace-nowrap">
+              <button onclick="confirmCounselRequest('${item.id}', '${item.target_date}', '${item.target_period}', '${item.student_name}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-bold transition shadow-sm whitespace-nowrap">접수</button>
+              <button onclick="rejectCounselRequest('${item.id}', '${item.target_date}', '${item.target_period}', '${item.student_name}')" class="px-2 py-1 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 rounded-md text-xs font-bold transition whitespace-nowrap">거절</button>
+            </div>
+          `;
+        } else {
+          actionButtons = `<span class="text-slate-400 text-xs whitespace-nowrap">처리 완료</span>`;
+        }
+
+        // 내용에 거절 사유가 있는 경우 시각적 강조
+        let detailHtml = item.detail || '-';
+        if (item.detail && item.detail.includes('[거절 사유:')) {
+          detailHtml = item.detail.replace(
+            /\[거절 사유: (.*?)\]/g, 
+            '<div class="mt-1.5 p-2 bg-rose-50 border border-rose-200 rounded text-rose-700 font-medium leading-relaxed">🚫 <b>거절 사유:</b> $1</div>'
+          );
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${item.target_date || '-'}</td>
+            <td class="p-3 font-semibold text-blue-600 whitespace-nowrap">
+              <div class="flex items-center gap-1.5">
+                <span>${item.target_period || '-'}</span>
+                ${conflictCount > 1 && item.status !== 'rejected' ? `<span class="inline-flex items-center text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200 px-1.5 py-0.5 rounded" title="동일 시간대에 ${conflictCount}건의 신청이 있습니다">⚠️ 시간겹침(${conflictCount})</span>` : ''}
+              </div>
+            </td>
+            <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${item.student_name || '-'} <span class="text-slate-400 text-[11px] font-normal">(${item.student_no || '-'})</span></td>
+            <td class="p-3 font-semibold text-slate-700 whitespace-nowrap">${item.topic || '-'}</td>
+            <td class="p-3 text-slate-600 leading-relaxed min-w-[220px]">${detailHtml}</td>
+            <td class="p-3 text-center whitespace-nowrap">${statusBadge}</td>
+            <td class="p-3 text-center whitespace-nowrap">${actionButtons}</td>
+          </tr>
+        `;
+      }).join('');
       lucide.createIcons();
     }
 
+    // [상담 접수 처리 + 중복 일정 사전 경고]
     async function confirmCounselRequest(requestId, targetDate, targetPeriod, studentName) {
-      if (!confirm(`[${studentName}] 학생의 ${targetDate} (${targetPeriod}) 상담 신청을 확인 처리할까요?`)) return;
+      // 1. 이미 동일 날짜 & 동일 시간대에 확정된 다른 학생 상담이 있는지 확인
+      const { data: existingConfirmed } = await supabaseClient
+        .from('counsel_requests')
+        .select('*')
+        .eq('target_date', targetDate)
+        .eq('target_period', targetPeriod)
+        .eq('status', 'confirmed')
+        .neq('id', requestId);
+
+      // 2. 해당 날짜에 등록된 학사/시험 달력 일정이 있는지 확인
+      const { data: existingEvents } = await supabaseClient
+        .from('calendar_events')
+        .select('*')
+        .eq('event_date', targetDate);
+
+      let conflictWarning = '';
+      if (existingConfirmed && existingConfirmed.length > 0) {
+        const studentNames = existingConfirmed.map(c => c.student_name).join(', ');
+        conflictWarning += `⚠️ [상담 일정 중복 경고]\n이미 해당 시간(${targetDate} ${targetPeriod})에 [${studentNames}] 학생과의 상담 일정이 확정되어 있습니다!\n\n`;
+      }
+
+      if (existingEvents && existingEvents.length > 0) {
+        const eventTitles = existingEvents.map(e => e.title).join(', ');
+        conflictWarning += `📅 [학사 달력 알림]\n해당 날짜(${targetDate})에 "${eventTitles}" 일정이 있습니다.\n\n`;
+      }
+
+      if (conflictWarning) {
+        const proceed = confirm(`${conflictWarning}그래도 [${studentName}] 학생의 상담을 확정 접수하고 달력에 등록할까요?`);
+        if (!proceed) return;
+      } else {
+        if (!confirm(`[${studentName}] 학생의 ${targetDate} (${targetPeriod}) 상담 신청을 접수할까요?`)) return;
+      }
 
       const { error } = await supabaseClient.from('counsel_requests').update({ status: 'confirmed' }).eq('id', requestId);
       if (error) {
@@ -1449,7 +1540,7 @@
         return;
       }
 
-      // 학사 달력(calendar_events)에도 학생 상담 일정 자동 등록
+      // 학사 달력(calendar_events)에 자동 일정 등록
       const cls = (activeClassNum === 'all') ? 0 : activeClassNum;
       await supabaseClient.from('calendar_events').insert([{
         event_date: targetDate,
@@ -1458,10 +1549,39 @@
         class_num: cls
       }]);
 
-      alert(`[${studentName}] 상담이 확인 처리되었고, 학사 달력에도 자동으로 일정이 등록되었습니다!`);
+      alert(`[${studentName}] 상담이 확정되었고, 학사 달력에도 자동으로 일정이 등록되었습니다!`);
       loadTeacherCounselRequests();
       loadHomeDashboardData();
       renderCalendar();
+    }
+
+    // [상담 거절 처리 + 거절 사유 기록]
+    async function rejectCounselRequest(requestId, targetDate, targetPeriod, studentName) {
+      const reason = prompt(
+        `[${studentName}] 학생의 상담 신청을 거절(반려)할까?\n\n학생에게 전달할 거절 및 일정 재조율 사유를 입력해주세요:`, 
+        '해당 시간대 다른 출장/상담 일정이 있어 접수가 어렵습니다. 다른 시간으로 재신청 바랍니다.'
+      );
+
+      if (reason === null) return; // 사용자가 취소 누른 경우
+      const trimmedReason = reason.trim() || '일정 조율 필요';
+
+      // 기존 상담 메모 뒤에 거절 사유를 보존하여 기록 (DB 구조 변경 없이 안전함)
+      const { data: currentItem } = await supabaseClient.from('counsel_requests').select('detail').eq('id', requestId).single();
+      const updatedDetail = (currentItem?.detail ? currentItem.detail + '\n\n' : '') + `[거절 사유: ${trimmedReason}]`;
+
+      const { error } = await supabaseClient.from('counsel_requests').update({
+        status: 'rejected',
+        detail: updatedDetail
+      }).eq('id', requestId);
+
+      if (error) {
+        alert('거절 처리 실패: ' + error.message);
+        return;
+      }
+
+      alert(`[${studentName}] 학생의 상담 신청을 거절 처리하고 사유를 남겼습니다.`);
+      loadTeacherCounselRequests();
+      loadHomeDashboardData();
     }
 
     // =================================================================
@@ -1513,7 +1633,7 @@
       currentAlbumPhotos = photos || [];
 
       if (!photos || photos.length === 0) {
-        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-16">이 폴더에 등록된 사진이 없습니다. [사진 여러 장 올리기]를 눌러 업로드해 보세요.</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-16">이 폴더에 등록된 사진이 없습니다. [사진 여러 장 올리기]를 눌러 업로드하세요.</p>';
         return;
       }
 
@@ -1540,7 +1660,7 @@
     }
     async function createAlbumFolder() {
       const name = document.getElementById('newFolderName').value.trim();
-      if (!name) return alert('폴더 이름을 입력해줘.');
+      if (!name) return alert('폴더 이름을 입력해주세요.');
       const cls = (activeClassNum === 'all') ? 2 : activeClassNum;
       const { data } = await supabaseClient.from('album_folders').insert([{ name, class_num: cls }]).select().single();
       if (data) {
@@ -1603,7 +1723,7 @@
         console.warn('스토리지 파일 삭제 예외 무시:', err);
       }
 
-      alert('사진이 삭제되었어!');
+      alert('사진이 삭제되었습니다!');
       loadAlbumPhotos();
       loadHomeDashboardData();
     }
@@ -1631,7 +1751,7 @@
         console.warn('스토리지 파일 삭제 예외 무시:', err);
       }
 
-      alert('사진이 삭제되었어!');
+      alert('사진이 삭제되었습니다!');
       closePhotoLightbox();
       loadAlbumPhotos();
       loadHomeDashboardData();
@@ -2223,7 +2343,7 @@
       const studentId = document.getElementById('teacherStudentSelect').value;
       const container = document.getElementById('teacherCardsContainer');
       if (!studentId) {
-        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해줘.</p>';
+        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
         return;
       }
 
@@ -2355,7 +2475,7 @@
 
       await supabaseClient.from('mock_scores').delete().eq('user_id', currentUser.id).eq('exam_round', round);
       await supabaseClient.from('mock_scores').insert(records);
-      alert(`${round} 모의고사 성적이 성공적으로 저장되었어!`);
+      alert(`${round} 모의고사 성적이 성공적으로 저장되었습니다!`);
       renderMockChart(currentUser.id, 'studentMockChart');
     }
 
@@ -2394,7 +2514,7 @@
           datasets: [
             { label: '국어 백분위', data: korData, borderColor: '#2563eb', backgroundColor: '#2563eb', tension: 0.2, spanGaps: true },
             { label: '수학 백분위', data: mathData, borderColor: '#dc2626', backgroundColor: '#dc2626', tension: 0.2, spanGaps: true },
-            { label: '전체 평균', data: totalAvgData, borderColor: '#ea580c', backgroundColor: '#ea580c', borderWidth: 3, pointRadius: 4, tension: 0.2, spanGaps: true }
+            { label: '국·수 평균', data: totalAvgData, borderColor: '#ea580c', backgroundColor: '#ea580c', borderWidth: 3, pointRadius: 4, tension: 0.2, spanGaps: true }
           ]
         },
         options: {
@@ -2412,7 +2532,7 @@
       const studentId = document.getElementById('mockStudentSelect').value;
       const container = document.getElementById('teacherMockContainer');
       if (!studentId) {
-        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해줘.</p>';
+        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
         return;
       }
       container.innerHTML = `
@@ -2460,7 +2580,7 @@
       };
 
       await supabaseClient.from('student_surveys').upsert(surveyObj);
-      alert('기초조사서가 성공적으로 저장되었습니다!');
+      alert('기초조사서가 성공적으로 저장되었어!');
     }
 
     async function loadStudentSurveyForTeacher() {
