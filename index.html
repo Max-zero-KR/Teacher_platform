@@ -17,7 +17,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
-  <!-- [화면 1: 로그인 / 회원가입 화면] -->
+  <!-- [화면 1: 로그인 / 회원가입] -->
   <div id="authScreen" class="flex min-h-screen items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-100 max-w-md w-full p-8">
       <div class="text-center mb-6">
@@ -85,7 +85,6 @@
 
   <!-- [화면 2: 메인 시스템] -->
   <div id="mainScreen" class="hidden">
-    <!-- 네비게이션 헤더 -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -97,7 +96,7 @@
         </div>
 
         <nav id="navMenu" class="hidden md:flex items-center gap-1 text-sm font-medium">
-          <!-- 교사 메뉴 -->
+          <!-- 교사용 메뉴 -->
           <div id="teacherNav" class="flex items-center gap-1">
             <button onclick="changeView('dashboard')" class="nav-btn px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 font-bold" data-view="dashboard">대시보드</button>
             <button onclick="changeView('approval')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1" data-view="approval">
@@ -109,7 +108,7 @@
             <button onclick="changeView('album')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="album">학급 앨범</button>
             <button onclick="changeView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="calendar">학사 달력</button>
           </div>
-          <!-- 학생 메뉴 -->
+          <!-- 학생용 메뉴 -->
           <div id="studentNav" class="hidden flex items-center gap-1">
             <button onclick="changeView('myCards')" class="nav-btn px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 font-bold" data-view="myCards">내 12장 원서</button>
             <button onclick="changeView('studentSurvey')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="studentSurvey">내 기본조사</button>
@@ -132,7 +131,6 @@
       </div>
     </header>
 
-    <!-- 메인 뷰 컨테이너 -->
     <main class="max-w-7xl mx-auto px-4 py-6">
 
       <!-- 1. [교사] 대시보드 -->
@@ -229,7 +227,7 @@
         </div>
       </section>
 
-      <!-- 3. [교사] 학생별 12장 상담카드 모아보기 -->
+      <!-- 3. [교사] 학생별 12장 상담카드 -->
       <section id="view-counselList" class="view-panel hidden space-y-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
           <h2 class="text-lg font-bold text-slate-800">학생별 대입 12장 지원 카드 관리</h2>
@@ -245,16 +243,16 @@
         </div>
       </section>
 
-      <!-- 4. [신규: 기본조사] 학생 직접 작성 / 교사 전체 열람 분기 -->
-      <!-- 4-A. 학생 전용 기본조사 입력폼 -->
+      <!-- 4. [기본조사] 2·3학년 교육과정 선택과목 조사서 -->
+      <!-- 4-A. 학생 작성 화면 -->
       <section id="view-studentSurvey" class="view-panel hidden space-y-6">
-        <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
           <div class="border-b pb-4">
             <h2 class="text-lg font-bold text-slate-800">3학년 2반 기초조사서 작성</h2>
-            <p class="text-xs text-slate-500 mt-1">학생 기초 인적사항과 선택과목을 정확하게 입력해줘. (담임선생님만 열람 가능)</p>
+            <p class="text-xs text-slate-500 mt-1">인적사항과 2·3학년 학교 선택과목을 정확하게 체크해줘. (담임선생님만 열람 가능)</p>
           </div>
 
-          <form id="studentSurveyForm" onsubmit="saveStudentSurvey(event)" class="space-y-5 text-xs">
+          <form id="studentSurveyForm" onsubmit="saveStudentSurvey(event)" class="space-y-6 text-xs">
             <!-- 부모님 정보 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
               <div>
@@ -291,72 +289,124 @@
               </div>
             </div>
 
-            <!-- 진로 및 특이사항 -->
+            <!-- 진로희망 및 특이사항 -->
             <div class="space-y-4">
               <div>
                 <label class="block font-semibold text-slate-600 mb-1">희망 진로 / 진학 희망 학과</label>
-                <input type="text" id="surv_career" placeholder="예: 초등교사, 컴퓨터공학과, 공공인재학부" class="w-full px-3 py-2 border rounded-lg outline-none">
+                <input type="text" id="surv_career" placeholder="예: 국어교육과, 컴퓨터공학과, 공공인재학부" class="w-full px-3 py-2 border rounded-lg outline-none">
               </div>
               <div>
-                <label class="block font-semibold text-slate-600 mb-1">담임선생님께 전달할 특이사항 (건강, 배려사항 등)</label>
+                <label class="block font-semibold text-slate-600 mb-1">담임선생님 공유 특이사항 (건강, 배려사항 등)</label>
                 <textarea id="surv_notes" rows="3" placeholder="지병, 복용 약물, 알레르기 또는 담임선생님이 상담 시 꼭 알아야 할 내용을 자유롭게 적어줘." class="w-full px-3 py-2 border rounded-lg outline-none"></textarea>
               </div>
             </div>
 
-            <!-- 수능 선택과목 (혼선 방지 체크박스/라디오) -->
-            <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-100 space-y-4">
-              <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                <i data-lucide="check-circle-2" class="w-4 h-4 text-blue-600"></i> 2026 수능 응시 선택과목 지정
+            <!-- [개편] 2학년 교육과정 선택과목 -->
+            <div class="p-4 bg-emerald-50/60 rounded-xl border border-emerald-200 space-y-3">
+              <h3 class="font-bold text-emerald-900 text-sm flex items-center gap-1.5">
+                <i data-lucide="check-square" class="w-4 h-4 text-emerald-600"></i> [2학년] 학교 이수 선택과목 체크
               </h3>
+              <p class="text-[11px] text-emerald-700">2학년 때 학교 교육과정에서 본인이 선택하여 수강한 모든 과목을 체크해줘.</p>
               
-              <!-- 국어 선택 -->
-              <div>
-                <p class="font-bold text-slate-700 mb-1.5">국어 영역 선택 (택 1)</p>
-                <div class="flex gap-4">
-                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_kor" value="화법과 작문" checked> 화법과 작문</label>
-                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_kor" value="언어와 매체"> 언어와 매체</label>
+              <div class="bg-white p-3.5 rounded-lg border border-emerald-100 space-y-3">
+                <div>
+                  <span class="font-bold text-slate-700 block mb-1.5 text-[11px]">기초 (국·수·영) 및 교양·제2외국어</span>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="기하"> 기하</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="인공지능 수학"> 인공지능 수학</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="영어권 문화"> 영어권 문화</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="일본어Ⅰ"> 일본어Ⅰ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="중국어Ⅰ"> 중국어Ⅰ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="한문Ⅰ"> 한문Ⅰ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="정보"> 정보</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="철학/심리학"> 철학/심리학</label>
+                  </div>
+                </div>
+
+                <div class="border-t pt-2.5">
+                  <span class="font-bold text-slate-700 block mb-1.5 text-[11px]">사회탐구 과목군</span>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="생활과 윤리"> 생활과 윤리</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="윤리와 사상"> 윤리와 사상</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="한국지리"> 한국지리</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="세계지리"> 세계지리</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="동아시아사"> 동아시아사</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="세계사"> 세계사</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="정치와 법"> 정치와 법</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="경제"> 경제</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="사회·문화"> 사회·문화</label>
+                  </div>
+                </div>
+
+                <div class="border-t pt-2.5">
+                  <span class="font-bold text-slate-700 block mb-1.5 text-[11px]">과학탐구 과목군</span>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="물리학Ⅰ"> 물리학Ⅰ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="화학Ⅰ"> 화학Ⅰ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="생명과학Ⅰ"> 생명과학Ⅰ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade2_sub" value="지구과학Ⅰ"> 지구과학Ⅰ</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- [개편] 3학년 교육과정 선택과목 -->
+            <div class="p-4 bg-blue-50/60 rounded-xl border border-blue-200 space-y-3">
+              <h3 class="font-bold text-blue-900 text-sm flex items-center gap-1.5">
+                <i data-lucide="check-square" class="w-4 h-4 text-blue-600"></i> [3학년] 현재 이수 중인 선택과목 체크
+              </h3>
+              <p class="text-[11px] text-blue-700">올해 3학년 교육과정에서 본인이 수강 중인 일반선택 및 진로선택 과목을 모두 체크해줘.</p>
+
+              <div class="bg-white p-3.5 rounded-lg border border-blue-100 space-y-3">
+                <div>
+                  <span class="font-bold text-slate-700 block mb-1.5 text-[11px]">국어·수학·영어 선택</span>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="화법과 작문"> 화법과 작문</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="언어와 매체"> 언어와 매체</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="심화 국어"> 심화 국어</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="고전 읽기"> 고전 읽기</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="확률과 통계"> 확률과 통계</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="미적분"> 미적분</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="경제 수학"> 경제 수학</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="수학과제 탐구"> 수학과제 탐구</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="영어 독해와 작문"> 영어 독해와 작문</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="심화 영어"> 심화 영어</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="진로 영어"> 진로 영어</label>
+                  </div>
+                </div>
+
+                <div class="border-t pt-2.5">
+                  <span class="font-bold text-slate-700 block mb-1.5 text-[11px]">사회·과학 진로/심화 탐구 과목군</span>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="여행지리"> 여행지리</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="사회문제 탐구"> 사회문제 탐구</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="고전과 윤리"> 고전과 윤리</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="현대 세계의 변화"> 현대 세계의 변화</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="물리학Ⅱ"> 물리학Ⅱ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="화학Ⅱ"> 화학Ⅱ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="생명과학Ⅱ"> 생명과학Ⅱ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="지구과학Ⅱ"> 지구과학Ⅱ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="생활과 과학"> 생활과 과학</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="융합과학"> 융합과학</label>
+                  </div>
+                </div>
+
+                <div class="border-t pt-2.5">
+                  <span class="font-bold text-slate-700 block mb-1.5 text-[11px]">제2외국어Ⅱ 및 교양/체육/예술</span>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="일본어Ⅱ"> 일본어Ⅱ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="중국어Ⅱ"> 중국어Ⅱ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="한문Ⅱ"> 한문Ⅱ</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="논술"> 논술</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="교육학"> 교육학</label>
+                    <label class="inline-flex items-center gap-1"><input type="checkbox" name="grade3_sub" value="프로그래밍"> 프로그래밍</label>
+                  </div>
                 </div>
               </div>
 
-              <!-- 수학 선택 -->
               <div>
-                <p class="font-bold text-slate-700 mb-1.5">수학 영역 선택 (택 1)</p>
-                <div class="flex gap-4">
-                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_math" value="확률과 통계" checked> 확률과 통계</label>
-                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_math" value="미적분"> 미적분</label>
-                  <label class="inline-flex items-center gap-1.5"><input type="radio" name="sel_math" value="기하"> 기하</label>
-                </div>
-              </div>
-
-              <!-- 탐구 영역 선택 (최대 2개 체크) -->
-              <div>
-                <div class="flex justify-between items-center mb-1.5">
-                  <p class="font-bold text-slate-700">탐구 영역 선택 (사탐/과탐 구분 없이 최대 2과목 체크)</p>
-                  <span id="tamCountDisplay" class="text-blue-600 font-bold">0 / 2 선택됨</span>
-                </div>
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 bg-white p-3 rounded-lg border">
-                  <div class="text-[11px] font-bold text-amber-700 col-span-full border-b pb-1">사회탐구 9과목</div>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="생활과 윤리" onchange="validateTamCount(this)"> 생활과 윤리</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="윤리와 사상" onchange="validateTamCount(this)"> 윤리와 사상</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="한국지리" onchange="validateTamCount(this)"> 한국지리</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="세계지리" onchange="validateTamCount(this)"> 세계지리</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="동아시아사" onchange="validateTamCount(this)"> 동아시아사</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="세계사" onchange="validateTamCount(this)"> 세계사</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="경제" onchange="validateTamCount(this)"> 경제</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="정치와 법" onchange="validateTamCount(this)"> 정치와 법</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="사회·문화" onchange="validateTamCount(this)"> 사회·문화</label>
-
-                  <div class="text-[11px] font-bold text-cyan-700 col-span-full border-b pb-1 mt-2">과학탐구 8과목</div>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="물리학Ⅰ" onchange="validateTamCount(this)"> 물리학Ⅰ</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="화학Ⅰ" onchange="validateTamCount(this)"> 화학Ⅰ</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="생명과학Ⅰ" onchange="validateTamCount(this)"> 생명과학Ⅰ</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="지구과학Ⅰ" onchange="validateTamCount(this)"> 지구과학Ⅰ</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="물리학Ⅱ" onchange="validateTamCount(this)"> 물리학Ⅱ</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="화학Ⅱ" onchange="validateTamCount(this)"> 화학Ⅱ</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="생명과학Ⅱ" onchange="validateTamCount(this)"> 생명과학Ⅱ</label>
-                  <label class="inline-flex items-center gap-1"><input type="checkbox" name="sel_tam" value="지구과학Ⅱ" onchange="validateTamCount(this)"> 지구과학Ⅱ</label>
-                </div>
+                <label class="block font-semibold text-slate-700 mb-1">기타 선택과목 (목록에 없는 학교 개설과목)</label>
+                <input type="text" id="surv_custom_sub" placeholder="직접 입력할 과목이 있다면 쉼표(,)로 구분해 적어줘." class="w-full px-3 py-2 border rounded-lg bg-white outline-none">
               </div>
             </div>
 
@@ -367,7 +417,7 @@
         </div>
       </section>
 
-      <!-- 4-B. [교사용] 학생 기초조사서 모아보기 -->
+      <!-- 4-B. 교사 열람 화면 -->
       <section id="view-teacherSurvey" class="view-panel hidden space-y-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
           <h2 class="text-lg font-bold text-slate-800">학생 기초조사서 열람</h2>
@@ -379,17 +429,17 @@
           </div>
         </div>
         <div id="surveyTeacherDetailCard" class="bg-white p-6 rounded-xl border border-slate-200">
-          <p class="text-center text-slate-400 py-12">상단에서 학생을 선택하면 해당 학생의 기초 인적사항과 선택과목이 표시됩니다.</p>
+          <p class="text-center text-slate-400 py-12">상단에서 학생을 선택하면 해당 학생의 인적사항과 2·3학년 선택과목이 표시됩니다.</p>
         </div>
       </section>
 
-      <!-- 5. [신규: 모의고사 관리] 학생용 입력 및 성적표 + 추이 그래프 -->
+      <!-- 5. [모의고사] 성적표 및 백분위 변동 그래프 (합산 및 개별 체크박스) -->
       <section id="view-studentMock" class="view-panel hidden space-y-6">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
           <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
             <div>
               <h2 class="text-lg font-bold text-slate-800">내 모의고사 성적표 관리</h2>
-              <p class="text-xs text-slate-500">회차별 성적을 기록하면 아래에서 백분위 변동 그래프를 한눈에 볼 수 있어.</p>
+              <p class="text-xs text-slate-500">회차별 성적을 기록하면 백분위 추이와 국·수·탐 평균을 바로 분석할 수 있어.</p>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold text-slate-600">시험 회차:</span>
@@ -405,7 +455,6 @@
             </div>
           </div>
 
-          <!-- 성적 입력 테이블 -->
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead class="bg-slate-50 border-b text-slate-600 font-semibold">
@@ -419,9 +468,7 @@
                   <th class="p-2.5 w-20">등급</th>
                 </tr>
               </thead>
-              <tbody id="mockInputTableBody" class="divide-y divide-slate-100">
-                <!-- 동적으로 랜더링 -->
-              </tbody>
+              <tbody id="mockInputTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
 
@@ -432,18 +479,40 @@
           </div>
         </div>
 
-        <!-- 성적 변동 꺾은선 그래프 -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <i data-lucide="trending-up" class="w-4 h-4 text-blue-600"></i> 영역별 백분위 변동 추이 (3월 ~ 10월/수능)
-          </h3>
-          <div class="h-72 w-full">
+        <!-- 성적 그래프 및 체크박스 필터 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap justify-between items-center gap-3">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4 text-blue-600"></i> 백분위 변동 추이 그래프
+            </h3>
+            
+            <!-- 과목별 On/Off 체크박스 -->
+            <div class="flex flex-wrap items-center gap-3 text-xs bg-slate-50 p-2 rounded-lg border">
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-blue-600">
+                <input type="checkbox" id="chk_kor" checked onchange="toggleDataset('student', 0, this.checked)"> 국어
+              </label>
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-rose-600">
+                <input type="checkbox" id="chk_math" checked onchange="toggleDataset('student', 1, this.checked)"> 수학
+              </label>
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-emerald-600">
+                <input type="checkbox" id="chk_tam1" checked onchange="toggleDataset('student', 2, this.checked)"> 탐구1
+              </label>
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-purple-600">
+                <input type="checkbox" id="chk_tam2" checked onchange="toggleDataset('student', 3, this.checked)"> 탐구2
+              </label>
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-amber-600 border-l pl-3">
+                <input type="checkbox" id="chk_total" checked onchange="toggleDataset('student', 4, this.checked)"> 국·수·탐 평균(합산)
+              </label>
+            </div>
+          </div>
+
+          <div class="h-80 w-full">
             <canvas id="studentMockChart"></canvas>
           </div>
         </div>
       </section>
 
-      <!-- 5-B. [교사용] 모의고사 분석 및 차트 조회 -->
+      <!-- 5-B. [교사] 모의고사 분석 -->
       <section id="view-teacherMock" class="view-panel hidden space-y-6">
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
           <h2 class="text-lg font-bold text-slate-800">학생별 모의고사 성적 & 추이 그래프</h2>
@@ -460,7 +529,7 @@
         </div>
       </section>
 
-      <!-- 6. [신규: 학급 앨범] 폴더 생성, 다중 업로드, 라이트박스 뷰어 -->
+      <!-- 6. [학급 앨범] 사진 여러 장 올리기 & 라이트박스 -->
       <section id="view-album" class="view-panel hidden space-y-6">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
           <div>
@@ -480,18 +549,14 @@
           </div>
         </div>
 
-        <!-- 폴더 탭 리스트 -->
-        <div id="albumFolderTabs" class="flex gap-2 overflow-x-auto pb-2 text-xs">
-          <!-- 렌더링 영역 -->
-        </div>
+        <div id="albumFolderTabs" class="flex gap-2 overflow-x-auto pb-2 text-xs"></div>
 
-        <!-- 사진 그리드 -->
         <div id="albumPhotosGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <p class="col-span-full text-center text-slate-400 py-16">선택된 폴더에 등록된 사진이 없습니다.</p>
         </div>
       </section>
 
-      <!-- 7. [학생 전용] 내 12장 원서 직접 작성/저장 -->
+      <!-- 7. [학생] 내 12장 원서 -->
       <section id="view-myCards" class="view-panel hidden space-y-6">
         <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
           <div>
@@ -518,7 +583,7 @@
         </div>
       </section>
 
-      <!-- 8. [학생 전용] 1:1 상담 신청 -->
+      <!-- 8. [학생] 1:1 상담 신청 -->
       <section id="view-myCounsel" class="view-panel hidden space-y-4">
         <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <h2 class="text-lg font-bold text-slate-800 mb-1">담임선생님 1:1 상담 신청</h2>
@@ -581,7 +646,7 @@
     </main>
   </div>
 
-  <!-- [모달 1: 계정 정보 및 비밀번호 변경 모달] -->
+  <!-- [모달 1: 회원 계정 수정] -->
   <div id="editUserModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
       <div class="flex justify-between items-center">
@@ -606,7 +671,7 @@
     </div>
   </div>
 
-  <!-- [모달 2: 학급 앨범 새 폴더 생성] -->
+  <!-- [모달 2: 새 앨범 폴더 추가] -->
   <div id="newFolderModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-4">
       <h3 class="font-bold text-slate-800 text-sm">새 앨범 폴더 추가</h3>
@@ -618,24 +683,18 @@
     </div>
   </div>
 
-  <!-- [모달 3: 학급 앨범 사진 확대 뷰어 (라이트박스 슬라이드)] -->
-  <div id="photoLightboxModal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center hidden select-none">
+  <!-- [모달 3: 라이트박스 뷰어] -->
+  <div id="photoLightboxModal" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center hidden select-none">
     <button onclick="closePhotoLightbox()" class="absolute top-4 right-4 text-white hover:text-slate-300 p-2 z-10">
       <i data-lucide="x" class="w-8 h-8"></i>
     </button>
-    
-    <!-- 이전 버튼 -->
     <button onclick="navigateLightbox(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 hover:bg-white/25 p-3 rounded-full transition z-10">
       <i data-lucide="chevron-left" class="w-8 h-8"></i>
     </button>
-
-    <!-- 사진 영역 -->
     <div class="max-w-4xl max-h-[85vh] p-2 flex flex-col items-center justify-center">
       <img id="lightboxImage" src="" alt="확대 사진" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl">
       <p id="lightboxCounter" class="text-slate-300 text-xs mt-3 font-medium">1 / 1</p>
     </div>
-
-    <!-- 다음 버튼 -->
     <button onclick="navigateLightbox(1)" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 hover:bg-white/25 p-3 rounded-full transition z-10">
       <i data-lucide="chevron-right" class="w-8 h-8"></i>
     </button>
@@ -653,12 +712,10 @@
     let currentUser = null;
     let currentProfile = null;
 
-    // 앨범 라이트박스 상태 관리
     let currentAlbumPhotos = [];
     let currentLightboxIdx = 0;
     let activeFolderId = null;
 
-    // 모의고사 차트 인스턴스
     let studentChartInstance = null;
     let teacherChartInstance = null;
 
@@ -817,7 +874,7 @@
         loadMySurveyData();
         renderMockScoreInputs();
         loadStudentMockScoresForRound();
-        renderStudentMockChart(currentUser.id, 'studentMockChart');
+        renderMockChart(currentUser.id, 'studentMockChart');
       }
       loadAlbumFolders();
       renderCalendar();
@@ -850,14 +907,13 @@
     }
 
     // =================================================================
-    // 💡 [기능 1] 학급 앨범 로직 (다중 업로드, 폴더, 슬라이드 뷰어)
+    // 💡 [기능 1: 학급 앨범] 사진 다중 업로드 & 에러 피드백 강화
     // =================================================================
     async function loadAlbumFolders() {
       const { data: folders } = await supabaseClient.from('album_folders').select('*').order('created_at', { ascending: true });
       const tabContainer = document.getElementById('albumFolderTabs');
       
       if (!folders || folders.length === 0) {
-        // 기본 폴더 하나 생성
         const { data: newF } = await supabaseClient.from('album_folders').insert([{ name: '기본 앨범' }]).select().single();
         if (newF) activeFolderId = newF.id;
         loadAlbumFolders();
@@ -927,36 +983,52 @@
       if (!files || files.length === 0) return;
       if (!activeFolderId) return alert('사진을 올릴 폴더를 먼저 선택해줘.');
 
-      const uploadBtn = e.target.parentElement;
-      const originHtml = uploadBtn.innerHTML;
-      uploadBtn.innerText = `업로드 중 (0/${files.length})...`;
+      const uploadLabel = e.target.parentElement;
+      const originHtml = uploadLabel.innerHTML;
+      uploadLabel.innerText = `업로드 중 (0/${files.length})...`;
 
       let successCount = 0;
+      let lastErrorMessage = '';
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const ext = file.name.split('.').pop();
-        const filePath = `${activeFolderId}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+        const ext = file.name.split('.').pop() || 'jpg';
+        // 한글 파일명 오류 방지용 안전한 경로 생성
+        const safeFilePath = `${activeFolderId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
-        const { error: upErr } = await supabaseClient.storage.from('class-album').upload(filePath, file);
-        if (!upErr) {
-          const { data: { publicUrl } } = supabaseClient.storage.from('class-album').getPublicUrl(filePath);
-          await supabaseClient.from('album_photos').insert([{
-            folder_id: activeFolderId,
-            photo_url: publicUrl,
-            caption: file.name
-          }]);
-          successCount++;
+        const { error: upErr } = await supabaseClient.storage
+          .from('class-album')
+          .upload(safeFilePath, file, { cacheControl: '3600', upsert: true });
+
+        if (upErr) {
+          console.error('스토리지 업로드 실패:', upErr);
+          lastErrorMessage = upErr.message;
+          continue;
         }
-        uploadBtn.innerText = `업로드 중 (${i+1}/${files.length})...`;
+
+        const { data: { publicUrl } } = supabaseClient.storage.from('class-album').getPublicUrl(safeFilePath);
+
+        await supabaseClient.from('album_photos').insert([{
+          folder_id: activeFolderId,
+          photo_url: publicUrl,
+          caption: file.name
+        }]);
+
+        successCount++;
+        uploadLabel.innerText = `업로드 중 (${i+1}/${files.length})...`;
       }
 
-      alert(`${successCount}장의 사진이 성공적으로 등록되었어!`);
-      uploadBtn.innerHTML = originHtml;
+      uploadLabel.innerHTML = originHtml;
       e.target.value = '';
-      loadAlbumPhotos();
+
+      if (successCount === 0) {
+        alert('사진 업로드 실패! 원인: ' + (lastErrorMessage || 'Supabase Storage RLS 권한을 확인해주세요. 1단계 SQL을 실행했는지 점검해봐!'));
+      } else {
+        alert(`${successCount}장의 사진이 성공적으로 업로드되었어!`);
+        loadAlbumPhotos();
+      }
     }
 
-    // 라이트박스 뷰어
     function openPhotoLightbox(index) {
       currentLightboxIdx = index;
       updateLightboxContent();
@@ -980,7 +1052,6 @@
       document.getElementById('lightboxCounter').innerText = `${currentLightboxIdx + 1} / ${currentAlbumPhotos.length}`;
     }
 
-    // 키보드 화살표 사진 넘기기 이벤트
     window.addEventListener('keydown', (e) => {
       const modal = document.getElementById('photoLightboxModal');
       if (modal && !modal.classList.contains('hidden')) {
@@ -991,18 +1062,8 @@
     });
 
     // =================================================================
-    // 💡 [기능 2] 기본조사서 로직 (선택과목 체크박스 & 권한 분리)
+    // 💡 [기능 2: 기본조사] 2학년 & 3학년 학교 교육과정 선택과목
     // =================================================================
-    function validateTamCount(currentBox) {
-      const checkedTams = document.querySelectorAll('input[name="sel_tam"]:checked');
-      document.getElementById('tamCountDisplay').innerText = `${checkedTams.length} / 2 선택됨`;
-      if (checkedTams.length > 2) {
-        alert('탐구 영역은 최대 2과목까지만 선택할 수 있어.');
-        currentBox.checked = false;
-        document.getElementById('tamCountDisplay').innerText = `2 / 2 선택됨`;
-      }
-    }
-
     async function loadMySurveyData() {
       const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', currentUser.id).single();
       if (data) {
@@ -1017,28 +1078,27 @@
         document.getElementById('surv_notes').value = data.special_notes || '';
 
         const subj = data.selected_subjects || {};
-        if (subj.korean) {
-          const r = document.querySelector(`input[name="sel_kor"][value="${subj.korean}"]`);
-          if (r) r.checked = true;
-        }
-        if (subj.math) {
-          const r = document.querySelector(`input[name="sel_math"][value="${subj.math}"]`);
-          if (r) r.checked = true;
-        }
-        if (subj.tams && Array.isArray(subj.tams)) {
-          document.querySelectorAll('input[name="sel_tam"]').forEach(cb => {
-            cb.checked = subj.tams.includes(cb.value);
-          });
-          document.getElementById('tamCountDisplay').innerText = `${subj.tams.length} / 2 선택됨`;
-        }
+        // 2학년 과목 복원
+        const g2List = subj.grade2 || [];
+        document.querySelectorAll('input[name="grade2_sub"]').forEach(cb => {
+          cb.checked = g2List.includes(cb.value);
+        });
+
+        // 3학년 과목 복원
+        const g3List = subj.grade3 || [];
+        document.querySelectorAll('input[name="grade3_sub"]').forEach(cb => {
+          cb.checked = g3List.includes(cb.value);
+        });
+
+        document.getElementById('surv_custom_sub').value = subj.custom || '';
       }
     }
 
     async function saveStudentSurvey(e) {
       e.preventDefault();
-      const kor = document.querySelector('input[name="sel_kor"]:checked')?.value;
-      const math = document.querySelector('input[name="sel_math"]:checked')?.value;
-      const tams = Array.from(document.querySelectorAll('input[name="sel_tam"]:checked')).map(c => c.value);
+      const g2Selected = Array.from(document.querySelectorAll('input[name="grade2_sub"]:checked')).map(c => c.value);
+      const g3Selected = Array.from(document.querySelectorAll('input[name="grade3_sub"]:checked')).map(c => c.value);
+      const customSubj = document.getElementById('surv_custom_sub').value.trim();
 
       const surveyObj = {
         user_id: currentUser.id,
@@ -1051,13 +1111,17 @@
         address: document.getElementById('surv_address').value.trim(),
         career_hope: document.getElementById('surv_career').value.trim(),
         special_notes: document.getElementById('surv_notes').value.trim(),
-        selected_subjects: { korean: kor, math: math, tams: tams },
+        selected_subjects: {
+          grade2: g2Selected,
+          grade3: g3Selected,
+          custom: customSubj
+        },
         updated_at: new Date()
       };
 
       const { error } = await supabaseClient.from('student_surveys').upsert(surveyObj);
       if (error) alert('기초조사서 저장 실패: ' + error.message);
-      else alert('기초조사서가 담임선생님께 안전하게 전달·저장되었어!');
+      else alert('2·3학년 선택과목 및 기초조사서가 성공적으로 저장되었어!');
     }
 
     async function loadStudentSurveyForTeacher() {
@@ -1075,6 +1139,9 @@
       }
 
       const subj = data.selected_subjects || {};
+      const g2 = subj.grade2 || [];
+      const g3 = subj.grade3 || [];
+
       card.innerHTML = `
         <div class="space-y-4 text-xs">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
@@ -1085,25 +1152,38 @@
             <div class="md:col-span-2"><span class="text-slate-400 font-semibold">실거주 주소:</span> <b class="text-slate-700">${data.address || '-'}</b></div>
           </div>
 
-          <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-            <h4 class="font-bold text-blue-900 mb-2">선택과목 지정 내역</h4>
-            <div class="flex gap-4">
-              <span class="px-2.5 py-1 bg-white rounded border font-semibold">국어: <b class="text-blue-600">${subj.korean || '-'}</b></span>
-              <span class="px-2.5 py-1 bg-white rounded border font-semibold">수학: <b class="text-blue-600">${subj.math || '-'}</b></span>
-              <span class="px-2.5 py-1 bg-white rounded border font-semibold">탐구: <b class="text-purple-600">${(subj.tams || []).join(', ') || '-'}</b></span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200">
+              <h4 class="font-bold text-emerald-900 mb-2 flex items-center gap-1">
+                <i data-lucide="bookmark" class="w-3.5 h-3.5 text-emerald-600"></i> [2학년] 이수 선택과목 (${g2.length}과목)
+              </h4>
+              <div class="flex flex-wrap gap-1.5">
+                ${g2.length > 0 ? g2.map(s => `<span class="px-2 py-0.5 bg-white border border-emerald-200 rounded font-semibold text-emerald-800">${s}</span>`).join('') : '<span class="text-slate-400">등록된 과목 없음</span>'}
+              </div>
+            </div>
+
+            <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-200">
+              <h4 class="font-bold text-blue-900 mb-2 flex items-center gap-1">
+                <i data-lucide="bookmark" class="w-3.5 h-3.5 text-blue-600"></i> [3학년] 수강 선택과목 (${g3.length}과목)
+              </h4>
+              <div class="flex flex-wrap gap-1.5">
+                ${g3.length > 0 ? g3.map(s => `<span class="px-2 py-0.5 bg-white border border-blue-200 rounded font-semibold text-blue-800">${s}</span>`).join('') : '<span class="text-slate-400">등록된 과목 없음</span>'}
+              </div>
+              ${subj.custom ? `<div class="mt-2 text-[11px] text-slate-500 font-medium">기타: ${subj.custom}</div>` : ''}
             </div>
           </div>
 
           <div class="space-y-2">
             <div><span class="text-slate-400 font-semibold">진로희망:</span> <p class="font-bold text-slate-800 bg-slate-50 p-2.5 rounded-lg">${data.career_hope || '-'}</p></div>
-            <div><span class="text-slate-400 font-semibold">특이사항 (담임 공유):</span> <p class="text-slate-700 bg-amber-50 p-3 rounded-lg border border-amber-200 whitespace-pre-line">${data.special_notes || '등록된 특이사항 없음'}</p></div>
+            <div><span class="text-slate-400 font-semibold">담임선생님 공유 특이사항:</span> <p class="text-slate-700 bg-amber-50 p-3 rounded-lg border border-amber-200 whitespace-pre-line">${data.special_notes || '등록된 특이사항 없음'}</p></div>
           </div>
         </div>
       `;
+      lucide.createIcons();
     }
 
     // =================================================================
-    // 💡 [기능 3] 모의고사 관리 & 백분위 변동 꺾은선 차트 (Chart.js)
+    // 💡 [기능 3: 모의고사 관리] 합산 백분위 및 과목별 체크박스 필터
     // =================================================================
     const SUBJECT_ROWS = [
       { key: 'korean', name: '국어', options: ['화법과 작문', '언어와 매체'] },
@@ -1196,11 +1276,11 @@
       if (error) alert('성적 저장 실패: ' + error.message);
       else {
         alert(`${round} 모의고사 성적이 성공적으로 저장되었어!`);
-        renderStudentMockChart(currentUser.id, 'studentMockChart');
+        renderMockChart(currentUser.id, 'studentMockChart');
       }
     }
 
-    async function renderStudentMockChart(userId, canvasId) {
+    async function renderMockChart(userId, canvasId) {
       const rounds = ['3월학평', '5월학평', '6월모평', '7월학평', '9월모평', '10월학평', '수능'];
       const { data: allScores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', userId);
 
@@ -1208,6 +1288,7 @@
       const mathData = [];
       const tam1Data = [];
       const tam2Data = [];
+      const totalAvgData = []; // 국수탐(2) 합산 평균 백분위
 
       rounds.forEach(r => {
         const rScores = allScores ? allScores.filter(s => s.exam_round === r) : [];
@@ -1216,10 +1297,28 @@
         const t1 = rScores.find(s => s.subject_key === 'tam1');
         const t2 = rScores.find(s => s.subject_key === 'tam2');
 
-        korData.push(k ? k.percentile : null);
-        mathData.push(m ? m.percentile : null);
-        tam1Data.push(t1 ? t1.percentile : null);
-        tam2Data.push(t2 ? t2.percentile : null);
+        const kPct = k && k.percentile !== null ? parseFloat(k.percentile) : null;
+        const mPct = m && m.percentile !== null ? parseFloat(m.percentile) : null;
+        const t1Pct = t1 && t1.percentile !== null ? parseFloat(t1.percentile) : null;
+        const t2Pct = t2 && t2.percentile !== null ? parseFloat(t2.percentile) : null;
+
+        korData.push(kPct);
+        mathData.push(mPct);
+        tam1Data.push(t1Pct);
+        tam2Data.push(t2Pct);
+
+        // 국·수·탐 평균 백분위 계산: [국어 + 수학 + (탐1+탐2)/2] / 3
+        let tamAvg = null;
+        if (t1Pct !== null && t2Pct !== null) tamAvg = (t1Pct + t2Pct) / 2;
+        else if (t1Pct !== null) tamAvg = t1Pct;
+        else if (t2Pct !== null) tamAvg = t2Pct;
+
+        if (kPct !== null && mPct !== null && tamAvg !== null) {
+          const avg = ((kPct + mPct + tamAvg) / 3).toFixed(2);
+          totalAvgData.push(parseFloat(avg));
+        } else {
+          totalAvgData.push(null);
+        }
       });
 
       const canvas = document.getElementById(canvasId);
@@ -1236,12 +1335,16 @@
             { label: '국어 백분위', data: korData, borderColor: '#2563eb', backgroundColor: '#2563eb', tension: 0.2, spanGaps: true },
             { label: '수학 백분위', data: mathData, borderColor: '#dc2626', backgroundColor: '#dc2626', tension: 0.2, spanGaps: true },
             { label: '탐구1 백분위', data: tam1Data, borderColor: '#16a34a', backgroundColor: '#16a34a', tension: 0.2, spanGaps: true },
-            { label: '탐구2 백분위', data: tam2Data, borderColor: '#9333ea', backgroundColor: '#9333ea', tension: 0.2, spanGaps: true }
+            { label: '탐구2 백분위', data: tam2Data, borderColor: '#9333ea', backgroundColor: '#9333ea', tension: 0.2, spanGaps: true },
+            { label: '국·수·탐 평균(합산)', data: totalAvgData, borderColor: '#ea580c', backgroundColor: '#ea580c', borderWidth: 3, pointRadius: 5, tension: 0.2, spanGaps: true }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false } // 상단 커스텀 체크박스로 제어
+          },
           scales: {
             y: { min: 0, max: 100, title: { display: true, text: '백분위 (%)' } }
           }
@@ -1250,6 +1353,15 @@
 
       if (canvasId === 'studentMockChart') studentChartInstance = newChart;
       else teacherChartInstance = newChart;
+    }
+
+    // 과목별 체크박스 On/Off 제어
+    function toggleDataset(type, datasetIndex, isVisible) {
+      const chart = (type === 'student') ? studentChartInstance : teacherChartInstance;
+      if (chart) {
+        chart.setDatasetVisibility(datasetIndex, isVisible);
+        chart.update();
+      }
     }
 
     async function loadStudentMockForTeacher() {
@@ -1261,14 +1373,33 @@
       }
 
       container.innerHTML = `
-        <div class="bg-white p-5 rounded-xl border shadow-sm">
-          <h3 class="font-bold text-slate-800 text-sm mb-3">회차별 백분위 변동 추이</h3>
-          <div class="h-64 w-full">
+        <div class="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
+          <div class="flex flex-wrap justify-between items-center gap-3">
+            <h3 class="font-bold text-slate-800 text-sm">회차별 백분위 변동 추이</h3>
+            <div class="flex flex-wrap items-center gap-3 text-xs bg-slate-50 p-2 rounded-lg border">
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-blue-600">
+                <input type="checkbox" checked onchange="toggleDataset('teacher', 0, this.checked)"> 국어
+              </label>
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-rose-600">
+                <input type="checkbox" checked onchange="toggleDataset('teacher', 1, this.checked)"> 수학
+              </label>
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-emerald-600">
+                <input type="checkbox" checked onchange="toggleDataset('teacher', 2, this.checked)"> 탐구1
+              </label>
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-purple-600">
+                <input type="checkbox" checked onchange="toggleDataset('teacher', 3, this.checked)"> 탐구2
+              </label>
+              <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-amber-600 border-l pl-3">
+                <input type="checkbox" checked onchange="toggleDataset('teacher', 4, this.checked)"> 국·수·탐 평균(합산)
+              </label>
+            </div>
+          </div>
+          <div class="h-72 w-full">
             <canvas id="teacherMockChartCanvas"></canvas>
           </div>
         </div>
       `;
-      renderStudentMockChart(studentId, 'teacherMockChartCanvas');
+      renderMockChart(studentId, 'teacherMockChartCanvas');
     }
 
     // =================================================================
