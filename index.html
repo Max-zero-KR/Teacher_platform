@@ -249,105 +249,8 @@
           </button>
         </div>
       </div>
-
-<!-- 헤더 우측 사용자명 & 로그아웃 영역 -->
-<div class="flex items-center gap-2">
-  <div class="text-right hidden sm:block">
-    <div id="headerUserName" class="text-sm font-bold text-slate-800">-</div>
-    <div id="headerUserSub" class="text-xs text-slate-400">-</div>
-  </div>
-  <button onclick="handleLogout()" title="로그아웃" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition">
-    <i data-lucide="log-out" class="w-5 h-5"></i>
-  </button>
-  <!-- [추가] 모바일 햄버거 메뉴 버튼 (데스크톱에서는 숨김) -->
-  <button onclick="toggleMobileDrawer(true)" class="lg:hidden p-2 hover:bg-slate-100 rounded-lg text-slate-700 transition" title="메뉴 열기">
-    <i data-lucide="menu" class="w-6 h-6"></i>
-  </button>
-</div>
-      
     </header>
-<!-- [모바일 사이드 드로어 메뉴] -->
-<div id="mobileDrawerOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleMobileDrawer(false)">
-  <div id="mobileDrawerContent" class="fixed right-0 top-0 bottom-0 w-72 bg-white shadow-2xl p-5 overflow-y-auto space-y-4" onclick="event.stopPropagation()">
-    <div class="flex items-center justify-between pb-3 border-b">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-sm">3-2</div>
-        <span class="font-bold text-slate-800 text-sm">전체 메뉴</span>
-      </div>
-      <button onclick="toggleMobileDrawer(false)" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-    </div>
 
-    <div class="space-y-3 text-xs">
-      <!-- 1. 메인 홈 -->
-      <button onclick="navigateMobile('home')" class="w-full text-left px-3 py-2.5 rounded-xl font-bold bg-blue-50 text-blue-600 flex items-center gap-2">
-        <i data-lucide="home" class="w-4 h-4"></i> 메인 홈
-      </button>
-
-      <!-- 2. 학급지도 -->
-      <div class="space-y-1">
-        <div class="px-2 font-bold text-slate-400 text-[11px]">학급지도</div>
-        <button onclick="navigateMobile(isCurrentTeacher() ? 'teacherSurvey' : 'studentSurvey')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="clipboard-list" class="w-4 h-4 text-blue-500"></i> 기초조사서
-        </button>
-        <button onclick="navigateMobile(isCurrentTeacher() ? 'counselRequests' : 'myCounsel')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="message-square" class="w-4 h-4 text-blue-500"></i> 상담 신청 관리
-        </button>
-      </div>
-
-      <!-- 3. 입시지도 -->
-      <div class="space-y-1">
-        <div class="px-2 font-bold text-slate-400 text-[11px]">입시지도</div>
-        <button onclick="navigateMobile(isCurrentTeacher() ? 'counselList' : 'myCards')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="award" class="w-4 h-4 text-blue-600"></i> 입시상담카드
-        </button>
-        <button onclick="navigateMobile(isCurrentTeacher() ? 'teacherMock' : 'studentMock')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="line-chart" class="w-4 h-4 text-indigo-500"></i> 모의고사 분석
-        </button>
-        <button onclick="navigateMobile('schedules')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="calendar-check" class="w-4 h-4 text-amber-500"></i> 입시일정 (면접·논술)
-        </button>
-        <button onclick="navigateMobile('minimumCheck')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="check-check" class="w-4 h-4 text-emerald-500"></i> 수능최저 충족분석
-        </button>
-      </div>
-
-      <!-- 4. 입시자료 -->
-      <div class="space-y-1">
-        <div class="px-2 font-bold text-slate-400 text-[11px]">입시자료실</div>
-        <button onclick="navigateMobileWithFilter('materials', 'all')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="book-open" class="w-4 h-4 text-blue-500"></i> 전체 자료 목록
-        </button>
-        <button onclick="navigateMobileWithFilter('materials', 'interview')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="mic" class="w-4 h-4 text-blue-500"></i> 면접 기출/후기
-        </button>
-        <button onclick="navigateMobileWithFilter('materials', 'eval_case')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="file-check-2" class="w-4 h-4 text-emerald-500"></i> 학종 평가 사례
-        </button>
-        <button onclick="navigateMobileWithFilter('materials', 'analysis')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-500"></i> 입결 결과 분석
-        </button>
-      </div>
-
-      <!-- 5. 학사/학급 -->
-      <div class="space-y-1">
-        <div class="px-2 font-bold text-slate-400 text-[11px]">학사·학급</div>
-        <button onclick="navigateMobile('album')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="camera" class="w-4 h-4 text-purple-500"></i> 학급 앨범
-        </button>
-        <button onclick="navigateMobile('calendar')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-          <i data-lucide="calendar" class="w-4 h-4 text-rose-500"></i> 학사 달력
-        </button>
-        <div id="mobileTeacherApprovalWrapper" class="hidden">
-          <button onclick="navigateMobile('approval')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-            <i data-lucide="user-cog" class="w-4 h-4 text-slate-500"></i> 회원 관리
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
     <main class="max-w-7xl mx-auto px-4 py-6">
 
       <!-- ======================================================= -->
@@ -1856,52 +1759,6 @@
       lucide.createIcons();
     }
 
-// 1. 수능 디데이 기준일 설정 및 자동 계산
-const SUNEUNG_DATE = '2026-11-19'; // 2027학년도 대입 수능일
-
-function updateSuneungDday() {
-  const target = new Date(SUNEUNG_DATE);
-  target.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-  const el = document.getElementById('homeDdayCount');
-  if (!el) return;
-
-  if (diffDays === 0) el.innerText = 'D-DAY';
-  else if (diffDays > 0) el.innerText = `D-${diffDays}`;
-  else el.innerText = `D+${Math.abs(diffDays)}`;
-}
-
-// 2. 모바일 메뉴 열기/닫기 및 뷰 이동
-function toggleMobileDrawer(show) {
-  const drawer = document.getElementById('mobileDrawerOverlay');
-  if (!drawer) return;
-  if (show) {
-    drawer.classList.remove('hidden');
-    // 교사 권한인 경우 모바일 회원관리 메뉴 표시
-    const approvalWrapper = document.getElementById('mobileTeacherApprovalWrapper');
-    if (approvalWrapper) {
-      if (isCurrentTeacher()) approvalWrapper.classList.remove('hidden');
-      else approvalWrapper.classList.add('hidden');
-    }
-  } else {
-    drawer.classList.add('hidden');
-  }
-  lucide.createIcons();
-}
-
-function navigateMobile(viewId) {
-  changeView(viewId);
-  toggleMobileDrawer(false);
-}
-
-function navigateMobileWithFilter(viewId, filter) {
-  changeViewWithFilter(viewId, filter);
-  toggleMobileDrawer(false);
-}
-    
     // =================================================================
     // 💡 메인 홈 대시보드 데이터 로드
     // =================================================================
@@ -2041,31 +1898,9 @@ function navigateMobileWithFilter(viewId, filter) {
 
       alert('담임 알림이 등록되었습니다!');
       closeNewNoticeModal();
-      loadHomeDashboardData(updateSuneungDday(););
+      loadHomeDashboardData();
     }
 
-    // 수능 시험일 설정 (2027학년도 대입 수능: 2026-11-19)
-const SUNEUNG_DATE = '2026-11-19';
-
-function updateSuneungDday() {
-  const target = new Date(SUNEUNG_DATE);
-  target.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-  const el = document.getElementById('homeDdayCount');
-  if (!el) return;
-
-  if (diffDays === 0) {
-    el.innerText = 'D-DAY';
-  } else if (diffDays > 0) {
-    el.innerText = `D-${diffDays}`;
-  } else {
-    el.innerText = `D+${Math.abs(diffDays)}`;
-  }
-}
-    
     // =================================================================
     // 💡 [학급지도: 상담 신청 관리] 교사 승인 및 반려
     // =================================================================
