@@ -13,6 +13,11 @@
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     * { font-family: 'Pretendard', sans-serif; }
     .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 700; }
+    /* 드롭다운 호버 애니메이션 */
+    .dropdown-menu {
+      transition: all 0.2s ease-in-out;
+      transform-origin: top center;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
@@ -25,7 +30,7 @@
           <i data-lucide="graduation-cap" class="w-8 h-8"></i>
         </div>
         <h1 class="text-2xl font-black text-slate-800 tracking-tight">고3 대입·학급 진학 플랫폼</h1>
-        <p class="text-xs text-slate-500 mt-1">12장 수시 관리 및 1:1 진학 상담·학급 포털</p>
+        <p class="text-xs text-slate-500 mt-1">입시상담카드 수시 관리 및 1:1 진학 상담·학급 포털</p>
       </div>
 
       <div class="flex border-b mb-6 text-sm">
@@ -121,35 +126,97 @@
           </div>
         </div>
 
+        <!-- ======================================================= -->
+        <!-- 💡 정리된 상단바 (커서를 올리면 하위 카테고리 표시) -->
+        <!-- ======================================================= -->
         <nav id="navMenu" class="hidden lg:flex items-center gap-1 text-sm font-medium">
-          <button onclick="changeView('home')" class="nav-btn px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 font-bold" data-view="home">
-            <i data-lucide="home" class="w-4 h-4 inline mr-1"></i>메인 홈
+          <!-- 1. 메인 홈 -->
+          <button onclick="changeView('home')" class="nav-btn px-3 py-2 rounded-lg text-blue-600 bg-blue-50 font-bold flex items-center gap-1" data-view="home">
+            <i data-lucide="home" class="w-4 h-4"></i> 메인 홈
           </button>
 
-          <!-- 교사 전용 메뉴 -->
-          <div id="teacherNav" class="flex items-center gap-1">
-            <button onclick="changeView('approval')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1" data-view="approval">
-              회원 관리 <span id="pendingCountBadge" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+          <!-- 2. 학급지도 (Hover 드롭다운) -->
+          <div class="relative group">
+            <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
+              <i data-lucide="users" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
+              <span>학급지도</span>
+              <span id="counselNavBadge" class="hidden bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
             </button>
-            <button onclick="changeView('counselRequests')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1" data-view="counselRequests">
-              상담 신청 관리 <span id="counselNavBadge" class="hidden bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
-            </button>
-            <button onclick="changeView('counselList')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="counselList">12장 상담카드</button>
-            <button onclick="changeView('teacherSurvey')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="teacherSurvey">기초조사서</button>
-            <button onclick="changeView('teacherMock')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="teacherMock">모의고사 분석</button>
+
+            <!-- 드롭다운 메뉴 -->
+            <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-48 hidden group-hover:block z-50">
+              <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
+                <button onclick="changeView(isCurrentTeacher() ? 'teacherSurvey' : 'studentSurvey')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between">
+                  <span class="flex items-center gap-2"><i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-blue-500"></i> 기초조사서</span>
+                </button>
+                <button onclick="changeView(isCurrentTeacher() ? 'counselRequests' : 'myCounsel')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between">
+                  <span class="flex items-center gap-2"><i data-lucide="message-square" class="w-3.5 h-3.5 text-blue-500"></i> 상담 신청 관리</span>
+                  <span id="counselDropdownBadge" class="hidden bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- 학생 전용 메뉴 -->
-          <div id="studentNav" class="hidden flex items-center gap-1">
-            <button onclick="changeView('myCards')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="myCards">내 12장 원서</button>
-            <button onclick="changeView('studentSurvey')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="studentSurvey">내 기본조사</button>
-            <button onclick="changeView('studentMock')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="studentMock">모의고사 성적</button>
-            <button onclick="changeView('myCounsel')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="myCounsel">1:1 상담 신청</button>
+          <!-- 3. 입시지도 (Hover 드롭다운) -->
+          <div class="relative group">
+            <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
+              <i data-lucide="compass" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
+              <span>입시지도</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
+            </button>
+
+            <!-- 드롭다운 메뉴 -->
+            <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-52 hidden group-hover:block z-50">
+              <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
+                <!-- 1) 입시상담카드 (구 12장 상담카드) -->
+                <button onclick="changeView(isCurrentTeacher() ? 'counselList' : 'myCards')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="award" class="w-3.5 h-3.5 text-blue-600"></i>
+                  <span>입시상담카드</span>
+                </button>
+                <!-- 2) 모의고사 분석 -->
+                <button onclick="changeView(isCurrentTeacher() ? 'teacherMock' : 'studentMock')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="line-chart" class="w-3.5 h-3.5 text-indigo-500"></i>
+                  <span>모의고사 분석</span>
+                </button>
+                <!-- 3) 입시일정정리 (면접·논술·실기) -->
+                <button onclick="changeView('schedules')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-amber-500"></i>
+                  <span>입시일정정리 (면접·논술·실기)</span>
+                </button>
+                <!-- 4) 최저충족여부 (2합/3합/4합 / 버림·반올림) -->
+                <button onclick="changeView('minimumCheck')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+                  <span>최저충족여부 (2·3·4합 분석)</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- 학급 공통 메뉴 -->
-          <button onclick="changeView('album')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="album">학급 앨범</button>
-          <button onclick="changeView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="calendar">학사 달력</button>
+          <!-- 4. 학사 및 학급 공통 메뉴 -->
+          <div class="relative group">
+            <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
+              <i data-lucide="school" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
+              <span>학사·학급</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
+            </button>
+            <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-44 hidden group-hover:block z-50">
+              <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
+                <button onclick="changeView('album')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="camera" class="w-3.5 h-3.5 text-purple-500"></i> 학급 앨범
+                </button>
+                <button onclick="changeView('calendar')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="calendar" class="w-3.5 h-3.5 text-rose-500"></i> 학사 달력
+                </button>
+                <div id="teacherApprovalMenuWrapper" class="hidden border-t pt-1">
+                  <button onclick="changeView('approval')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i data-lucide="user-cog" class="w-3.5 h-3.5 text-slate-500"></i> 회원 관리</span>
+                    <span id="pendingCountBadge" class="hidden bg-rose-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </nav>
 
         <div class="flex items-center gap-3">
@@ -226,13 +293,13 @@
               </div>
               <div class="pt-2 flex flex-wrap gap-2 text-xs">
                 <button onclick="changeView('myCards')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition flex items-center gap-1.5">
-                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 수시 12장 원서함 열기
+                  <i data-lucide="award" class="w-3.5 h-3.5"></i> 입시상담카드 열기
                 </button>
-                <button onclick="changeView('studentMock')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center gap-1.5">
-                  <i data-lucide="line-chart" class="w-3.5 h-3.5"></i> 모의고사 점수 입력
+                <button onclick="changeView('schedules')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-sm transition flex items-center gap-1.5">
+                  <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i> 면접·논술 일정
                 </button>
-                <button onclick="changeView('myCounsel')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition flex items-center gap-1.5">
-                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> 1:1 상담 신청하기
+                <button onclick="changeView('minimumCheck')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm transition flex items-center gap-1.5">
+                  <i data-lucide="check-check" class="w-3.5 h-3.5"></i> 최저충족 분석
                 </button>
               </div>
             </div>
@@ -287,7 +354,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 1. [교사] 회원 관리 & 학생 일괄 생성 -->
+      <!-- 1. [교사] 회원 관리 -->
       <!-- ======================================================= -->
       <section id="view-approval" class="view-panel hidden space-y-6">
         <div class="bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-2xl border border-blue-200 p-6 shadow-sm space-y-4">
@@ -373,13 +440,13 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 2. [교사] 학생 1:1 상담 신청 내역 확인 및 승인 관리 -->
+      <!-- 2. [학급지도: 상담 신청 관리] (교사용 승인 및 현황) -->
       <!-- ======================================================= -->
       <section id="view-counselRequests" class="view-panel hidden space-y-4">
         <div class="bg-white p-5 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3 shadow-sm">
           <div>
             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i> 학생 1:1 상담 신청 내역
+              <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i> 학급지도 : 학생 1:1 상담 신청 관리
             </h2>
             <p class="text-xs text-slate-500 mt-0.5">학생들의 신청 일시와 고민 내용을 검토하고 접수하거나 거절(사유 안내)할 수 있습니다.</p>
           </div>
@@ -416,13 +483,15 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 3. [교사] 학생별 12장 상담카드 -->
+      <!-- 3. [입시지도: 입시상담카드] (교사용 학생별 조회) -->
       <!-- ======================================================= -->
       <section id="view-counselList" class="view-panel hidden space-y-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
           <div>
-            <h2 class="text-lg font-bold text-slate-800">학생별 대입 12장 지원 카드 관리</h2>
-            <p class="text-xs text-slate-400">학생이 입력한 수시 6장과 특목·전문대 6장 원서가 실시간으로 연동됩니다.</p>
+            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="award" class="w-5 h-5 text-blue-600"></i> 입시지도 : 학생별 입시상담카드 (수시 12장 지원 현황)
+            </h2>
+            <p class="text-xs text-slate-400">학생이 입력한 일반 수시 6장과 특목·전문대 6장 원서가 실시간으로 연동됩니다.</p>
           </div>
           <div class="flex items-center gap-2">
             <label class="text-xs font-semibold text-slate-600">학생 선택:</label>
@@ -432,17 +501,19 @@
           </div>
         </div>
         <div id="teacherCardsContainer" class="space-y-6">
-          <p class="text-center text-slate-400 py-12 bg-white rounded-xl border">상단에서 학생을 선택하면 학생이 작성한 12장 원서가 실시간으로 나타납니다.</p>
+          <p class="text-center text-slate-400 py-12 bg-white rounded-xl border">상단에서 학생을 선택하면 학생이 작성한 입시상담카드가 실시간으로 나타납니다.</p>
         </div>
       </section>
 
       <!-- ======================================================= -->
-      <!-- 4. [기본조사] 2·3학년 교육과정 선택과목 -->
+      <!-- 4. [학급지도: 기초조사서] (학생용 작성 / 교사용 열람) -->
       <!-- ======================================================= -->
       <section id="view-studentSurvey" class="view-panel hidden space-y-6">
         <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
           <div class="border-b pb-4">
-            <h2 class="text-lg font-bold text-slate-800">기초조사서 및 선택과목 작성</h2>
+            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="clipboard-list" class="w-5 h-5 text-blue-600"></i> 학급지도 : 기초조사서 및 선택과목 작성
+            </h2>
             <p class="text-xs text-slate-500 mt-1">인적사항과 2·3학년 학교 선택과목을 정확하게 체크해주세요. (담임선생님만 열람 가능)</p>
           </div>
 
@@ -549,10 +620,12 @@
         </div>
       </section>
 
-      <!-- [교사] 기초조사서 열람 -->
+      <!-- [교사용] 기초조사서 열람 -->
       <section id="view-teacherSurvey" class="view-panel hidden space-y-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
-          <h2 class="text-lg font-bold text-slate-800">학생 기초조사서 열람</h2>
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i data-lucide="clipboard-list" class="w-5 h-5 text-blue-600"></i> 학급지도 : 학생 기초조사서 열람
+          </h2>
           <div class="flex items-center gap-2">
             <label class="text-xs font-semibold text-slate-600">학생 선택:</label>
             <select id="surveyStudentSelect" onchange="loadStudentSurveyForTeacher()" class="px-3 py-1.5 border rounded-lg text-sm bg-slate-50 font-bold text-blue-600 outline-none">
@@ -566,13 +639,15 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 5. [모의고사] 성적표 및 백분위 변동 그래프 -->
+      <!-- 5. [입시지도: 모의고사 분석] -->
       <!-- ======================================================= -->
       <section id="view-studentMock" class="view-panel hidden space-y-6">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
           <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
             <div>
-              <h2 class="text-lg font-bold text-slate-800">내 모의고사 성적표 관리</h2>
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="line-chart" class="w-5 h-5 text-blue-600"></i> 입시지도 : 내 모의고사 성적표 관리
+              </h2>
               <p class="text-xs text-slate-500">회차별 성적을 기록하면 백분위 추이와 국·수·탐 평균을 분석할 수 있습니다.</p>
             </div>
             <div class="flex items-center gap-2">
@@ -606,7 +681,10 @@
             </table>
           </div>
 
-          <div class="flex justify-end">
+          <div class="flex justify-between items-center pt-2">
+            <button onclick="changeView('minimumCheck')" class="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
+              <i data-lucide="check-check" class="w-4 h-4"></i> 입력된 성적으로 수능 최저 충족 여부 확인하기 →
+            </button>
             <button onclick="saveMockScores()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shadow transition">
               현재 회차 성적 저장하기
             </button>
@@ -623,10 +701,12 @@
         </div>
       </section>
 
-      <!-- [교사] 모의고사 분석 -->
+      <!-- [교사용] 모의고사 분석 -->
       <section id="view-teacherMock" class="view-panel hidden space-y-6">
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
-          <h2 class="text-lg font-bold text-slate-800">학생별 모의고사 성적 & 추이 그래프</h2>
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i data-lucide="line-chart" class="w-5 h-5 text-blue-600"></i> 입시지도 : 학생별 모의고사 성적 & 추이 그래프
+          </h2>
           <div class="flex items-center gap-2">
             <label class="text-xs font-semibold text-slate-600">학생 선택:</label>
             <select id="mockStudentSelect" onchange="loadStudentMockForTeacher()" class="px-3 py-1.5 border rounded-lg text-sm bg-slate-50 font-bold text-blue-600 outline-none">
@@ -640,7 +720,235 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 6. [학급 앨범] -->
+      <!-- 6. [신규/입시지도: 입시일정정리] 면접 · 논술 · 실기 일정 -->
+      <!-- ======================================================= -->
+      <section id="view-schedules" class="view-panel hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
+            <div>
+              <div class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded-full text-xs font-bold mb-1 border border-amber-200">
+                <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i> 대입 실전 고사 관리
+              </div>
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="calendar-check" class="w-5 h-5 text-amber-600"></i> 입시지도 : 입시일정정리 (면접 · 논술 · 실기)
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">대학별 면접고사, 논술시험, 실기고사, 1차 및 최종 합격 발표 일정을 등록하고 실시간 D-Day를 관리합니다.</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <div id="scheduleStudentSelectWrapper" class="hidden items-center gap-1.5">
+                <label class="text-xs font-bold text-slate-600">조회 학생:</label>
+                <select id="scheduleStudentSelect" onchange="loadExamSchedules()" class="px-3 py-1.5 border rounded-lg text-xs font-bold text-blue-600 bg-slate-50 outline-none">
+                  <option value="all">🌐 학급 전체 모아보기</option>
+                </select>
+              </div>
+              <button onclick="openExamScheduleModal()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                <i data-lucide="plus" class="w-4 h-4"></i> 새 입시 일정 등록
+              </button>
+            </div>
+          </div>
+
+          <!-- 일정 필터 탭 -->
+          <div class="flex flex-wrap gap-2 text-xs border-b pb-3">
+            <button onclick="filterExamSchedules('all')" id="schedFilter_all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition">전체 보기</button>
+            <button onclick="filterExamSchedules('interview')" id="schedFilter_interview" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span> 면접고사
+            </button>
+            <button onclick="filterExamSchedules('essay')" id="schedFilter_essay" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span> 논술시험
+            </button>
+            <button onclick="filterExamSchedules('practical')" id="schedFilter_practical" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span> 실기고사
+            </button>
+            <button onclick="filterExamSchedules('announcement')" id="schedFilter_announcement" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 합격발표
+            </button>
+          </div>
+
+          <!-- 일정 카드 목록 컨테이너 -->
+          <div id="examScheduleListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            <p class="col-span-full text-center text-slate-400 py-16">등록된 입시 일정이 없습니다. 상단의 [+ 새 입시 일정 등록]을 눌러 면접, 논술, 실기 일정을 입력해보세요.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 7. [신규/입시지도: 최저충족여부] 2합 · 3합 · 4합 (버림 / 반올림) -->
+      <!-- ======================================================= -->
+      <section id="view-minimumCheck" class="view-panel hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
+            <div>
+              <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-xs font-bold mb-1 border border-emerald-200">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 정밀 수능 최저학력기준 분석기
+              </div>
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="check-check" class="w-5 h-5 text-emerald-600"></i> 입시지도 : 수능 최저학력기준 충족 여부 분석
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">회차별 모의고사 성적을 바탕으로 2합, 3합, 4합 합산 및 탐구 반영 방식(상위 1과목, 2과목 버림, 2과목 반올림)을 정밀 계산합니다.</p>
+            </div>
+
+            <!-- 교사용 학생 선택기 -->
+            <div id="minCheckStudentSelectWrapper" class="hidden items-center gap-2">
+              <label class="text-xs font-bold text-slate-600">학생 선택:</label>
+              <select id="minCheckStudentSelect" onchange="renderMinimumCheckAnalysis()" class="px-3 py-1.5 border rounded-lg text-sm bg-slate-50 font-bold text-blue-600 outline-none">
+                <option value="">학생을 선택하세요</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 요약 안내 카드 -->
+          <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200 p-4 rounded-xl text-xs text-slate-700 space-y-1 leading-relaxed">
+            <p class="font-bold text-emerald-900 flex items-center gap-1.5">
+              <i data-lucide="info" class="w-4 h-4 text-emerald-600"></i> 탐구 영역 산출 기준 안내
+            </p>
+            <ul class="list-disc pl-5 space-y-0.5 text-slate-600">
+              <li><strong>탐구 상위 1과목</strong>: 탐구1과 탐구2 중 더 우수한(숫자가 작은) 1과목 등급만 반영</li>
+              <li><strong>탐구 2과목 [버림(절사)]</strong>: 두 과목 평균 산출 시 소수점을 절사 (예: 2등급+3등급 = 2.5 → <strong>2등급</strong>)</li>
+              <li><strong>탐구 2과목 [반올림]</strong>: 두 과목 평균 산출 시 소수점 첫째 자리에서 반올림 (예: 2등급+3등급 = 2.5 → <strong>3등급</strong>)</li>
+            </ul>
+          </div>
+
+          <!-- 메인 분석 표: 회차별 2합, 3합, 4합 (버림 / 반올림 / 상위1과목) -->
+          <div class="space-y-3">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="table" class="w-4 h-4 text-blue-600"></i> [전체 모의고사 회차별] 2합 · 3합 · 4합 종합 분석표
+            </h3>
+            
+            <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200 text-center">
+                  <tr>
+                    <th rowspan="2" class="p-3 border-r bg-slate-100">시험 회차</th>
+                    <th colspan="6" class="p-2 border-r bg-slate-50 text-slate-600">입력된 영역별 등급</th>
+                    <th rowspan="2" class="p-3 border-r bg-indigo-50/50 text-indigo-900">탐구 반영 기준</th>
+                    <th rowspan="2" class="p-3 border-r bg-indigo-50/50 text-indigo-900">탐구 환산등급</th>
+                    <th colspan="3" class="p-2 bg-emerald-50/80 text-emerald-900">최적 등급합 산출 결과</th>
+                  </tr>
+                  <tr class="border-t text-[11px] text-slate-600">
+                    <th class="p-2 border-r">국어</th>
+                    <th class="p-2 border-r">수학</th>
+                    <th class="p-2 border-r">영어</th>
+                    <th class="p-2 border-r">탐1</th>
+                    <th class="p-2 border-r">탐2</th>
+                    <th class="p-2 border-r">한국사</th>
+                    <th class="p-2 border-r bg-emerald-50 font-bold text-emerald-800">최적 2합</th>
+                    <th class="p-2 border-r bg-emerald-50 font-bold text-emerald-800">최적 3합</th>
+                    <th class="p-2 bg-emerald-50 font-bold text-emerald-800">4합 (전체)</th>
+                  </tr>
+                </thead>
+                <tbody id="minCheckTableBody" class="divide-y divide-slate-200 text-center">
+                  <tr><td colspan="12" class="p-8 text-center text-slate-400">모의고사 성적 데이터를 불러오는 중입니다...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 입시상담카드(수시 6장) 지망 대학별 최저 충족 실시간 시뮬레이터 -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                  <i data-lucide="target" class="w-4 h-4 text-blue-600"></i> 입시상담카드(수시 6장) 기준 최저 충족 진단
+                </h3>
+                <p class="text-[11px] text-slate-500">학생이 입력한 수시 6장의 '수능최저' 조건에 대해 현재 모의고사 성적이 충족되는지 실시간 판정합니다.</p>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <label class="font-bold text-slate-600">판정 기준 모의고사:</label>
+                <select id="minCheckSimRoundSelect" onchange="renderMinimumCheckAnalysis()" class="px-2.5 py-1 border rounded-lg font-bold text-blue-600 bg-white outline-none">
+                  <option value="9월모평" selected>2026 9월 모평</option>
+                  <option value="6월모평">2026 6월 모평</option>
+                  <option value="7월학평">2026 7월 학평</option>
+                  <option value="5월학평">2026 5월 학평</option>
+                  <option value="3월학평">2026 3월 학평</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="minCheckSusiCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <p class="col-span-full text-center text-slate-400 py-8">작성된 수시 지원 카드가 없습니다. [입시지도 > 입시상담카드]에서 수시 원서와 최저기준을 먼저 입력해주세요.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 8. [학생: 입시상담카드] 내 12장 원서함 -->
+      <!-- ======================================================= -->
+      <section id="view-myCards" class="view-panel hidden space-y-6">
+        <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
+          <div>
+            <h2 class="font-bold text-blue-900 text-base flex items-center gap-2">
+              <i data-lucide="award" class="w-5 h-5 text-blue-600"></i> 입시지도 : 내 입시상담카드 (수시 6장 + 특목·전문대 6장)
+            </h2>
+            <p class="text-xs text-blue-700 mt-0.5">작성 후 [전체 카드 저장하기]를 누르면 담임선생님 교무실 화면에 실시간으로 반영됩니다.</p>
+          </div>
+          <button onclick="saveStudent12Cards()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
+            <i data-lucide="save" class="w-4 h-4"></i> 전체 카드 저장하기
+          </button>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-600"></span> 일반 4년제 수시 6장 (지원 6회 제한)
+          </h3>
+          <div id="studentSusiGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-purple-600"></span> 특수목적대 (과기원, 사관학교, 전문대 등 6회 제한 외)
+          </h3>
+          <div id="studentSpecialGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 9. [학생: 상담 신청] 학급지도 1:1 상담 신청 -->
+      <!-- ======================================================= -->
+      <section id="view-myCounsel" class="view-panel hidden space-y-4">
+        <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+            <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i> 학급지도 : 담임선생님 1:1 상담 신청
+          </h2>
+          <p class="text-xs text-slate-500 mb-5">희망 시간과 상담 주제를 적어 신청하면 담임선생님 일정표에 등록됩니다.</p>
+
+          <form onsubmit="submitCounselRequest(event)" class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">희망 날짜</label>
+                <input type="date" id="counselDate" required class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">희망 시간/교시</label>
+                <select id="counselPeriod" class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
+                  <option value="점심시간">점심시간</option>
+                  <option value="청소시간/종례후">종례 직후</option>
+                  <option value="방과후 1차(17:00)">방과후 (17:00)</option>
+                  <option value="야자 1교시(19:00)">야자 1교시 (19:00)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">상담 주제</label>
+              <select id="counselTopic" class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
+                <option value="수시 6장 원서 라인 상담">입시상담카드 원서 라인 상담</option>
+                <option value="9월 모평 성적 및 최저 충족 가늠">모평 성적 및 수능 최저 충족 가늠</option>
+                <option value="면접·논술·실기 일정 및 대비">면접·논술·실기 일정 및 대비</option>
+                <option value="생기부 세특 및 학업 스트레스">생기부 세특 및 학업 스트레스</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">구체적인 고민 및 질문 내용</label>
+              <textarea id="counselDetail" rows="4" required placeholder="선생님께 미리 알리고 싶은 성적 고민이나 지원 희망 대학을 자유롭게 적어주세요." class="w-full px-3 py-2 text-sm border rounded-lg outline-none"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm transition">상담 신청서 제출하기</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 10. [학사·학급: 학급 앨범] -->
       <!-- ======================================================= -->
       <section id="view-album" class="view-panel hidden space-y-6">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
@@ -668,78 +976,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 7. [학생] 내 12장 원서 -->
-      <!-- ======================================================= -->
-      <section id="view-myCards" class="view-panel hidden space-y-6">
-        <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
-          <div>
-            <h2 class="font-bold text-blue-900 text-base">내 수시 6장 + 특목·전문대 6장 원서함</h2>
-            <p class="text-xs text-blue-700">작성 후 [전체 카드 저장하기]를 누르면 담임선생님 교무실 화면에 실시간으로 반영됩니다.</p>
-          </div>
-          <button onclick="saveStudent12Cards()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow transition">
-            전체 카드 저장하기
-          </button>
-        </div>
-
-        <div>
-          <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-blue-600"></span> 일반 4년제 수시 6장 (지원 6회 제한)
-          </h3>
-          <div id="studentSusiGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
-        </div>
-
-        <div>
-          <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-purple-600"></span> 특수목적대 (과기원, 사관학교, 전문대 등 6회 제한 외)
-          </h3>
-          <div id="studentSpecialGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
-        </div>
-      </section>
-
-      <!-- ======================================================= -->
-      <!-- 8. [학생] 1:1 상담 신청 -->
-      <!-- ======================================================= -->
-      <section id="view-myCounsel" class="view-panel hidden space-y-4">
-        <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h2 class="text-lg font-bold text-slate-800 mb-1">담임선생님 1:1 상담 신청</h2>
-          <p class="text-xs text-slate-500 mb-5">희망 시간과 상담 주제를 적어 신청하면 담임선생님 일정표에 등록됩니다.</p>
-
-          <form onsubmit="submitCounselRequest(event)" class="space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">희망 날짜</label>
-                <input type="date" id="counselDate" required class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">희망 시간/교시</label>
-                <select id="counselPeriod" class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
-                  <option value="점심시간">점심시간</option>
-                  <option value="청소시간/종례후">종례 직후</option>
-                  <option value="방과후 1차(17:00)">방과후 (17:00)</option>
-                  <option value="야자 1교시(19:00)">야자 1교시 (19:00)</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">상담 주제</label>
-              <select id="counselTopic" class="w-full px-3 py-2 text-sm border rounded-lg outline-none">
-                <option value="수시 6장 원서 라인 상담">수시 6장 원서 라인 상담</option>
-                <option value="9월 모평 성적 및 정시 가늠">9월 모평 성적 및 정시 가늠</option>
-                <option value="생기부 세특 및 면접 준비">생기부 세특 및 면접 준비</option>
-                <option value="학업 스트레스 및 기타 고민">학업 스트레스 및 기타 고민</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">구체적인 고민 및 질문 내용</label>
-              <textarea id="counselDetail" rows="4" required placeholder="선생님께 미리 알리고 싶은 성적 고민이나 지원 희망 대학을 자유롭게 적어주세요." class="w-full px-3 py-2 text-sm border rounded-lg outline-none"></textarea>
-            </div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm transition">상담 신청서 제출하기</button>
-          </form>
-        </div>
-      </section>
-
-      <!-- ======================================================= -->
-      <!-- 9. [공통] 학사 및 상담 캘린더 -->
+      <!-- 11. [학사·학급: 학사 달력] -->
       <!-- ======================================================= -->
       <section id="view-calendar" class="view-panel hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200">
@@ -764,7 +1001,73 @@
     </main>
   </div>
 
-  <!-- [모달 0: 담임 알림 등록 모달] -->
+  <!-- [모달: 새 입시 일정 (면접·논술·실기) 등록 모달] -->
+  <div id="examScheduleModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+      <div class="flex justify-between items-center pb-2 border-b">
+        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+          <i data-lucide="calendar-plus" class="w-4 h-4 text-amber-500"></i> 입시 일정 추가 (면접 · 논술 · 실기)
+        </h3>
+        <button onclick="closeExamScheduleModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">일정 유형 (구분)</label>
+          <select id="schedTypeInput" class="w-full px-3 py-2 border rounded-lg bg-white font-bold text-slate-800 outline-none">
+            <option value="interview">🗣️ 면접고사 (학생부종합 / 교과)</option>
+            <option value="essay">✍️ 논술시험</option>
+            <option value="practical">🎨 실기고사 (예체능 / 체육)</option>
+            <option value="announcement">📢 합격자 발표 (1차 / 최종)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">대학교명</label>
+            <input type="text" id="schedUnivInput" placeholder="예: 연세대, 중앙대" class="w-full px-3 py-2 border rounded-lg outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">모집단위 (학과)</label>
+            <input type="text" id="schedDeptInput" placeholder="예: 국어교육과" class="w-full px-3 py-2 border rounded-lg outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">전형명</label>
+          <input type="text" id="schedTypeDetailInput" placeholder="예: 학생부종합(활동우수형), 논술우수자" class="w-full px-3 py-2 border rounded-lg outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">고사 날짜</label>
+            <input type="date" id="schedDateInput" required class="w-full px-3 py-2 border rounded-lg outline-none font-medium">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">시간 / 입실 마감</label>
+            <input type="text" id="schedTimeInput" placeholder="예: 09:00 (08:30 입실)" class="w-full px-3 py-2 border rounded-lg outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">고사장 위치 / 세부 장소</label>
+          <input type="text" id="schedLocationInput" placeholder="예: 신촌캠퍼스 백양관 301호" class="w-full px-3 py-2 border rounded-lg outline-none">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">준비물 및 비고 (제시문 유무, 신분증 등)</label>
+          <textarea id="schedMemoInput" rows="2" placeholder="예: 신분증, 수험표 지참. 제시문 숙독 15분 후 면접 10분 진행" class="w-full px-3 py-2 border rounded-lg outline-none"></textarea>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeExamScheduleModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold">취소</button>
+        <button onclick="submitExamSchedule()" id="schedSubmitBtn" class="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold shadow transition">일정 등록 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [기존 알림 모달] -->
   <div id="newNoticeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center">
@@ -790,7 +1093,7 @@
     </div>
   </div>
 
-  <!-- [모달 1: 일정 날짜 범위 등록 모달] -->
+  <!-- [기존 학사 일정 등록 모달] -->
   <div id="newEventModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 text-xs">
       <div class="flex justify-between items-center pb-1 border-b">
@@ -809,7 +1112,6 @@
           <input type="date" id="eventEndDateInput" class="w-full px-2.5 py-1.5 border rounded-lg outline-none font-medium">
         </div>
       </div>
-      <p class="text-[11px] text-slate-400">※ 하루 일정인 경우 시작일과 종료일을 동일하게 선택하세요.</p>
       <div>
         <label class="block font-semibold text-slate-600 mb-1">구분</label>
         <select id="eventCatInput" class="w-full px-3 py-1.5 border rounded-lg outline-none">
@@ -829,7 +1131,7 @@
     </div>
   </div>
 
-  <!-- [모달 2: 관리자 전용 회원 계정 수정] -->
+  <!-- [기존 회원 수정 모달] -->
   <div id="editUserModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
       <div class="flex justify-between items-center">
@@ -867,7 +1169,7 @@
     </div>
   </div>
 
-  <!-- [모달 3: 새 앨범 폴더 추가] -->
+  <!-- [기존 앨범 모달] -->
   <div id="newFolderModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-4">
       <h3 class="font-bold text-slate-800 text-sm">새 앨범 폴더 추가</h3>
@@ -879,7 +1181,7 @@
     </div>
   </div>
 
-  <!-- [모달 4: 대형 고화질 라이트박스 뷰어] -->
+  <!-- [라이트박스 모달] -->
   <div id="photoLightboxModal" class="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-between p-4 hidden select-none">
     <div class="w-full flex items-center justify-between px-2 py-1 z-20">
       <div class="text-white/80 text-xs font-semibold" id="lightboxCounter">1 / 1</div>
@@ -892,25 +1194,21 @@
         </button>
       </div>
     </div>
-
     <div class="relative flex-1 w-full flex items-center justify-center overflow-hidden my-2">
       <button onclick="navigateLightbox(-1)" class="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/50 hover:bg-black/80 p-3 rounded-full transition z-10 shadow-lg border border-white/10">
         <i data-lucide="chevron-left" class="w-8 h-8"></i>
       </button>
-
       <img id="lightboxImage" src="" alt="확대 사진" class="max-w-[96vw] max-h-[86vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition duration-200">
-
       <button onclick="navigateLightbox(1)" class="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/50 hover:bg-black/80 p-3 rounded-full transition z-10 shadow-lg border border-white/10">
         <i data-lucide="chevron-right" class="w-8 h-8"></i>
       </button>
     </div>
-
     <div class="text-[11px] text-white/40 pb-1">
       키보드 좌우 방향키(←, →) 또는 ESC로 닫을 수 있습니다.
     </div>
   </div>
 
-  <!-- [모달 5: 최초 로그인 학생 강제 비밀번호 변경 모달] -->
+  <!-- [학생 초기 비밀번호 변경 모달] -->
   <div id="firstLoginPwModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-blue-100">
       <div class="text-center space-y-1">
@@ -941,7 +1239,7 @@
 
   <script>
     // =================================================================
-    // 💡 Supabase 접속 정보
+    // 💡 Supabase 접속 정보 및 전역 상태
     // =================================================================
     const SB_URL = 'https://vmkfmwbzsdlietprgtyt.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZta2Ztd2J6c2RsaWV0cHJndHl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQxMjIsImV4cCI6MjEwNTUwMDEyMn0.eqkdTi2LzOkVA715lyy2VMfiNio4umT-LwImPv7LaWQ';
@@ -959,6 +1257,14 @@
 
     let studentChartInstance = null;
     let teacherChartInstance = null;
+
+    // 입시 일정 메모리/로컬 백업 캐시 (Supabase 테이블 미생성 대비 안정적 fallback)
+    let currentSchedules = [];
+    let activeScheduleFilter = 'all';
+
+    function isCurrentTeacher() {
+      return currentProfile && (currentProfile.role === 'teacher' || currentProfile.role === 'admin');
+    }
 
     function toAuthEmail(rawId) {
       const clean = rawId.trim().toLowerCase();
@@ -1183,21 +1489,26 @@
       const isTeacher = (currentProfile.role === 'admin' || currentProfile.role === 'teacher');
 
       if (isTeacher) {
-        document.getElementById('teacherNav').classList.remove('hidden');
-        document.getElementById('studentNav').classList.add('hidden');
+        document.getElementById('teacherApprovalMenuWrapper').classList.remove('hidden');
         document.getElementById('postNoticeBtn').classList.remove('hidden');
         document.getElementById('teacherHomeSummary').classList.remove('hidden');
         document.getElementById('studentHomeSummary').classList.add('hidden');
+        document.getElementById('scheduleStudentSelectWrapper').classList.remove('hidden');
+        document.getElementById('scheduleStudentSelectWrapper').classList.add('flex');
+        document.getElementById('minCheckStudentSelectWrapper').classList.remove('hidden');
+        document.getElementById('minCheckStudentSelectWrapper').classList.add('flex');
+
         loadUsersData();
         loadTeacherStudentSelects();
         loadTeacherCounselRequests();
       } else {
-        document.getElementById('teacherNav').classList.add('hidden');
-        document.getElementById('studentNav').classList.remove('hidden');
+        document.getElementById('teacherApprovalMenuWrapper').classList.add('hidden');
         document.getElementById('postNoticeBtn').classList.add('hidden');
         document.getElementById('teacherHomeSummary').classList.add('hidden');
         document.getElementById('studentHomeSummary').classList.remove('hidden');
-        
+        document.getElementById('scheduleStudentSelectWrapper').classList.add('hidden');
+        document.getElementById('minCheckStudentSelectWrapper').classList.add('hidden');
+
         renderStudent12CardInputs();
         loadStudentExisting12Cards();
         loadMySurveyData();
@@ -1218,6 +1529,8 @@
       loadHomeDashboardData();
       loadAlbumFolders();
       renderCalendar();
+      loadExamSchedules();
+      renderMinimumCheckAnalysis();
       lucide.createIcons();
     }
 
@@ -1254,6 +1567,8 @@
       renderCalendar();
       loadUsersData();
       loadTeacherCounselRequests();
+      loadExamSchedules();
+      renderMinimumCheckAnalysis();
       lucide.createIcons();
     }
 
@@ -1272,18 +1587,15 @@
       const target = document.getElementById('view-' + viewId);
       if (target) target.classList.remove('hidden');
 
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        if (btn.dataset.view === viewId) {
-          btn.className = 'nav-btn px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 font-bold';
-        } else {
-          btn.className = 'nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100';
-        }
-      });
-
       if (viewId === 'counselRequests') {
         loadTeacherCounselRequests();
+      } else if (viewId === 'schedules') {
+        loadExamSchedules();
+      } else if (viewId === 'minimumCheck') {
+        renderMinimumCheckAnalysis();
       }
 
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       lucide.createIcons();
     }
 
@@ -1352,11 +1664,15 @@
         document.getElementById('homeTeacherStatCounsel').innerText = cCount + '건';
 
         const navBadge = document.getElementById('counselNavBadge');
+        const dropBadge = document.getElementById('counselDropdownBadge');
         if (cCount > 0) {
           navBadge.innerText = cCount;
           navBadge.classList.remove('hidden');
+          dropBadge.innerText = cCount;
+          dropBadge.classList.remove('hidden');
         } else {
           navBadge.classList.add('hidden');
+          dropBadge.classList.add('hidden');
         }
 
         let pendingQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('is_approved', false);
@@ -1422,7 +1738,7 @@
     }
 
     // =================================================================
-    // 💡 [교사용] 1:1 상담 신청 목록 로드 및 접수/거절/일정중복 처리
+    // 💡 [학급지도: 상담 신청 관리] 교사 승인 및 반려
     // =================================================================
     async function loadTeacherCounselRequests() {
       const tbody = document.getElementById('teacherCounselTableBody');
@@ -1440,14 +1756,12 @@
       }
 
       tbody.innerHTML = list.map(item => {
-        // 동일 날짜 & 시간 중복 신청 건수 계산 (취소/거절된 것은 제외)
         const conflictCount = list.filter(x => 
           x.target_date === item.target_date && 
           x.target_period === item.target_period && 
           x.status !== 'rejected'
         ).length;
 
-        // 상태 뱃지 설정
         let statusBadge = '';
         if (item.status === 'confirmed') {
           statusBadge = '<span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 whitespace-nowrap">확인 완료</span>';
@@ -1457,7 +1771,6 @@
           statusBadge = '<span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 whitespace-nowrap">미확인</span>';
         }
 
-        // 처리 버튼 영역
         let actionButtons = '';
         if (item.status === 'pending') {
           actionButtons = `
@@ -1470,7 +1783,6 @@
           actionButtons = `<span class="text-slate-400 text-xs whitespace-nowrap">처리 완료</span>`;
         }
 
-        // 내용에 거절 사유가 있는 경우 시각적 강조
         let detailHtml = item.detail || '-';
         if (item.detail && item.detail.includes('[거절 사유:')) {
           detailHtml = item.detail.replace(
@@ -1499,9 +1811,7 @@
       lucide.createIcons();
     }
 
-    // [상담 접수 처리 + 중복 일정 사전 경고]
     async function confirmCounselRequest(requestId, targetDate, targetPeriod, studentName) {
-      // 1. 이미 동일 날짜 & 동일 시간대에 확정된 다른 학생 상담이 있는지 확인
       const { data: existingConfirmed } = await supabaseClient
         .from('counsel_requests')
         .select('*')
@@ -1510,7 +1820,6 @@
         .eq('status', 'confirmed')
         .neq('id', requestId);
 
-      // 2. 해당 날짜에 등록된 학사/시험 달력 일정이 있는지 확인
       const { data: existingEvents } = await supabaseClient
         .from('calendar_events')
         .select('*')
@@ -1540,7 +1849,6 @@
         return;
       }
 
-      // 학사 달력(calendar_events)에 자동 일정 등록
       const cls = (activeClassNum === 'all') ? 0 : activeClassNum;
       await supabaseClient.from('calendar_events').insert([{
         event_date: targetDate,
@@ -1555,17 +1863,15 @@
       renderCalendar();
     }
 
-    // [상담 거절 처리 + 거절 사유 기록]
     async function rejectCounselRequest(requestId, targetDate, targetPeriod, studentName) {
       const reason = prompt(
         `[${studentName}] 학생의 상담 신청을 거절(반려)할까?\n\n학생에게 전달할 거절 및 일정 재조율 사유를 입력해주세요:`, 
         '해당 시간대 다른 출장/상담 일정이 있어 접수가 어렵습니다. 다른 시간으로 재신청 바랍니다.'
       );
 
-      if (reason === null) return; // 사용자가 취소 누른 경우
+      if (reason === null) return;
       const trimmedReason = reason.trim() || '일정 조율 필요';
 
-      // 기존 상담 메모 뒤에 거절 사유를 보존하여 기록 (DB 구조 변경 없이 안전함)
       const { data: currentItem } = await supabaseClient.from('counsel_requests').select('detail').eq('id', requestId).single();
       const updatedDetail = (currentItem?.detail ? currentItem.detail + '\n\n' : '') + `[거절 사유: ${trimmedReason}]`;
 
@@ -1582,6 +1888,1126 @@
       alert(`[${studentName}] 학생의 상담 신청을 거절 처리하고 사유를 남겼습니다.`);
       loadTeacherCounselRequests();
       loadHomeDashboardData();
+    }
+
+    // =================================================================
+    // 💡 [입시지도: 입시일정정리] 면접 · 논술 · 실기 로직
+    // =================================================================
+    function openExamScheduleModal() {
+      document.getElementById('schedUnivInput').value = '';
+      document.getElementById('schedDeptInput').value = '';
+      document.getElementById('schedTypeDetailInput').value = '';
+      document.getElementById('schedDateInput').value = '2026-11-21';
+      document.getElementById('schedTimeInput').value = '';
+      document.getElementById('schedLocationInput').value = '';
+      document.getElementById('schedMemoInput').value = '';
+      document.getElementById('examScheduleModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeExamScheduleModal() {
+      document.getElementById('examScheduleModal').classList.add('hidden');
+    }
+
+    function filterExamSchedules(cat) {
+      activeScheduleFilter = cat;
+      ['all', 'interview', 'essay', 'practical', 'announcement'].forEach(c => {
+        const btn = document.getElementById(`schedFilter_${c}`);
+        if (btn) {
+          if (c === cat) {
+            btn.className = 'px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1';
+          }
+        }
+      });
+      renderExamScheduleCards();
+    }
+
+    async function loadExamSchedules() {
+      // 1. Supabase 시도 -> 없으면 로컬스토리지 백업 데이터 활용
+      let queryTargetUserId = currentUser ? currentUser.id : null;
+      if (isCurrentTeacher()) {
+        const selVal = document.getElementById('scheduleStudentSelect')?.value;
+        if (selVal && selVal !== 'all') {
+          queryTargetUserId = selVal;
+        } else {
+          queryTargetUserId = null; // 전체
+        }
+      }
+
+      try {
+        let q = supabaseClient.from('admission_schedules').select('*').order('exam_date', { ascending: true });
+        if (queryTargetUserId) {
+          q = q.eq('user_id', queryTargetUserId);
+        }
+        const { data, error } = await q;
+        if (!error && data) {
+          currentSchedules = data;
+        } else {
+          fallbackLoadLocalSchedules();
+        }
+      } catch (err) {
+        fallbackLoadLocalSchedules();
+      }
+
+      renderExamScheduleCards();
+    }
+
+    function fallbackLoadLocalSchedules() {
+      try {
+        const raw = localStorage.getItem('local_admission_schedules');
+        let all = raw ? JSON.parse(raw) : [];
+        if (!isCurrentTeacher() && currentUser) {
+          currentSchedules = all.filter(s => s.user_id === currentUser.id);
+        } else {
+          const selVal = document.getElementById('scheduleStudentSelect')?.value;
+          if (selVal && selVal !== 'all') {
+            currentSchedules = all.filter(s => s.user_id === selVal);
+          } else {
+            currentSchedules = all;
+          }
+        }
+      } catch (e) {
+        currentSchedules = [];
+      }
+    }
+
+    async function submitExamSchedule() {
+      const type = document.getElementById('schedTypeInput').value;
+      const univ = document.getElementById('schedUnivInput').value.trim();
+      const dept = document.getElementById('schedDeptInput').value.trim();
+      const typeDetail = document.getElementById('schedTypeDetailInput').value.trim();
+      const date = document.getElementById('schedDateInput').value;
+      const time = document.getElementById('schedTimeInput').value.trim();
+      const location = document.getElementById('schedLocationInput').value.trim();
+      const memo = document.getElementById('schedMemoInput').value.trim();
+
+      if (!univ || !date) return alert('대학교명과 고사 날짜를 입력해주세요.');
+
+      const newRecord = {
+        id: 'sched_' + Date.now(),
+        user_id: currentUser.id,
+        student_name: currentProfile.name,
+        student_no: currentProfile.student_no || '',
+        class_num: currentProfile.class_num || 2,
+        schedule_type: type,
+        university: univ,
+        department: dept,
+        admission_type: typeDetail,
+        exam_date: date,
+        exam_time: time,
+        location: location,
+        memo: memo,
+        created_at: new Date().toISOString()
+      };
+
+      // Supabase 저장 시도
+      try {
+        await supabaseClient.from('admission_schedules').insert([newRecord]);
+      } catch (e) {
+        console.warn('Supabase 테이블 저장 패스(로컬 동기화):', e);
+      }
+
+      // 로컬 스토리지 동기화 백업
+      const raw = localStorage.getItem('local_admission_schedules');
+      let all = raw ? JSON.parse(raw) : [];
+      all.push(newRecord);
+      localStorage.setItem('local_admission_schedules', JSON.stringify(all));
+
+      alert('입시 일정이 등록되었습니다!');
+      closeExamScheduleModal();
+      loadExamSchedules();
+    }
+
+    async function deleteExamSchedule(id) {
+      if (!confirm('이 입시 일정을 삭제할까요?')) return;
+      try {
+        await supabaseClient.from('admission_schedules').delete().eq('id', id);
+      } catch (e) {}
+
+      const raw = localStorage.getItem('local_admission_schedules');
+      if (raw) {
+        let all = JSON.parse(raw).filter(s => s.id !== id);
+        localStorage.setItem('local_admission_schedules', JSON.stringify(all));
+      }
+
+      loadExamSchedules();
+    }
+
+    function calculateDday(dateStr) {
+      if (!dateStr) return '';
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(dateStr);
+      target.setHours(0, 0, 0, 0);
+      const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+      if (diff === 0) return '<span class="bg-rose-600 text-white px-2 py-0.5 rounded-md font-black text-[11px] animate-pulse">D-DAY</span>';
+      if (diff > 0) return `<span class="bg-blue-600 text-white px-2 py-0.5 rounded-md font-black text-[11px]">D-${diff}</span>`;
+      return `<span class="bg-slate-300 text-slate-600 px-2 py-0.5 rounded-md font-bold text-[11px]">종료(D+${Math.abs(diff)})</span>`;
+    }
+
+    function getScheduleTypeBadge(type) {
+      switch (type) {
+        case 'interview': return '<span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px]">🗣️ 면접고사</span>';
+        case 'essay': return '<span class="px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-bold text-[10px]">✍️ 논술시험</span>';
+        case 'practical': return '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-bold text-[10px]">🎨 실기고사</span>';
+        case 'announcement': return '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[10px]">📢 합격발표</span>';
+        default: return '<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">입시일정</span>';
+      }
+    }
+
+    function renderExamScheduleCards() {
+      const container = document.getElementById('examScheduleListContainer');
+      if (!container) return;
+
+      let list = currentSchedules || [];
+      if (activeScheduleFilter !== 'all') {
+        list = list.filter(s => s.schedule_type === activeScheduleFilter);
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = '<p class="col-span-full text-center text-slate-400 py-16">해당 조건에 등록된 일정이 없습니다.</p>';
+        return;
+      }
+
+      // 날짜 오름차순 정렬
+      list.sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date));
+
+      container.innerHTML = list.map(item => `
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:border-blue-300 hover:shadow-md transition space-y-3 relative group">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              ${getScheduleTypeBadge(item.schedule_type)}
+              ${isCurrentTeacher() ? `<span class="text-[11px] font-bold text-slate-500">[${item.student_name || '학생'}]</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5">
+              ${calculateDday(item.exam_date)}
+              <button onclick="deleteExamSchedule('${item.id}')" title="일정 삭제" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition p-1">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="font-black text-slate-800 text-base leading-tight">${item.university} ${item.department || ''}</h4>
+            <p class="text-xs text-blue-600 font-bold mt-0.5">${item.admission_type || '-'}</p>
+          </div>
+
+          <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-1 text-xs text-slate-600">
+            <div class="flex items-center gap-1.5 font-semibold text-slate-800">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600"></i> ${item.exam_date} ${item.exam_time ? ' (' + item.exam_time + ')' : ''}
+            </div>
+            ${item.location ? `
+              <div class="flex items-center gap-1.5 text-slate-600 text-[11px]">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500"></i> ${item.location}
+              </div>
+            ` : ''}
+          </div>
+
+          ${item.memo ? `
+            <div class="text-[11px] text-slate-500 bg-amber-50/50 p-2 rounded-lg border border-amber-100 leading-relaxed">
+              💡 ${item.memo}
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // =================================================================
+    // 💡 [입시지도: 최저충족여부] 2합 · 3합 · 4합 / 버림 · 반올림 정밀 계산
+    // =================================================================
+    async function renderMinimumCheckAnalysis() {
+      const tbody = document.getElementById('minCheckTableBody');
+      const cardsGrid = document.getElementById('minCheckSusiCardsGrid');
+      if (!tbody) return;
+
+      let targetUserId = currentUser ? currentUser.id : null;
+      if (isCurrentTeacher()) {
+        const selVal = document.getElementById('minCheckStudentSelect')?.value;
+        if (selVal) targetUserId = selVal;
+      }
+
+      if (!targetUserId) {
+        tbody.innerHTML = '<tr><td colspan="12" class="p-8 text-center text-slate-400">학생을 먼저 선택해주세요.</td></tr>';
+        if (cardsGrid) cardsGrid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-8">학생을 선택하면 수시 6장 최저 충족 현황이 표시됩니다.</p>';
+        return;
+      }
+
+      tbody.innerHTML = '<tr><td colspan="12" class="p-8 text-center text-slate-400">모의고사 성적을 정밀 분석하고 있습니다...</td></tr>';
+
+      // 1. 해당 학생의 모든 모의고사 성적 로드
+      const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', targetUserId);
+      const rounds = ['3월학평', '5월학평', '6월모평', '7월학평', '9월모평', '10월학평', '수능'];
+
+      let rowsHtml = '';
+      const roundAnalysisMap = {}; // 회차별 계산 결과 캐시 (수시 카드 판정용)
+
+      rounds.forEach(round => {
+        const rScores = (scores || []).filter(s => s.exam_round === round);
+        
+        const kor = rScores.find(s => s.subject_key === 'korean')?.grade ?? null;
+        const mat = rScores.find(s => s.subject_key === 'math')?.grade ?? null;
+        const eng = rScores.find(s => s.subject_key === 'english')?.grade ?? null;
+        const his = rScores.find(s => s.subject_key === 'history')?.grade ?? null;
+        const t1 = rScores.find(s => s.subject_key === 'tam1')?.grade ?? null;
+        const t2 = rScores.find(s => s.subject_key === 'tam2')?.grade ?? null;
+
+        // 점수가 전혀 입력되지 않은 회차
+        if (kor === null && mat === null && eng === null && t1 === null && t2 === null) {
+          return; // 미응시/미입력 회차는 건너뜀
+        }
+
+        // 탐구 3가지 방식 계산
+        // 1) 상위 1과목
+        let tamTop1 = null;
+        if (t1 !== null && t2 !== null) tamTop1 = Math.min(t1, t2);
+        else if (t1 !== null) tamTop1 = t1;
+        else if (t2 !== null) tamTop1 = t2;
+
+        // 2) 2과목 버림(절사)
+        let tamFloor = null;
+        if (t1 !== null && t2 !== null) tamFloor = Math.floor((t1 + t2) / 2);
+        else if (t1 !== null) tamFloor = t1;
+        else if (t2 !== null) tamFloor = t2;
+
+        // 3) 2과목 반올림
+        let tamRound = null;
+        if (t1 !== null && t2 !== null) tamRound = Math.round((t1 + t2) / 2);
+        else if (t1 !== null) tamRound = t1;
+        else if (t2 !== null) tamRound = t2;
+
+        // 2합, 3합, 4합 계산 헬퍼 함수
+        function calcBestSums(tamGrade) {
+          const subjects = [];
+          if (kor !== null) subjects.push({ name: '국', grade: kor });
+          if (mat !== null) subjects.push({ name: '수', grade: mat });
+          if (eng !== null) subjects.push({ name: '영', grade: eng });
+          if (tamGrade !== null) subjects.push({ name: '탐', grade: tamGrade });
+
+          subjects.sort((a, b) => a.grade - b.grade);
+
+          const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade, desc: `${subjects[0].name}${subjects[0].grade}+${subjects[1].name}${subjects[1].grade}` } : null;
+          const sum3 = subjects.length >= 3 ? { val: subjects[0].grade + subjects[1].grade + subjects[2].grade, desc: `${subjects[0].name}${subjects[0].grade}+${subjects[1].name}${subjects[1].grade}+${subjects[2].name}${subjects[2].grade}` } : null;
+          const sum4 = subjects.length >= 4 ? { val: subjects.reduce((acc, cur) => acc + cur.grade, 0), desc: subjects.map(s => `${s.name}${s.grade}`).join('+') } : null;
+
+          return { sum2, sum3, sum4 };
+        }
+
+        const top1Sums = calcBestSums(tamTop1);
+        const floorSums = calcBestSums(tamFloor);
+        const roundSums = calcBestSums(tamRound);
+
+        roundAnalysisMap[round] = { kor, mat, eng, t1, t2, his, tamTop1, tamFloor, tamRound, top1Sums, floorSums, roundSums };
+
+        // 3개 행 (상위 1과목, 2과목 버림, 2과목 반올림) 생성
+        rowsHtml += `
+          <!-- 1) 탐구 상위 1과목 행 -->
+          <tr class="hover:bg-blue-50/30 transition border-t-2 border-slate-300">
+            <td rowspan="3" class="p-3 font-black text-slate-800 border-r bg-slate-50 align-middle">
+              <span class="text-sm text-blue-600 block">${round}</span>
+            </td>
+            <td rowspan="3" class="p-2 border-r font-bold text-slate-700 align-middle">${kor ?? '-'}</td>
+            <td rowspan="3" class="p-2 border-r font-bold text-slate-700 align-middle">${mat ?? '-'}</td>
+            <td rowspan="3" class="p-2 border-r font-bold text-slate-700 align-middle">${eng ?? '-'}</td>
+            <td rowspan="3" class="p-2 border-r font-medium text-slate-600 align-middle">${t1 ?? '-'}</td>
+            <td rowspan="3" class="p-2 border-r font-medium text-slate-600 align-middle">${t2 ?? '-'}</td>
+            <td rowspan="3" class="p-2 border-r text-slate-400 align-middle">${his ?? '-'}</td>
+            
+            <td class="p-2 border-r text-xs font-semibold text-slate-700 text-left pl-3">
+              <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5"></span>탐구 상위 1과목
+            </td>
+            <td class="p-2 border-r font-black text-blue-600 bg-blue-50/30">${tamTop1 !== null ? tamTop1 + '등급' : '-'}</td>
+            <td class="p-2 border-r font-black text-emerald-700 bg-emerald-50/30">
+              ${top1Sums.sum2 ? `<span class="text-sm font-black">${top1Sums.sum2.val}</span> <span class="text-[10px] text-slate-400 block font-normal">(${top1Sums.sum2.desc})</span>` : '-'}
+            </td>
+            <td class="p-2 border-r font-black text-emerald-700 bg-emerald-50/30">
+              ${top1Sums.sum3 ? `<span class="text-sm font-black">${top1Sums.sum3.val}</span> <span class="text-[10px] text-slate-400 block font-normal">(${top1Sums.sum3.desc})</span>` : '-'}
+            </td>
+            <td class="p-2 font-black text-emerald-700 bg-emerald-50/30">
+              ${top1Sums.sum4 ? `<span class="text-sm font-black">${top1Sums.sum4.val}</span>` : '-'}
+            </td>
+          </tr>
+
+          <!-- 2) 탐구 2과목 버림(절사) 행 -->
+          <tr class="hover:bg-amber-50/30 transition border-t border-slate-100">
+            <td class="p-2 border-r text-xs font-semibold text-slate-700 text-left pl-3">
+              <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>탐구 2과목 <b class="text-amber-700">[버림]</b>
+            </td>
+            <td class="p-2 border-r font-black text-amber-600 bg-amber-50/20">
+              ${tamFloor !== null ? tamFloor + '등급' : '-'}
+              ${(t1 !== null && t2 !== null && (t1 + t2) % 2 !== 0) ? `<span class="text-[10px] text-amber-600 block">(${(t1+t2)/2}→${tamFloor})</span>` : ''}
+            </td>
+            <td class="p-2 border-r font-black text-emerald-700 bg-emerald-50/20">
+              ${floorSums.sum2 ? `<span class="text-sm font-black">${floorSums.sum2.val}</span> <span class="text-[10px] text-slate-400 block font-normal">(${floorSums.sum2.desc})</span>` : '-'}
+            </td>
+            <td class="p-2 border-r font-black text-emerald-700 bg-emerald-50/20">
+              ${floorSums.sum3 ? `<span class="text-sm font-black">${floorSums.sum3.val}</span> <span class="text-[10px] text-slate-400 block font-normal">(${floorSums.sum3.desc})</span>` : '-'}
+            </td>
+            <td class="p-2 font-black text-emerald-700 bg-emerald-50/20">
+              ${floorSums.sum4 ? `<span class="text-sm font-black">${floorSums.sum4.val}</span>` : '-'}
+            </td>
+          </tr>
+
+          <!-- 3) 탐구 2과목 반올림 행 -->
+          <tr class="hover:bg-purple-50/30 transition border-t border-slate-100">
+            <td class="p-2 border-r text-xs font-semibold text-slate-700 text-left pl-3">
+              <span class="inline-block w-2 h-2 rounded-full bg-purple-500 mr-1.5"></span>탐구 2과목 <b class="text-purple-700">[반올림]</b>
+            </td>
+            <td class="p-2 border-r font-black text-purple-600 bg-purple-50/20">
+              ${tamRound !== null ? tamRound + '등급' : '-'}
+              ${(t1 !== null && t2 !== null && (t1 + t2) % 2 !== 0) ? `<span class="text-[10px] text-purple-600 block">(${(t1+t2)/2}→${tamRound})</span>` : ''}
+            </td>
+            <td class="p-2 border-r font-black text-emerald-700 bg-emerald-50/20">
+              ${roundSums.sum2 ? `<span class="text-sm font-black">${roundSums.sum2.val}</span> <span class="text-[10px] text-slate-400 block font-normal">(${roundSums.sum2.desc})</span>` : '-'}
+            </td>
+            <td class="p-2 border-r font-black text-emerald-700 bg-emerald-50/20">
+              ${roundSums.sum3 ? `<span class="text-sm font-black">${roundSums.sum3.val}</span> <span class="text-[10px] text-slate-400 block font-normal">(${roundSums.sum3.desc})</span>` : '-'}
+            </td>
+            <td class="p-2 font-black text-emerald-700 bg-emerald-50/20">
+              ${roundSums.sum4 ? `<span class="text-sm font-black">${roundSums.sum4.val}</span>` : '-'}
+            </td>
+          </tr>
+        `;
+      });
+
+      if (!rowsHtml) {
+        tbody.innerHTML = '<tr><td colspan="12" class="p-8 text-center text-slate-400">등록된 모의고사 성적이 없습니다. [입시지도 > 모의고사 분석]에서 성적을 먼저 입력해주세요.</td></tr>';
+      } else {
+        tbody.innerHTML = rowsHtml;
+      }
+
+      // 2. 수시 6장 최저 충족 실시간 판정기 렌더링
+      const simRound = document.getElementById('minCheckSimRoundSelect')?.value || '9월모평';
+      const roundData = roundAnalysisMap[simRound];
+
+      const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', targetUserId).eq('slot_type', 'susi');
+      if (!cards || cards.length === 0 || !cards.some(c => c.university)) {
+        cardsGrid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-8">등록된 수시 지망 대학이 없습니다. [입시지도 > 입시상담카드]에서 대학을 등록해보세요.</p>';
+        return;
+      }
+
+      cardsGrid.innerHTML = cards.map(c => {
+        if (!c.university) return '';
+        const criteria = (c.min_criteria || '').trim();
+
+        let statusHtml = '';
+        if (!criteria || criteria === '없음' || criteria === '-') {
+          statusHtml = '<span class="px-2 py-1 bg-slate-100 text-slate-500 rounded text-xs font-bold">수능최저 없음</span>';
+        } else if (!roundData) {
+          statusHtml = `<span class="px-2 py-1 bg-slate-100 text-slate-400 rounded text-xs">${simRound} 미응시</span>`;
+        } else {
+          // 최저 기준 자동 파싱 (예: "3합 7", "2합 5", "4합 8")
+          const match = criteria.match(/([2-4])\s*합\s*([0-9]{1,2})/);
+          if (match) {
+            const reqCount = parseInt(match[1]); // 2, 3, 4
+            const targetSum = parseInt(match[2]); // 7, 5 등
+
+            // 우선 탐구 상위 1과목 기준으로 판정
+            const bestSumObj = reqCount === 2 ? roundData.top1Sums.sum2 : (reqCount === 3 ? roundData.top1Sums.sum3 : roundData.top1Sums.sum4);
+
+            if (bestSumObj && bestSumObj.val !== null) {
+              const diff = targetSum - bestSumObj.val; // 양수이면 여유(충족), 음수이면 부족
+              if (diff >= 0) {
+                statusHtml = `
+                  <div class="space-y-1">
+                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-md text-xs font-black inline-flex items-center gap-1">
+                      <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> 최저 충족 (${bestSumObj.val}합)
+                    </span>
+                    <span class="text-[10px] text-emerald-600 block font-semibold">+${diff}등급 여유</span>
+                  </div>
+                `;
+              } else {
+                statusHtml = `
+                  <div class="space-y-1">
+                    <span class="px-2.5 py-1 bg-rose-100 text-rose-700 rounded-md text-xs font-black inline-flex items-center gap-1">
+                      <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> 최저 미달 (${bestSumObj.val}합)
+                    </span>
+                    <span class="text-[10px] text-rose-600 block font-semibold">${Math.abs(diff)}등급 향상 필요</span>
+                  </div>
+                `;
+              }
+            } else {
+              statusHtml = '<span class="px-2 py-1 bg-slate-100 text-slate-500 rounded text-xs">영역 수 부족</span>';
+            }
+          } else {
+            statusHtml = `<span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-bold" title="${criteria}">기준: ${criteria}</span>`;
+          }
+        }
+
+        return `
+          <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-blue-600">${c.slot_num}지망</span>
+                <span class="text-[10px] text-slate-400">${c.admission_type || '-'}</span>
+              </div>
+              <h4 class="font-black text-slate-800 text-sm mt-0.5">${c.university} ${c.department || ''}</h4>
+              <p class="text-xs text-slate-500 mt-1">최저 기준: <b class="text-slate-800">${criteria || '없음'}</b></p>
+            </div>
+            <div class="pt-2 border-t flex justify-between items-center">
+              <span class="text-[11px] text-slate-400 font-medium">${simRound} 결과:</span>
+              <div>${statusHtml}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    // =================================================================
+    // 💡 원서 12장 및 모의고사, 기초조사서 기능들
+    // =================================================================
+    function renderStudent12CardInputs() {
+      const sGrid = document.getElementById('studentSusiGrid');
+      const spGrid = document.getElementById('studentSpecialGrid');
+
+      sGrid.innerHTML = [1,2,3,4,5,6].map(i => `
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-xs space-y-2">
+          <div class="font-bold text-blue-600">수시 지원 ${i}지망</div>
+          <input type="text" id="susi_univ_${i}" placeholder="대학교 (예: 고려대)" class="w-full px-2 py-1.5 border rounded">
+          <input type="text" id="susi_dept_${i}" placeholder="모집단위 (예: 국어교육과)" class="w-full px-2 py-1.5 border rounded">
+          <input type="text" id="susi_type_${i}" placeholder="전형 (예: 학종 일반)" class="w-full px-2 py-1.5 border rounded">
+          <input type="text" id="susi_min_${i}" placeholder="수능최저 (예: 3합 7)" class="w-full px-2 py-1.5 border rounded font-semibold text-emerald-700 bg-emerald-50/30">
+        </div>
+      `).join('');
+
+      spGrid.innerHTML = [1,2,3,4,5,6].map(i => `
+        <div class="bg-white p-3 rounded-xl border border-purple-200 shadow-sm text-xs space-y-2">
+          <div class="font-bold text-purple-600">특목/전문대 ${i}지망</div>
+          <input type="text" id="spec_univ_${i}" placeholder="학교 (예: KAIST/육사)" class="w-full px-2 py-1.5 border rounded">
+          <input type="text" id="spec_dept_${i}" placeholder="학과/계열" class="w-full px-2 py-1.5 border rounded">
+          <input type="text" id="spec_type_${i}" placeholder="전형구분" class="w-full px-2 py-1.5 border rounded">
+          <input type="text" id="spec_memo_${i}" placeholder="비고/특이사항" class="w-full px-2 py-1.5 border rounded">
+        </div>
+      `).join('');
+    }
+
+    async function loadStudentExisting12Cards() {
+      const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', currentUser.id);
+      if (cards) {
+        cards.forEach(c => {
+          if (c.slot_type === 'susi') {
+            const u = document.getElementById(`susi_univ_${c.slot_num}`);
+            const d = document.getElementById(`susi_dept_${c.slot_num}`);
+            const t = document.getElementById(`susi_type_${c.slot_num}`);
+            const m = document.getElementById(`susi_min_${c.slot_num}`);
+            if (u) u.value = c.university || '';
+            if (d) d.value = c.department || '';
+            if (t) t.value = c.admission_type || '';
+            if (m) m.value = c.min_criteria || '';
+          } else {
+            const u = document.getElementById(`spec_univ_${c.slot_num}`);
+            const d = document.getElementById(`spec_dept_${c.slot_num}`);
+            const t = document.getElementById(`spec_type_${c.slot_num}`);
+            const m = document.getElementById(`spec_memo_${c.slot_num}`);
+            if (u) u.value = c.university || '';
+            if (d) d.value = c.department || '';
+            if (t) t.value = c.admission_type || '';
+            if (m) m.value = c.memo || '';
+          }
+        });
+      }
+    }
+
+    async function saveStudent12Cards() {
+      const records = [];
+      for (let i = 1; i <= 6; i++) {
+        records.push({
+          user_id: currentUser.id,
+          student_no: currentProfile.student_no,
+          student_name: currentProfile.name,
+          slot_type: 'susi',
+          slot_num: i,
+          university: document.getElementById(`susi_univ_${i}`).value.trim(),
+          department: document.getElementById(`susi_dept_${i}`).value.trim(),
+          admission_type: document.getElementById(`susi_type_${i}`).value.trim(),
+          min_criteria: document.getElementById(`susi_min_${i}`).value.trim()
+        });
+        records.push({
+          user_id: currentUser.id,
+          student_no: currentProfile.student_no,
+          student_name: currentProfile.name,
+          slot_type: 'special',
+          slot_num: i,
+          university: document.getElementById(`spec_univ_${i}`).value.trim(),
+          department: document.getElementById(`spec_dept_${i}`).value.trim(),
+          admission_type: document.getElementById(`spec_type_${i}`).value.trim(),
+          memo: document.getElementById(`spec_memo_${i}`).value.trim()
+        });
+      }
+
+      await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
+      await supabaseClient.from('applications_12').insert(records);
+      alert('입시상담카드 내용이 성공적으로 저장되었습니다!');
+      loadHomeDashboardData();
+      renderMinimumCheckAnalysis();
+    }
+
+    async function submitCounselRequest(e) {
+      e.preventDefault();
+      const date = document.getElementById('counselDate').value;
+      const period = document.getElementById('counselPeriod').value;
+      const topic = document.getElementById('counselTopic').value;
+      const detail = document.getElementById('counselDetail').value.trim();
+
+      await supabaseClient.from('counsel_requests').insert([{
+        user_id: currentUser.id,
+        student_no: currentProfile.student_no,
+        student_name: currentProfile.name,
+        target_date: date,
+        target_period: period,
+        topic: topic,
+        detail: detail,
+        status: 'pending'
+      }]);
+
+      alert('상담 신청서가 담임선생님께 제출되었습니다!');
+      document.getElementById('counselDetail').value = '';
+      loadHomeDashboardData();
+    }
+
+    async function loadStudent12CardsForTeacher() {
+      const studentId = document.getElementById('teacherStudentSelect').value;
+      const container = document.getElementById('teacherCardsContainer');
+      if (!studentId) {
+        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
+        return;
+      }
+
+      const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', studentId);
+      const susiList = cards ? cards.filter(c => c.slot_type === 'susi') : [];
+      const specList = cards ? cards.filter(c => c.slot_type === 'special') : [];
+
+      container.innerHTML = `
+        <div class="bg-white p-5 rounded-xl border border-slate-200">
+          <h3 class="font-bold text-blue-700 text-sm mb-3">일반 수시 6장 지망 현황</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${[1,2,3,4,5,6].map(num => {
+              const c = susiList.find(x => x.slot_num === num) || {};
+              return `
+                <div class="p-3 bg-slate-50 rounded-lg border text-xs">
+                  <div class="font-bold text-blue-600 mb-1">${num}지망: ${c.university || '<span class="text-slate-400">미입력</span>'}</div>
+                  <div class="text-slate-700">학과: ${c.department || '-'}</div>
+                  <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
+                  <div class="text-emerald-700 font-semibold">최저: ${c.min_criteria || '-'}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200">
+          <h3 class="font-bold text-purple-700 text-sm mb-3">특수목적대 / 전문대 6장 현황</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${[1,2,3,4,5,6].map(num => {
+              const c = specList.find(x => x.slot_num === num) || {};
+              return `
+                <div class="p-3 bg-slate-50 rounded-lg border text-xs">
+                  <div class="font-bold text-purple-600 mb-1">${num}지망: ${c.university || '<span class="text-slate-400">미입력</span>'}</div>
+                  <div class="text-slate-700">학과: ${c.department || '-'}</div>
+                  <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
+                  <div class="text-slate-400">비고: ${c.memo || '-'}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    const SUBJECT_ROWS = [
+      { key: 'korean', name: '국어', options: ['화법과 작문', '언어와 매체'] },
+      { key: 'math', name: '수학', options: ['확률과 통계', '미적분', '기하'] },
+      { key: 'english', name: '영어', options: ['영어(절대)'] },
+      { key: 'history', name: '한국사', options: ['한국사(절대)'] },
+      { key: 'tam1', name: '탐구1', options: ['생활과 윤리','윤리와 사상','한국지리','세계지리','사회·문화','경제','정치와 법','동아시아사','세계사','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학II','화학II','생명과학II','지구과학II'] },
+      { key: 'tam2', name: '탐구2', options: ['생활과 윤리','윤리와 사상','한국지리','세계지리','사회·문화','경제','정치와 법','동아시아사','세계사','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학II','화학II','생명과학II','지구과학II'] }
+    ];
+
+    function renderMockScoreInputs() {
+      const tbody = document.getElementById('mockInputTableBody');
+      tbody.innerHTML = SUBJECT_ROWS.map(s => `
+        <tr>
+          <td class="p-2.5 font-bold text-slate-700">${s.name}</td>
+          <td class="p-2.5">
+            <select id="mock_subj_${s.key}" class="px-2 py-1 border rounded bg-white font-medium">
+              ${s.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+            </select>
+          </td>
+          <td class="p-2.5"><input type="number" id="mock_raw_${s.key}" placeholder="0~100" class="w-full px-2 py-1 border rounded"></td>
+          <td class="p-2.5"><input type="number" id="mock_std_${s.key}" placeholder="표점" class="w-full px-2 py-1 border rounded"></td>
+          <td class="p-2.5"><input type="number" step="0.01" id="mock_pct_${s.key}" placeholder="백분위" class="w-full px-2 py-1 border rounded font-bold text-blue-600"></td>
+          <td class="p-2.5"><input type="number" step="0.01" id="mock_cumpct_${s.key}" placeholder="누적" class="w-full px-2 py-1 border rounded"></td>
+          <td class="p-2.5"><input type="number" id="mock_grd_${s.key}" placeholder="등급" min="1" max="9" class="w-full px-2 py-1 border rounded font-bold"></td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadStudentMockScoresForRound() {
+      const round = document.getElementById('mockRoundSelect').value;
+      const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', currentUser.id).eq('exam_round', round);
+
+      SUBJECT_ROWS.forEach(s => {
+        document.getElementById(`mock_raw_${s.key}`).value = '';
+        document.getElementById(`mock_std_${s.key}`).value = '';
+        document.getElementById(`mock_pct_${s.key}`).value = '';
+        document.getElementById(`mock_cumpct_${s.key}`).value = '';
+        document.getElementById(`mock_grd_${s.key}`).value = '';
+      });
+
+      if (scores) {
+        scores.forEach(row => {
+          const s = SUBJECT_ROWS.find(item => item.key === row.subject_key);
+          if (s) {
+            const selSubj = document.getElementById(`mock_subj_${s.key}`);
+            if (selSubj) selSubj.value = row.subject_name;
+            document.getElementById(`mock_raw_${s.key}`).value = row.raw_score ?? '';
+            document.getElementById(`mock_std_${s.key}`).value = row.standard_score ?? '';
+            document.getElementById(`mock_pct_${s.key}`).value = row.percentile ?? '';
+            document.getElementById(`mock_cumpct_${s.key}`).value = row.cum_percentile ?? '';
+            document.getElementById(`mock_grd_${s.key}`).value = row.grade ?? '';
+          }
+        });
+      }
+    }
+
+    async function saveMockScores() {
+      const round = document.getElementById('mockRoundSelect').value;
+      const records = [];
+
+      SUBJECT_ROWS.forEach(s => {
+        const subjName = document.getElementById(`mock_subj_${s.key}`).value;
+        const raw = document.getElementById(`mock_raw_${s.key}`).value;
+        const std = document.getElementById(`mock_std_${s.key}`).value;
+        const pct = document.getElementById(`mock_pct_${s.key}`).value;
+        const cumpct = document.getElementById(`mock_cumpct_${s.key}`).value;
+        const grd = document.getElementById(`mock_grd_${s.key}`).value;
+
+        if (raw || std || pct || grd) {
+          records.push({
+            user_id: currentUser.id,
+            exam_round: round,
+            subject_key: s.key,
+            subject_name: subjName,
+            raw_score: raw ? parseInt(raw) : null,
+            standard_score: std ? parseInt(std) : null,
+            percentile: pct ? parseFloat(pct) : null,
+            cum_percentile: cumpct ? parseFloat(cumpct) : null,
+            grade: grd ? parseInt(grd) : null
+          });
+        }
+      });
+
+      if (records.length === 0) return alert('입력된 점수가 없습니다.');
+
+      await supabaseClient.from('mock_scores').delete().eq('user_id', currentUser.id).eq('exam_round', round);
+      await supabaseClient.from('mock_scores').insert(records);
+      alert(`${round} 모의고사 성적이 성공적으로 저장되었습니다!`);
+      renderMockChart(currentUser.id, 'studentMockChart');
+      renderMinimumCheckAnalysis();
+    }
+
+    async function renderMockChart(userId, canvasId) {
+      const rounds = ['3월학평', '5월학평', '6월모평', '7월학평', '9월모평', '10월학평', '수능'];
+      const { data: allScores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', userId);
+
+      const korData = [];
+      const mathData = [];
+      const totalAvgData = [];
+
+      rounds.forEach(r => {
+        const rScores = allScores ? allScores.filter(s => s.exam_round === r) : [];
+        const k = rScores.find(s => s.subject_key === 'korean');
+        const m = rScores.find(s => s.subject_key === 'math');
+        const kPct = k && k.percentile !== null ? parseFloat(k.percentile) : null;
+        const mPct = m && m.percentile !== null ? parseFloat(m.percentile) : null;
+
+        korData.push(kPct);
+        mathData.push(mPct);
+
+        if (kPct !== null && mPct !== null) totalAvgData.push(parseFloat(((kPct + mPct) / 2).toFixed(2)));
+        else totalAvgData.push(null);
+      });
+
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+
+      if (canvasId === 'studentMockChart' && studentChartInstance) studentChartInstance.destroy();
+      if (canvasId === 'teacherMockChartCanvas' && teacherChartInstance) teacherChartInstance.destroy();
+
+      const newChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: rounds,
+          datasets: [
+            { label: '국어 백분위', data: korData, borderColor: '#2563eb', backgroundColor: '#2563eb', tension: 0.2, spanGaps: true },
+            { label: '수학 백분위', data: mathData, borderColor: '#dc2626', backgroundColor: '#dc2626', tension: 0.2, spanGaps: true },
+            { label: '국·수 평균', data: totalAvgData, borderColor: '#ea580c', backgroundColor: '#ea580c', borderWidth: 3, pointRadius: 4, tension: 0.2, spanGaps: true }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 100 } }
+        }
+      });
+
+      if (canvasId === 'studentMockChart') studentChartInstance = newChart;
+      else teacherChartInstance = newChart;
+    }
+
+    async function loadStudentMockForTeacher() {
+      const studentId = document.getElementById('mockStudentSelect').value;
+      const container = document.getElementById('teacherMockContainer');
+      if (!studentId) {
+        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
+        return;
+      }
+      container.innerHTML = `
+        <div class="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
+          <h3 class="font-bold text-slate-800 text-sm">회차별 백분위 변동 추이</h3>
+          <div class="h-72 w-full"><canvas id="teacherMockChartCanvas"></canvas></div>
+        </div>
+      `;
+      renderMockChart(studentId, 'teacherMockChartCanvas');
+    }
+
+    async function loadMySurveyData() {
+      const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', currentUser.id).single();
+      if (data) {
+        document.getElementById('surv_father_name').value = data.father_name || '';
+        document.getElementById('surv_father_phone').value = data.father_phone || '';
+        document.getElementById('surv_mother_name').value = data.mother_name || '';
+        document.getElementById('surv_mother_phone').value = data.mother_phone || '';
+        document.getElementById('surv_student_phone').value = data.student_phone || '';
+        document.getElementById('surv_siblings').value = data.siblings || '';
+        document.getElementById('surv_address').value = data.address || '';
+        document.getElementById('surv_career').value = data.career_hope || '';
+        document.getElementById('surv_notes').value = data.special_notes || '';
+      }
+    }
+
+    async function saveStudentSurvey(e) {
+      e.preventDefault();
+      const g2Selected = Array.from(document.querySelectorAll('input[name="grade2_sub"]:checked')).map(c => c.value);
+      const g3Selected = Array.from(document.querySelectorAll('input[name="grade3_sub"]:checked')).map(c => c.value);
+
+      const surveyObj = {
+        user_id: currentUser.id,
+        father_name: document.getElementById('surv_father_name').value.trim(),
+        father_phone: document.getElementById('surv_father_phone').value.trim(),
+        mother_name: document.getElementById('surv_mother_name').value.trim(),
+        mother_phone: document.getElementById('surv_mother_phone').value.trim(),
+        student_phone: document.getElementById('surv_student_phone').value.trim(),
+        siblings: document.getElementById('surv_siblings').value.trim(),
+        address: document.getElementById('surv_address').value.trim(),
+        career_hope: document.getElementById('surv_career').value.trim(),
+        special_notes: document.getElementById('surv_notes').value.trim(),
+        selected_subjects: { grade2: g2Selected, grade3: g3Selected },
+        updated_at: new Date()
+      };
+
+      await supabaseClient.from('student_surveys').upsert(surveyObj);
+      alert('기초조사서가 성공적으로 저장되었어!');
+    }
+
+    async function loadStudentSurveyForTeacher() {
+      const studentId = document.getElementById('surveyStudentSelect').value;
+      const card = document.getElementById('surveyTeacherDetailCard');
+      if (!studentId) return;
+
+      const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', studentId).single();
+      if (!data) {
+        card.innerHTML = '<p class="text-center text-slate-400 py-12">작성된 기초조사서가 없습니다.</p>';
+        return;
+      }
+
+      card.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
+            <div>부모님 연락처: <b>${data.father_name || '-'}</b>(${data.father_phone || '-'}), <b>${data.mother_name || '-'}</b>(${data.mother_phone || '-'})</div>
+            <div>학생 연락처: <b class="text-blue-600">${data.student_phone || '-'}</b></div>
+            <div class="col-span-2">주소: <b>${data.address || '-'}</b></div>
+          </div>
+          <div>진로희망: <b class="text-slate-800">${data.career_hope || '-'}</b></div>
+          <div>특이사항: <p class="text-slate-700 bg-amber-50 p-3 rounded-lg border border-amber-200">${data.special_notes || '없음'}</p></div>
+        </div>
+      `;
+    }
+
+    // =================================================================
+    // 💡 회원 및 학생 선택자 관리
+    // =================================================================
+    async function loadTeacherStudentSelects() {
+      let q = supabaseClient.from('profiles').select('*').eq('role', 'student').eq('is_approved', true).order('student_no');
+      if (activeClassNum !== 'all') {
+        q = q.eq('class_num', activeClassNum);
+      }
+      const { data: students } = await q;
+      const optHtml = '<option value="">학생을 선택하세요</option>' + (students || []).map(s => `
+        <option value="${s.id}">${s.student_no ? s.student_no + ' ' : ''}${s.name} (${s.class_num || 2}반)</option>
+      `).join('');
+
+      const tSel = document.getElementById('teacherStudentSelect');
+      const sSel = document.getElementById('surveyStudentSelect');
+      const mSel = document.getElementById('mockStudentSelect');
+      const minSel = document.getElementById('minCheckStudentSelect');
+      const schedSel = document.getElementById('scheduleStudentSelect');
+
+      if (tSel) tSel.innerHTML = optHtml;
+      if (sSel) sSel.innerHTML = optHtml;
+      if (mSel) mSel.innerHTML = optHtml;
+      if (minSel) minSel.innerHTML = optHtml;
+      if (schedSel) {
+        schedSel.innerHTML = '<option value="all">🌐 학급 전체 모아보기</option>' + (students || []).map(s => `
+          <option value="${s.id}">${s.student_no ? s.student_no + ' ' : ''}${s.name}</option>
+        `).join('');
+      }
+    }
+
+    async function loadUsersData() {
+      let pendingQuery = supabaseClient.from('profiles').select('*').eq('is_approved', false).order('created_at', { ascending: false });
+      if (activeClassNum !== 'all') {
+        pendingQuery = pendingQuery.eq('class_num', activeClassNum);
+      }
+      const { data: pendingList } = await pendingQuery;
+      const pendingTbody = document.getElementById('pendingUserTableBody');
+      const badge = document.getElementById('pendingCountBadge');
+
+      if (!pendingList || pendingList.length === 0) {
+        pendingTbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>';
+        badge.classList.add('hidden');
+      } else {
+        badge.classList.remove('hidden');
+        badge.innerText = pendingList.length;
+        pendingTbody.innerHTML = pendingList.map(u => `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 text-xs text-slate-400">${new Date(u.created_at).toLocaleDateString()}</td>
+            <td class="p-3 font-bold text-blue-600">${u.class_num ? u.class_num + '반' : '전체'}</td>
+            <td class="p-3 font-bold text-slate-800">${u.student_no ? u.student_no : u.email}</td>
+            <td class="p-3 font-bold text-slate-800">${u.name}</td>
+            <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${u.role}</span></td>
+            <td class="p-3">
+              <select id="roleSelect_${u.id}" class="text-xs border rounded px-2 py-1 bg-white">
+                <option value="student" ${u.role==='student'?'selected':''}>학생</option>
+                <option value="teacher" ${u.role==='teacher'?'selected':''}>담임교사</option>
+                <option value="admin" ${u.role==='admin'?'selected':''}>학년부장/관리자</option>
+                <option value="parent" ${u.role==='parent'?'selected':''}>학부모</option>
+              </select>
+            </td>
+            <td class="p-3 text-right space-x-1">
+              <button onclick="approveUser('${u.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition">승인</button>
+              <button onclick="rejectUser('${u.id}')" class="px-2 py-1 bg-slate-200 hover:bg-rose-100 text-slate-600 hover:text-rose-600 rounded text-xs transition">반려</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      let approvedQuery = supabaseClient.from('profiles').select('*').eq('is_approved', true).order('class_num');
+      if (activeClassNum !== 'all') {
+        approvedQuery = approvedQuery.eq('class_num', activeClassNum);
+      }
+      const { data: approvedList } = await approvedQuery;
+      const approvedTbody = document.getElementById('approvedUserTableBody');
+
+      if (!approvedList || approvedList.length === 0) {
+        approvedTbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">등록된 회원이 없습니다.</td></tr>';
+      } else {
+        approvedTbody.innerHTML = approvedList.map(u => `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-blue-600">${u.class_num ? u.class_num + '반' : '전체(관리자)'}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-xs font-semibold ${
+                u.role === 'admin'
+                  ? 'bg-amber-100 text-amber-800'
+                  : (u.role === 'student'
+                      ? 'bg-blue-100 text-blue-800'
+                      : (u.role === 'teacher' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'))
+              }">
+                ${u.role === 'admin' ? '부장/관리자' : (u.role === 'student' ? '학생' : (u.role === 'teacher' ? '담임교사' : '학부모'))}
+              </span>
+            </td>
+            <td class="p-3 font-bold text-slate-800">${u.student_no || u.email}</td>
+            <td class="p-3 font-semibold text-slate-700">${u.name}</td>
+            <td class="p-3 text-right">
+              <button onclick="openEditUserModal('${u.id}', '${u.student_no || u.email}', '${u.name}', ${u.class_num !== null && u.class_num !== undefined ? u.class_num : 2}, '${u.role || 'student'}')" class="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded text-xs font-bold transition inline-flex items-center gap-1">
+                <i data-lucide="key" class="w-3 h-3"></i> 수정
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+      lucide.createIcons();
+    }
+
+    async function approveUser(userId) {
+      const selectedRole = document.getElementById(`roleSelect_${userId}`).value;
+      await supabaseClient.from('profiles').update({ is_approved: true, role: selectedRole }).eq('id', userId);
+      alert('승인 및 역할 부여가 완료되었습니다.');
+      loadUsersData();
+      loadTeacherStudentSelects();
+    }
+    async function rejectUser(userId) {
+      if (confirm('이 회원을 삭제(반려)할까요?')) {
+        await supabaseClient.from('profiles').delete().eq('id', userId);
+        loadUsersData();
+      }
+    }
+
+    function openEditUserModal(userId, currentRawId, name, classNum, role) {
+      document.getElementById('modalUserId').value = userId;
+      document.getElementById('modalUserRawId').value = currentRawId;
+      document.getElementById('modalUserClassNum').value = (classNum !== null && classNum !== undefined) ? classNum : 2;
+      document.getElementById('modalUserRole').value = role || 'student';
+      document.getElementById('modalUserPw').value = '';
+      document.getElementById('modalUserName').innerText = `[${name}] 계정 수정`;
+      document.getElementById('editUserModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeEditUserModal() {
+      document.getElementById('editUserModal').classList.add('hidden');
+    }
+
+    async function submitUserEdit() {
+      const userId = document.getElementById('modalUserId').value;
+      const newRawId = document.getElementById('modalUserRawId').value.trim();
+      const newClassNum = parseInt(document.getElementById('modalUserClassNum').value) || 0;
+      const newRole = document.getElementById('modalUserRole').value;
+      const newPw = document.getElementById('modalUserPw').value.trim();
+      const saveBtn = document.getElementById('modalSaveBtn');
+
+      saveBtn.innerText = '저장 중...';
+      saveBtn.disabled = true;
+
+      const updateFields = {
+        class_num: newClassNum,
+        role: newRole
+      };
+      if (newRole === 'student') {
+        updateFields.student_no = newRawId;
+      }
+
+      const { error: profileError } = await supabaseClient.from('profiles').update(updateFields).eq('id', userId);
+      if (profileError) {
+        alert('회원 프로필 수정 실패: ' + profileError.message);
+        saveBtn.innerText = '저장하기';
+        saveBtn.disabled = false;
+        return;
+      }
+
+      const { error: rpcError } = await supabaseClient.rpc('admin_update_user_credentials', {
+        target_user_id: userId,
+        new_raw_id: newRawId,
+        new_password: newPw || null
+      });
+
+      if (rpcError) {
+        alert('계정 로그인 정보 수정 오류: ' + rpcError.message);
+      } else {
+        alert('회원 구분, 학급 및 계정 정보가 성공적으로 변경되었습니다!');
+        closeEditUserModal();
+        loadUsersData();
+        loadTeacherStudentSelects();
+      }
+      saveBtn.innerText = '저장하기';
+      saveBtn.disabled = false;
+    }
+
+    async function handleBulkStudentCreate() {
+      const rawText = document.getElementById('bulkStudentInput').value.trim();
+      if (!rawText) return alert('학번과 이름 명렬표를 입력해주세요.');
+
+      const lines = rawText.split('\n');
+      const students = [];
+
+      for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        const parts = line.split(/\s+/);
+        if (parts.length >= 2) {
+          const sNo = parts[0].trim();
+          let cls = (activeClassNum === 'all') ? 2 : activeClassNum;
+          if (sNo.length >= 3 && sNo.startsWith('3')) {
+            cls = parseInt(sNo.substring(1, 3)) || cls;
+          }
+          students.push({
+            student_no: sNo,
+            name: parts.slice(1).join(' ').trim(),
+            class_num: cls
+          });
+        }
+      }
+
+      if (students.length === 0) return alert('유효한 명렬표 형식을 찾을 수 없습니다.');
+
+      const btn = document.getElementById('bulkCreateBtn');
+      btn.innerText = '생성 중...';
+      btn.disabled = true;
+
+      const { data: results, error } = await supabaseClient.rpc('admin_bulk_create_students', { students: students });
+
+      if (error) alert('일괄 생성 실패: ' + error.message);
+      else {
+        lastGeneratedResults = results || [];
+        renderBulkResultTable(lastGeneratedResults);
+        alert(`학생 계정 생성이 완료되었습니다!`);
+        document.getElementById('bulkStudentInput').value = '';
+        loadUsersData();
+        loadTeacherStudentSelects();
+      }
+
+      btn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4"></i> 일괄 계정 생성 및 임시 비밀번호 발급';
+      btn.disabled = false;
+      lucide.createIcons();
+    }
+
+    function renderBulkResultTable(list) {
+      const container = document.getElementById('bulkResultContainer');
+      const copyBtn = document.getElementById('copyResultBtn');
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<p class="text-center py-6 text-slate-400">생성 결과가 없습니다.</p>';
+        copyBtn.classList.add('hidden');
+        return;
+      }
+
+      copyBtn.classList.remove('hidden');
+      container.innerHTML = `
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b font-bold text-slate-700 bg-white">
+              <th class="p-1.5">학번</th>
+              <th class="p-1.5">이름</th>
+              <th class="p-1.5 text-blue-600">임시 비밀번호</th>
+              <th class="p-1.5 text-right">상태</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            ${list.map(s => `
+              <tr class="hover:bg-white/80">
+                <td class="p-1.5 font-bold text-slate-800">${s.student_no}</td>
+                <td class="p-1.5">${s.name}</td>
+                <td class="p-1.5 font-mono font-bold text-blue-600">${s.temp_pw}</td>
+                <td class="p-1.5 text-right"><span class="px-1.5 py-0.5 rounded text-[10px] ${s.status === '성공' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${s.status}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function copyBulkResultText() {
+      if (!lastGeneratedResults || lastGeneratedResults.length === 0) return;
+      let text = `=== 3학년 ${activeClassNum === 'all' ? '' : activeClassNum + '반'} 진학 플랫폼 학생 계정 안내 ===\n\n`;
+      lastGeneratedResults.forEach(s => {
+        text += `[${s.student_no}] ${s.name} | 아이디: ${s.student_no} | 임시비번: ${s.temp_pw}\n`;
+      });
+      navigator.clipboard.writeText(text).then(() => {
+        alert('학생 배포용 명단 및 임시비밀번호가 복사되었습니다!');
+      });
     }
 
     // =================================================================
@@ -1961,652 +3387,8 @@
     }
 
     // =================================================================
-    // 💡 [회원 관리 및 학생 선택자]
+    // 💡 초기화 실행
     // =================================================================
-    async function loadTeacherStudentSelects() {
-      let q = supabaseClient.from('profiles').select('*').eq('role', 'student').eq('is_approved', true).order('student_no');
-      if (activeClassNum !== 'all') {
-        q = q.eq('class_num', activeClassNum);
-      }
-      const { data: students } = await q;
-      const optHtml = '<option value="">학생을 선택하세요</option>' + (students || []).map(s => `
-        <option value="${s.id}">${s.student_no ? s.student_no + ' ' : ''}${s.name} (${s.class_num || 2}반)</option>
-      `).join('');
-
-      const tSel = document.getElementById('teacherStudentSelect');
-      const sSel = document.getElementById('surveyStudentSelect');
-      const mSel = document.getElementById('mockStudentSelect');
-
-      if (tSel) tSel.innerHTML = optHtml;
-      if (sSel) sSel.innerHTML = optHtml;
-      if (mSel) mSel.innerHTML = optHtml;
-    }
-
-    async function loadUsersData() {
-      let pendingQuery = supabaseClient.from('profiles').select('*').eq('is_approved', false).order('created_at', { ascending: false });
-      if (activeClassNum !== 'all') {
-        pendingQuery = pendingQuery.eq('class_num', activeClassNum);
-      }
-      const { data: pendingList } = await pendingQuery;
-      const pendingTbody = document.getElementById('pendingUserTableBody');
-      const badge = document.getElementById('pendingCountBadge');
-
-      if (!pendingList || pendingList.length === 0) {
-        pendingTbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>';
-        badge.classList.add('hidden');
-      } else {
-        badge.classList.remove('hidden');
-        badge.innerText = pendingList.length;
-        pendingTbody.innerHTML = pendingList.map(u => `
-          <tr class="hover:bg-slate-50">
-            <td class="p-3 text-xs text-slate-400">${new Date(u.created_at).toLocaleDateString()}</td>
-            <td class="p-3 font-bold text-blue-600">${u.class_num ? u.class_num + '반' : '전체'}</td>
-            <td class="p-3 font-bold text-slate-800">${u.student_no ? u.student_no : u.email}</td>
-            <td class="p-3 font-bold text-slate-800">${u.name}</td>
-            <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${u.role}</span></td>
-            <td class="p-3">
-              <select id="roleSelect_${u.id}" class="text-xs border rounded px-2 py-1 bg-white">
-                <option value="student" ${u.role==='student'?'selected':''}>학생</option>
-                <option value="teacher" ${u.role==='teacher'?'selected':''}>담임교사</option>
-                <option value="admin" ${u.role==='admin'?'selected':''}>학년부장/관리자</option>
-                <option value="parent" ${u.role==='parent'?'selected':''}>학부모</option>
-              </select>
-            </td>
-            <td class="p-3 text-right space-x-1">
-              <button onclick="approveUser('${u.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition">승인</button>
-              <button onclick="rejectUser('${u.id}')" class="px-2 py-1 bg-slate-200 hover:bg-rose-100 text-slate-600 hover:text-rose-600 rounded text-xs transition">반려</button>
-            </td>
-          </tr>
-        `).join('');
-      }
-
-      let approvedQuery = supabaseClient.from('profiles').select('*').eq('is_approved', true).order('class_num');
-      if (activeClassNum !== 'all') {
-        approvedQuery = approvedQuery.eq('class_num', activeClassNum);
-      }
-      const { data: approvedList } = await approvedQuery;
-      const approvedTbody = document.getElementById('approvedUserTableBody');
-
-      if (!approvedList || approvedList.length === 0) {
-        approvedTbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">등록된 회원이 없습니다.</td></tr>';
-      } else {
-        approvedTbody.innerHTML = approvedList.map(u => `
-          <tr class="hover:bg-slate-50">
-            <td class="p-3 font-bold text-blue-600">${u.class_num ? u.class_num + '반' : '전체(관리자)'}</td>
-            <td class="p-3">
-              <span class="px-2 py-0.5 rounded text-xs font-semibold ${
-                u.role === 'admin'
-                  ? 'bg-amber-100 text-amber-800'
-                  : (u.role === 'student'
-                      ? 'bg-blue-100 text-blue-800'
-                      : (u.role === 'teacher' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'))
-              }">
-                ${u.role === 'admin' ? '부장/관리자' : (u.role === 'student' ? '학생' : (u.role === 'teacher' ? '담임교사' : '학부모'))}
-              </span>
-            </td>
-            <td class="p-3 font-bold text-slate-800">${u.student_no || u.email}</td>
-            <td class="p-3 font-semibold text-slate-700">${u.name}</td>
-            <td class="p-3 text-right">
-              <button onclick="openEditUserModal('${u.id}', '${u.student_no || u.email}', '${u.name}', ${u.class_num !== null && u.class_num !== undefined ? u.class_num : 2}, '${u.role || 'student'}')" class="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded text-xs font-bold transition inline-flex items-center gap-1">
-                <i data-lucide="key" class="w-3 h-3"></i> 수정
-              </button>
-            </td>
-          </tr>
-        `).join('');
-      }
-      lucide.createIcons();
-    }
-
-    async function approveUser(userId) {
-      const selectedRole = document.getElementById(`roleSelect_${userId}`).value;
-      await supabaseClient.from('profiles').update({ is_approved: true, role: selectedRole }).eq('id', userId);
-      alert('승인 및 역할 부여가 완료되었습니다.');
-      loadUsersData();
-      loadTeacherStudentSelects();
-    }
-    async function rejectUser(userId) {
-      if (confirm('이 회원을 삭제(반려)할까요?')) {
-        await supabaseClient.from('profiles').delete().eq('id', userId);
-        loadUsersData();
-      }
-    }
-
-    function openEditUserModal(userId, currentRawId, name, classNum, role) {
-      document.getElementById('modalUserId').value = userId;
-      document.getElementById('modalUserRawId').value = currentRawId;
-      document.getElementById('modalUserClassNum').value = (classNum !== null && classNum !== undefined) ? classNum : 2;
-      document.getElementById('modalUserRole').value = role || 'student';
-      document.getElementById('modalUserPw').value = '';
-      document.getElementById('modalUserName').innerText = `[${name}] 계정 수정`;
-      document.getElementById('editUserModal').classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    function closeEditUserModal() {
-      document.getElementById('editUserModal').classList.add('hidden');
-    }
-
-    async function submitUserEdit() {
-      const userId = document.getElementById('modalUserId').value;
-      const newRawId = document.getElementById('modalUserRawId').value.trim();
-      const newClassNum = parseInt(document.getElementById('modalUserClassNum').value) || 0;
-      const newRole = document.getElementById('modalUserRole').value;
-      const newPw = document.getElementById('modalUserPw').value.trim();
-      const saveBtn = document.getElementById('modalSaveBtn');
-
-      saveBtn.innerText = '저장 중...';
-      saveBtn.disabled = true;
-
-      const updateFields = {
-        class_num: newClassNum,
-        role: newRole
-      };
-      if (newRole === 'student') {
-        updateFields.student_no = newRawId;
-      }
-
-      const { error: profileError } = await supabaseClient.from('profiles').update(updateFields).eq('id', userId);
-      if (profileError) {
-        alert('회원 프로필 수정 실패: ' + profileError.message);
-        saveBtn.innerText = '저장하기';
-        saveBtn.disabled = false;
-        return;
-      }
-
-      const { error: rpcError } = await supabaseClient.rpc('admin_update_user_credentials', {
-        target_user_id: userId,
-        new_raw_id: newRawId,
-        new_password: newPw || null
-      });
-
-      if (rpcError) {
-        alert('계정 로그인 정보 수정 오류: ' + rpcError.message);
-      } else {
-        alert('회원 구분, 학급 및 계정 정보가 성공적으로 변경되었습니다!');
-        closeEditUserModal();
-        loadUsersData();
-        loadTeacherStudentSelects();
-      }
-      saveBtn.innerText = '저장하기';
-      saveBtn.disabled = false;
-    }
-
-    // =================================================================
-    // 💡 학생 일괄 생성
-    // =================================================================
-    async function handleBulkStudentCreate() {
-      const rawText = document.getElementById('bulkStudentInput').value.trim();
-      if (!rawText) return alert('학번과 이름 명렬표를 입력해주세요.');
-
-      const lines = rawText.split('\n');
-      const students = [];
-
-      for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
-        const parts = line.split(/\s+/);
-        if (parts.length >= 2) {
-          const sNo = parts[0].trim();
-          let cls = (activeClassNum === 'all') ? 2 : activeClassNum;
-          if (sNo.length >= 3 && sNo.startsWith('3')) {
-            cls = parseInt(sNo.substring(1, 3)) || cls;
-          }
-          students.push({
-            student_no: sNo,
-            name: parts.slice(1).join(' ').trim(),
-            class_num: cls
-          });
-        }
-      }
-
-      if (students.length === 0) return alert('유효한 명렬표 형식을 찾을 수 없습니다.');
-
-      const btn = document.getElementById('bulkCreateBtn');
-      btn.innerText = '생성 중...';
-      btn.disabled = true;
-
-      const { data: results, error } = await supabaseClient.rpc('admin_bulk_create_students', { students: students });
-
-      if (error) alert('일괄 생성 실패: ' + error.message);
-      else {
-        lastGeneratedResults = results || [];
-        renderBulkResultTable(lastGeneratedResults);
-        alert(`학생 계정 생성이 완료되었습니다!`);
-        document.getElementById('bulkStudentInput').value = '';
-        loadUsersData();
-        loadTeacherStudentSelects();
-      }
-
-      btn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4"></i> 일괄 계정 생성 및 임시 비밀번호 발급';
-      btn.disabled = false;
-      lucide.createIcons();
-    }
-
-    function renderBulkResultTable(list) {
-      const container = document.getElementById('bulkResultContainer');
-      const copyBtn = document.getElementById('copyResultBtn');
-
-      if (!list || list.length === 0) {
-        container.innerHTML = '<p class="text-center py-6 text-slate-400">생성 결과가 없습니다.</p>';
-        copyBtn.classList.add('hidden');
-        return;
-      }
-
-      copyBtn.classList.remove('hidden');
-      container.innerHTML = `
-        <table class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="border-b font-bold text-slate-700 bg-white">
-              <th class="p-1.5">학번</th>
-              <th class="p-1.5">이름</th>
-              <th class="p-1.5 text-blue-600">임시 비밀번호</th>
-              <th class="p-1.5 text-right">상태</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200">
-            ${list.map(s => `
-              <tr class="hover:bg-white/80">
-                <td class="p-1.5 font-bold text-slate-800">${s.student_no}</td>
-                <td class="p-1.5">${s.name}</td>
-                <td class="p-1.5 font-mono font-bold text-blue-600">${s.temp_pw}</td>
-                <td class="p-1.5 text-right"><span class="px-1.5 py-0.5 rounded text-[10px] ${s.status === '성공' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${s.status}</span></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-
-    function copyBulkResultText() {
-      if (!lastGeneratedResults || lastGeneratedResults.length === 0) return;
-      let text = `=== 3학년 ${activeClassNum === 'all' ? '' : activeClassNum + '반'} 진학 플랫폼 학생 계정 안내 ===\n\n`;
-      lastGeneratedResults.forEach(s => {
-        text += `[${s.student_no}] ${s.name} | 아이디: ${s.student_no} | 임시비번: ${s.temp_pw}\n`;
-      });
-      navigator.clipboard.writeText(text).then(() => {
-        alert('학생 배포용 명단 및 임시비밀번호가 복사되었습니다!');
-      });
-    }
-
-    // =================================================================
-    // 💡 원서 12장 및 모의고사, 기초조사서 기능들
-    // =================================================================
-    function renderStudent12CardInputs() {
-      const sGrid = document.getElementById('studentSusiGrid');
-      const spGrid = document.getElementById('studentSpecialGrid');
-
-      sGrid.innerHTML = [1,2,3,4,5,6].map(i => `
-        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-xs space-y-2">
-          <div class="font-bold text-blue-600">수시 지원 ${i}지망</div>
-          <input type="text" id="susi_univ_${i}" placeholder="대학교 (예: 고려대)" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="susi_dept_${i}" placeholder="모집단위 (예: 국어교육과)" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="susi_type_${i}" placeholder="전형 (예: 학종 일반)" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="susi_min_${i}" placeholder="수능최저 (예: 3합 7)" class="w-full px-2 py-1.5 border rounded">
-        </div>
-      `).join('');
-
-      spGrid.innerHTML = [1,2,3,4,5,6].map(i => `
-        <div class="bg-white p-3 rounded-xl border border-purple-200 shadow-sm text-xs space-y-2">
-          <div class="font-bold text-purple-600">특목/전문대 ${i}지망</div>
-          <input type="text" id="spec_univ_${i}" placeholder="학교 (예: KAIST/육사)" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="spec_dept_${i}" placeholder="학과/계열" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="spec_type_${i}" placeholder="전형구분" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="spec_memo_${i}" placeholder="비고/특이사항" class="w-full px-2 py-1.5 border rounded">
-        </div>
-      `).join('');
-    }
-
-    async function loadStudentExisting12Cards() {
-      const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', currentUser.id);
-      if (cards) {
-        cards.forEach(c => {
-          if (c.slot_type === 'susi') {
-            const u = document.getElementById(`susi_univ_${c.slot_num}`);
-            const d = document.getElementById(`susi_dept_${c.slot_num}`);
-            const t = document.getElementById(`susi_type_${c.slot_num}`);
-            const m = document.getElementById(`susi_min_${c.slot_num}`);
-            if (u) u.value = c.university || '';
-            if (d) d.value = c.department || '';
-            if (t) t.value = c.admission_type || '';
-            if (m) m.value = c.min_criteria || '';
-          } else {
-            const u = document.getElementById(`spec_univ_${c.slot_num}`);
-            const d = document.getElementById(`spec_dept_${c.slot_num}`);
-            const t = document.getElementById(`spec_type_${c.slot_num}`);
-            const m = document.getElementById(`spec_memo_${c.slot_num}`);
-            if (u) u.value = c.university || '';
-            if (d) d.value = c.department || '';
-            if (t) t.value = c.admission_type || '';
-            if (m) m.value = c.memo || '';
-          }
-        });
-      }
-    }
-
-    async function saveStudent12Cards() {
-      const records = [];
-      for (let i = 1; i <= 6; i++) {
-        records.push({
-          user_id: currentUser.id,
-          student_no: currentProfile.student_no,
-          student_name: currentProfile.name,
-          slot_type: 'susi',
-          slot_num: i,
-          university: document.getElementById(`susi_univ_${i}`).value.trim(),
-          department: document.getElementById(`susi_dept_${i}`).value.trim(),
-          admission_type: document.getElementById(`susi_type_${i}`).value.trim(),
-          min_criteria: document.getElementById(`susi_min_${i}`).value.trim()
-        });
-        records.push({
-          user_id: currentUser.id,
-          student_no: currentProfile.student_no,
-          student_name: currentProfile.name,
-          slot_type: 'special',
-          slot_num: i,
-          university: document.getElementById(`spec_univ_${i}`).value.trim(),
-          department: document.getElementById(`spec_dept_${i}`).value.trim(),
-          admission_type: document.getElementById(`spec_type_${i}`).value.trim(),
-          memo: document.getElementById(`spec_memo_${i}`).value.trim()
-        });
-      }
-
-      await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
-      await supabaseClient.from('applications_12').insert(records);
-      alert('12장 지원 카드가 성공적으로 저장되었습니다!');
-      loadHomeDashboardData();
-    }
-
-    async function submitCounselRequest(e) {
-      e.preventDefault();
-      const date = document.getElementById('counselDate').value;
-      const period = document.getElementById('counselPeriod').value;
-      const topic = document.getElementById('counselTopic').value;
-      const detail = document.getElementById('counselDetail').value.trim();
-
-      await supabaseClient.from('counsel_requests').insert([{
-        user_id: currentUser.id,
-        student_no: currentProfile.student_no,
-        student_name: currentProfile.name,
-        target_date: date,
-        target_period: period,
-        topic: topic,
-        detail: detail,
-        status: 'pending'
-      }]);
-
-      alert('상담 신청서가 담임선생님께 제출되었습니다!');
-      document.getElementById('counselDetail').value = '';
-      loadHomeDashboardData();
-    }
-
-    async function loadStudent12CardsForTeacher() {
-      const studentId = document.getElementById('teacherStudentSelect').value;
-      const container = document.getElementById('teacherCardsContainer');
-      if (!studentId) {
-        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
-        return;
-      }
-
-      const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', studentId);
-      const susiList = cards ? cards.filter(c => c.slot_type === 'susi') : [];
-      const specList = cards ? cards.filter(c => c.slot_type === 'special') : [];
-
-      container.innerHTML = `
-        <div class="bg-white p-5 rounded-xl border border-slate-200">
-          <h3 class="font-bold text-blue-700 text-sm mb-3">일반 수시 6장 지망 현황</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            ${[1,2,3,4,5,6].map(num => {
-              const c = susiList.find(x => x.slot_num === num) || {};
-              return `
-                <div class="p-3 bg-slate-50 rounded-lg border text-xs">
-                  <div class="font-bold text-blue-600 mb-1">${num}지망: ${c.university || '<span class="text-slate-400">미입력</span>'}</div>
-                  <div class="text-slate-700">학과: ${c.department || '-'}</div>
-                  <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
-                  <div class="text-slate-400">최저: ${c.min_criteria || '-'}</div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-xl border border-slate-200">
-          <h3 class="font-bold text-purple-700 text-sm mb-3">특수목적대 / 전문대 6장 현황</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            ${[1,2,3,4,5,6].map(num => {
-              const c = specList.find(x => x.slot_num === num) || {};
-              return `
-                <div class="p-3 bg-slate-50 rounded-lg border text-xs">
-                  <div class="font-bold text-purple-600 mb-1">${num}지망: ${c.university || '<span class="text-slate-400">미입력</span>'}</div>
-                  <div class="text-slate-700">학과: ${c.department || '-'}</div>
-                  <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
-                  <div class="text-slate-400">비고: ${c.memo || '-'}</div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    const SUBJECT_ROWS = [
-      { key: 'korean', name: '국어', options: ['화법과 작문', '언어와 매체'] },
-      { key: 'math', name: '수학', options: ['확률과 통계', '미적분', '기하'] },
-      { key: 'english', name: '영어', options: ['영어(절대)'] },
-      { key: 'history', name: '한국사', options: ['한국사(절대)'] },
-      { key: 'tam1', name: '탐구1', options: ['생활과 윤리','윤리와 사상','한국지리','세계지리','사회·문화','경제','정치와 법','동아시아사','세계사','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학II','화학II','생명과학II','지구과학II'] },
-      { key: 'tam2', name: '탐구2', options: ['생활과 윤리','윤리와 사상','한국지리','세계지리','사회·문화','경제','정치와 법','동아시아사','세계사','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학II','화학II','생명과학II','지구과학II'] }
-    ];
-
-    function renderMockScoreInputs() {
-      const tbody = document.getElementById('mockInputTableBody');
-      tbody.innerHTML = SUBJECT_ROWS.map(s => `
-        <tr>
-          <td class="p-2.5 font-bold text-slate-700">${s.name}</td>
-          <td class="p-2.5">
-            <select id="mock_subj_${s.key}" class="px-2 py-1 border rounded bg-white font-medium">
-              ${s.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-            </select>
-          </td>
-          <td class="p-2.5"><input type="number" id="mock_raw_${s.key}" placeholder="0~100" class="w-full px-2 py-1 border rounded"></td>
-          <td class="p-2.5"><input type="number" id="mock_std_${s.key}" placeholder="표점" class="w-full px-2 py-1 border rounded"></td>
-          <td class="p-2.5"><input type="number" step="0.01" id="mock_pct_${s.key}" placeholder="백분위" class="w-full px-2 py-1 border rounded font-bold text-blue-600"></td>
-          <td class="p-2.5"><input type="number" step="0.01" id="mock_cumpct_${s.key}" placeholder="누적" class="w-full px-2 py-1 border rounded"></td>
-          <td class="p-2.5"><input type="number" id="mock_grd_${s.key}" placeholder="등급" min="1" max="9" class="w-full px-2 py-1 border rounded font-bold"></td>
-        </tr>
-      `).join('');
-    }
-
-    async function loadStudentMockScoresForRound() {
-      const round = document.getElementById('mockRoundSelect').value;
-      const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', currentUser.id).eq('exam_round', round);
-
-      SUBJECT_ROWS.forEach(s => {
-        document.getElementById(`mock_raw_${s.key}`).value = '';
-        document.getElementById(`mock_std_${s.key}`).value = '';
-        document.getElementById(`mock_pct_${s.key}`).value = '';
-        document.getElementById(`mock_cumpct_${s.key}`).value = '';
-        document.getElementById(`mock_grd_${s.key}`).value = '';
-      });
-
-      if (scores) {
-        scores.forEach(row => {
-          const s = SUBJECT_ROWS.find(item => item.key === row.subject_key);
-          if (s) {
-            const selSubj = document.getElementById(`mock_subj_${s.key}`);
-            if (selSubj) selSubj.value = row.subject_name;
-            document.getElementById(`mock_raw_${s.key}`).value = row.raw_score ?? '';
-            document.getElementById(`mock_std_${s.key}`).value = row.standard_score ?? '';
-            document.getElementById(`mock_pct_${s.key}`).value = row.percentile ?? '';
-            document.getElementById(`mock_cumpct_${s.key}`).value = row.cum_percentile ?? '';
-            document.getElementById(`mock_grd_${s.key}`).value = row.grade ?? '';
-          }
-        });
-      }
-    }
-
-    async function saveMockScores() {
-      const round = document.getElementById('mockRoundSelect').value;
-      const records = [];
-
-      SUBJECT_ROWS.forEach(s => {
-        const subjName = document.getElementById(`mock_subj_${s.key}`).value;
-        const raw = document.getElementById(`mock_raw_${s.key}`).value;
-        const std = document.getElementById(`mock_std_${s.key}`).value;
-        const pct = document.getElementById(`mock_pct_${s.key}`).value;
-        const cumpct = document.getElementById(`mock_cumpct_${s.key}`).value;
-        const grd = document.getElementById(`mock_grd_${s.key}`).value;
-
-        if (raw || std || pct || grd) {
-          records.push({
-            user_id: currentUser.id,
-            exam_round: round,
-            subject_key: s.key,
-            subject_name: subjName,
-            raw_score: raw ? parseInt(raw) : null,
-            standard_score: std ? parseInt(std) : null,
-            percentile: pct ? parseFloat(pct) : null,
-            cum_percentile: cumpct ? parseFloat(cumpct) : null,
-            grade: grd ? parseInt(grd) : null
-          });
-        }
-      });
-
-      if (records.length === 0) return alert('입력된 점수가 없습니다.');
-
-      await supabaseClient.from('mock_scores').delete().eq('user_id', currentUser.id).eq('exam_round', round);
-      await supabaseClient.from('mock_scores').insert(records);
-      alert(`${round} 모의고사 성적이 성공적으로 저장되었습니다!`);
-      renderMockChart(currentUser.id, 'studentMockChart');
-    }
-
-    async function renderMockChart(userId, canvasId) {
-      const rounds = ['3월학평', '5월학평', '6월모평', '7월학평', '9월모평', '10월학평', '수능'];
-      const { data: allScores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', userId);
-
-      const korData = [];
-      const mathData = [];
-      const totalAvgData = [];
-
-      rounds.forEach(r => {
-        const rScores = allScores ? allScores.filter(s => s.exam_round === r) : [];
-        const k = rScores.find(s => s.subject_key === 'korean');
-        const m = rScores.find(s => s.subject_key === 'math');
-        const kPct = k && k.percentile !== null ? parseFloat(k.percentile) : null;
-        const mPct = m && m.percentile !== null ? parseFloat(m.percentile) : null;
-
-        korData.push(kPct);
-        mathData.push(mPct);
-
-        if (kPct !== null && mPct !== null) totalAvgData.push(parseFloat(((kPct + mPct) / 2).toFixed(2)));
-        else totalAvgData.push(null);
-      });
-
-      const canvas = document.getElementById(canvasId);
-      if (!canvas) return;
-
-      if (canvasId === 'studentMockChart' && studentChartInstance) studentChartInstance.destroy();
-      if (canvasId === 'teacherMockChartCanvas' && teacherChartInstance) teacherChartInstance.destroy();
-
-      const newChart = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: rounds,
-          datasets: [
-            { label: '국어 백분위', data: korData, borderColor: '#2563eb', backgroundColor: '#2563eb', tension: 0.2, spanGaps: true },
-            { label: '수학 백분위', data: mathData, borderColor: '#dc2626', backgroundColor: '#dc2626', tension: 0.2, spanGaps: true },
-            { label: '국·수 평균', data: totalAvgData, borderColor: '#ea580c', backgroundColor: '#ea580c', borderWidth: 3, pointRadius: 4, tension: 0.2, spanGaps: true }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { y: { min: 0, max: 100 } }
-        }
-      });
-
-      if (canvasId === 'studentMockChart') studentChartInstance = newChart;
-      else teacherChartInstance = newChart;
-    }
-
-    async function loadStudentMockForTeacher() {
-      const studentId = document.getElementById('mockStudentSelect').value;
-      const container = document.getElementById('teacherMockContainer');
-      if (!studentId) {
-        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
-        return;
-      }
-      container.innerHTML = `
-        <div class="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
-          <h3 class="font-bold text-slate-800 text-sm">회차별 백분위 변동 추이</h3>
-          <div class="h-72 w-full"><canvas id="teacherMockChartCanvas"></canvas></div>
-        </div>
-      `;
-      renderMockChart(studentId, 'teacherMockChartCanvas');
-    }
-
-    async function loadMySurveyData() {
-      const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', currentUser.id).single();
-      if (data) {
-        document.getElementById('surv_father_name').value = data.father_name || '';
-        document.getElementById('surv_father_phone').value = data.father_phone || '';
-        document.getElementById('surv_mother_name').value = data.mother_name || '';
-        document.getElementById('surv_mother_phone').value = data.mother_phone || '';
-        document.getElementById('surv_student_phone').value = data.student_phone || '';
-        document.getElementById('surv_siblings').value = data.siblings || '';
-        document.getElementById('surv_address').value = data.address || '';
-        document.getElementById('surv_career').value = data.career_hope || '';
-        document.getElementById('surv_notes').value = data.special_notes || '';
-      }
-    }
-
-    async function saveStudentSurvey(e) {
-      e.preventDefault();
-      const g2Selected = Array.from(document.querySelectorAll('input[name="grade2_sub"]:checked')).map(c => c.value);
-      const g3Selected = Array.from(document.querySelectorAll('input[name="grade3_sub"]:checked')).map(c => c.value);
-
-      const surveyObj = {
-        user_id: currentUser.id,
-        father_name: document.getElementById('surv_father_name').value.trim(),
-        father_phone: document.getElementById('surv_father_phone').value.trim(),
-        mother_name: document.getElementById('surv_mother_name').value.trim(),
-        mother_phone: document.getElementById('surv_mother_phone').value.trim(),
-        student_phone: document.getElementById('surv_student_phone').value.trim(),
-        siblings: document.getElementById('surv_siblings').value.trim(),
-        address: document.getElementById('surv_address').value.trim(),
-        career_hope: document.getElementById('surv_career').value.trim(),
-        special_notes: document.getElementById('surv_notes').value.trim(),
-        selected_subjects: { grade2: g2Selected, grade3: g3Selected },
-        updated_at: new Date()
-      };
-
-      await supabaseClient.from('student_surveys').upsert(surveyObj);
-      alert('기초조사서가 성공적으로 저장되었어!');
-    }
-
-    async function loadStudentSurveyForTeacher() {
-      const studentId = document.getElementById('surveyStudentSelect').value;
-      const card = document.getElementById('surveyTeacherDetailCard');
-      if (!studentId) return;
-
-      const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', studentId).single();
-      if (!data) {
-        card.innerHTML = '<p class="text-center text-slate-400 py-12">작성된 기초조사서가 없습니다.</p>';
-        return;
-      }
-
-      card.innerHTML = `
-        <div class="space-y-4 text-xs">
-          <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
-            <div>부모님 연락처: <b>${data.father_name || '-'}</b>(${data.father_phone || '-'}), <b>${data.mother_name || '-'}</b>(${data.mother_phone || '-'})</div>
-            <div>학생 연락처: <b class="text-blue-600">${data.student_phone || '-'}</b></div>
-            <div class="col-span-2">주소: <b>${data.address || '-'}</b></div>
-          </div>
-          <div>진로희망: <b class="text-slate-800">${data.career_hope || '-'}</b></div>
-          <div>특이사항: <p class="text-slate-700 bg-amber-50 p-3 rounded-lg border border-amber-200">${data.special_notes || '없음'}</p></div>
-        </div>
-      `;
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
       lucide.createIcons();
