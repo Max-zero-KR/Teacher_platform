@@ -47,7 +47,7 @@
         <button type="submit" id="loginSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm shadow-md transition">로그인</button>
       </form>
 
-      <!-- 회원가입 폼 -->
+      <!-- 회원가입 폼 (마스터 코드 필드 완전 삭제) -->
       <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3 hidden">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">구분 (역할)</label>
@@ -80,15 +80,8 @@
           <input type="password" id="regPw" required minlength="6" placeholder="••••••••" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
 
-        <!-- 교사 마스터 코드 -->
-        <div id="masterCodeField" class="hidden bg-amber-50 p-3 rounded-lg border border-amber-200">
-          <label class="block text-xs font-bold text-amber-800 mb-1">교사용 관리자 마스터 코드</label>
-          <input type="password" id="regMasterCode" placeholder="기본코드: TEACHER302" class="w-full px-3 py-1.5 text-sm border border-amber-300 rounded focus:ring-2 focus:ring-amber-500 outline-none bg-white">
-          <p class="text-[10px] text-amber-700 mt-1">※ 정확히 입력하면 대기 없이 즉시 담임 관리자로 승인됩니다.</p>
-        </div>
-
         <p class="text-[11px] text-slate-500 bg-slate-100 p-2.5 rounded-lg leading-relaxed">
-          💡 <strong>이메일 인증 절차가 없습니다.</strong><br>학생은 가입 신청 후 담임선생님이 승인하면 바로 로그인할 수 있습니다.
+          💡 <strong>가입 신청 안내</strong><br>신청 후 담임선생님이 승인하면 바로 로그인할 수 있습니다.
         </p>
         <button type="submit" id="regSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm shadow-md transition">가입 신청 완료</button>
       </form>
@@ -108,13 +101,13 @@
           </div>
         </div>
 
-        <!-- 메뉴 탭 (교사용 / 학생용 분기) -->
+        <!-- 메뉴 탭 -->
         <nav id="navMenu" class="hidden md:flex items-center gap-1 text-sm font-medium">
           <!-- 교사 메뉴 -->
           <div id="teacherNav" class="flex items-center gap-1">
             <button onclick="changeView('dashboard')" class="nav-btn px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 font-bold" data-view="dashboard">대시보드</button>
             <button onclick="changeView('approval')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1" data-view="approval">
-              가입 승인 <span id="pendingCountBadge" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+              회원 관리 <span id="pendingCountBadge" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
             </button>
             <button onclick="changeView('counselList')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="counselList">12장 상담카드</button>
             <button onclick="changeView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="calendar">학사 달력</button>
@@ -143,23 +136,23 @@
     <!-- 메인 컨텐츠 영역 -->
     <main class="max-w-7xl mx-auto px-4 py-6">
 
-      <!-- 1. [교사] 가입 신청 승인 관리 -->
-      <section id="view-approval" class="view-panel hidden space-y-4">
-        <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200">
-          <div>
-            <h2 class="text-lg font-bold text-slate-800">회원 가입 승인 및 권한 부여</h2>
-            <p class="text-xs text-slate-500">학생이나 학부모가 가입 신청하면 이곳에 뜹니다. 승인 시 역할을 지정할 수 있습니다.</p>
-          </div>
-          <button onclick="loadPendingUsers()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
-          </button>
-        </div>
-
+      <!-- 1. [교사] 회원 관리 및 계정 수정 -->
+      <section id="view-approval" class="view-panel hidden space-y-6">
+        <!-- 1-1. 승인 대기 목록 -->
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+            <div>
+              <h2 class="text-base font-bold text-slate-800">가입 승인 대기 목록</h2>
+              <p class="text-xs text-slate-500">학생이나 교사가 가입 신청하면 이곳에 대기합니다.</p>
+            </div>
+            <button onclick="loadUsersData()" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-1">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
+            </button>
+          </div>
           <table class="w-full text-left border-collapse text-sm">
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
               <tr>
-                <th class="p-3">신청일자</th>
+                <th class="p-3">신청일</th>
                 <th class="p-3">아이디 (학번)</th>
                 <th class="p-3">이름</th>
                 <th class="p-3">신청구분</th>
@@ -168,7 +161,29 @@
               </tr>
             </thead>
             <tbody id="pendingUserTableBody" class="divide-y divide-slate-100">
-              <tr><td colspan="6" class="p-8 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>
+              <tr><td colspan="6" class="p-6 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 1-2. 현재 등록된 전체 회원 목록 (정보 수정 / 비밀번호 변경) -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-200 bg-slate-50">
+            <h2 class="text-base font-bold text-slate-800">등록된 회원 목록 (아이디 / 비밀번호 변경)</h2>
+            <p class="text-xs text-slate-500">이미 승인된 학생과 교사의 계정 정보를 직접 수정하거나 비밀번호를 초기화할 수 있습니다.</p>
+          </div>
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
+              <tr>
+                <th class="p-3">구분</th>
+                <th class="p-3">아이디(학번)</th>
+                <th class="p-3">이름</th>
+                <th class="p-3">현재 권한</th>
+                <th class="p-3 text-right">계정 관리</th>
+              </tr>
+            </thead>
+            <tbody id="approvedUserTableBody" class="divide-y divide-slate-100">
+              <tr><td colspan="5" class="p-6 text-center text-slate-400">등록된 회원이 없습니다.</td></tr>
             </tbody>
           </table>
         </div>
@@ -323,18 +338,47 @@
     </main>
   </div>
 
+  <!-- [계정 정보 및 비밀번호 변경 모달] -->
+  <div id="editUserModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-slate-800 text-base" id="modalUserName">회원 계정 정보 수정</h3>
+        <button onclick="closeEditUserModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <input type="hidden" id="modalUserId">
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">아이디 / 학번</label>
+          <input type="text" id="modalUserRawId" class="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">새 비밀번호 (6자 이상)</label>
+          <input type="password" id="modalUserPw" placeholder="변경하지 않으려면 빈칸 유지" class="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+          <p class="text-[10px] text-slate-400 mt-1">※ 빈칸으로 두면 기존 비밀번호가 그대로 유지됩니다.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeEditUserModal()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition">취소</button>
+        <button onclick="submitUserEdit()" id="modalSaveBtn" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition">저장하기</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // =================================================================
-    // 💡 [선생님 설정 영역]: 따옴표('') 안에 수파베이스 정보를 넣어주세요!
+    // 💡 [선생님 설정 영역]: 수파베이스 정보
     // =================================================================
     const SB_URL = 'https://vmkfmwbzsdlietprgtyt.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZta2Ztd2J6c2RsaWV0cHJndHl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQxMjIsImV4cCI6MjEwNTUwMDEyMn0.eqkdTi2LzOkVA715lyy2VMfiNio4umT-LwImPv7LaWQ';    // =================================================================
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZta2Ztd2J6c2RsaWV0cHJndHl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQxMjIsImV4cCI6MjEwNTUwMDEyMn0.eqkdTi2LzOkVA715lyy2VMfiNio4umT-LwImPv7LaWQ';
+    // =================================================================
 
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
     let currentUser = null;
     let currentProfile = null;
 
-    // 아이디를 수파베이스 내부 인증용 규격으로 자동 변환해주는 헬퍼
     function toAuthEmail(rawId) {
       const clean = rawId.trim().toLowerCase();
       return clean.includes('@') ? clean : `${clean}@school.net`;
@@ -375,20 +419,13 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       const role = document.getElementById('regRole').value;
       const sField = document.getElementById('studentNoField');
       const cField = document.getElementById('customIdField');
-      const mField = document.getElementById('masterCodeField');
 
       if (role === 'student') {
         sField.classList.remove('hidden');
         cField.classList.add('hidden');
-        mField.classList.add('hidden');
-      } else if (role === 'teacher') {
-        sField.classList.add('hidden');
-        cField.classList.remove('hidden');
-        mField.classList.remove('hidden');
       } else {
         sField.classList.add('hidden');
         cField.classList.remove('hidden');
-        mField.classList.add('hidden');
       }
     }
 
@@ -410,16 +447,10 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
         if (!rawId) return alert('사용할 아이디를 입력해줘.');
       }
 
-      const masterCode = document.getElementById('regMasterCode').value.trim();
-      const isTeacherMaster = (role === 'teacher' && masterCode === 'TEACHER302');
-      const isApproved = isTeacherMaster;
-      const assignedRole = isTeacherMaster ? 'admin' : role;
-
       const regBtn = document.getElementById('regSubmitBtn');
       regBtn.innerText = '가입 신청 처리 중...';
       regBtn.disabled = true;
 
-      // 수파베이스 Auth 회원 생성 (내부적으로 @school.net 가상 주소 매핑)
       const authEmail = toAuthEmail(rawId);
       const { data: authData, error: authError } = await supabaseClient.auth.signUp({ 
         email: authEmail, 
@@ -427,7 +458,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       });
 
       if (authError) {
-        alert('가입 에러: 이미 등록된 아이디(학번)이거나 비밀번호가 너무 짧습니다.');
+        alert('가입 에러: 이미 등록된 아이디이거나 비밀번호 규격(6자 이상)을 확인해줘.');
         regBtn.innerText = '가입 신청 완료';
         regBtn.disabled = false;
         return;
@@ -436,18 +467,14 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       if (authData.user) {
         await supabaseClient.from('profiles').insert([{
           id: authData.user.id,
-          email: rawId, // 화면 표기용 아이디 저장
+          email: rawId,
           name: name,
-          role: assignedRole,
+          role: role,
           student_no: studentNo,
-          is_approved: isApproved
+          is_approved: false // 모든 신청은 관리자 승인 대기
         }]);
 
-        if (isApproved) {
-          alert('선생님 관리자 계정 생성 완료! 등록하신 아이디로 로그인해줘.');
-        } else {
-          alert(`가입 신청 완료! 아이디는 [${rawId}]야. 담임선생님이 승인하면 로그인할 수 있어.`);
-        }
+        alert(`가입 신청 완료! 아이디는 [${rawId}]야. 담임선생님이 승인하면 로그인할 수 있어.`);
         switchAuthTab('login');
       }
       regBtn.innerText = '가입 신청 완료';
@@ -496,14 +523,14 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       document.getElementById('mainScreen').classList.remove('hidden');
 
       document.getElementById('headerUserName').innerText = currentProfile.name;
-      document.getElementById('headerUserSub').innerText = currentProfile.role === 'admin' ? '담임교사(관리자)' : (currentProfile.student_no ? `${currentProfile.student_no} 학생` : '학부모');
+      document.getElementById('headerUserSub').innerText = currentProfile.role === 'admin' ? '담임교사(관리자)' : (currentProfile.student_no ? `${currentProfile.student_no} 학생` : '학부모/교사');
       document.getElementById('userRoleBadge').innerText = currentProfile.role === 'admin' ? '3학년 2반 교무실' : '학생 전용 포털';
 
       if (currentProfile.role === 'admin' || currentProfile.role === 'teacher') {
         document.getElementById('teacherNav').classList.remove('hidden');
         document.getElementById('studentNav').classList.add('hidden');
         changeView('dashboard');
-        loadPendingUsers();
+        loadUsersData();
         loadCounselRequestsForTeacher();
         loadStudentListForTeacher();
       } else {
@@ -542,56 +569,133 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       lucide.createIcons();
     }
 
-    async function loadPendingUsers() {
-      const { data: list } = await supabaseClient.from('profiles').select('*').eq('is_approved', false).order('created_at', { ascending: false });
-      const tbody = document.getElementById('pendingUserTableBody');
+    // 회원 목록 로드 (대기 목록 + 전체 가입 회원 목록)
+    async function loadUsersData() {
+      // 1. 승인 대기자 로드
+      const { data: pendingList } = await supabaseClient.from('profiles').select('*').eq('is_approved', false).order('created_at', { ascending: false });
+      const pendingTbody = document.getElementById('pendingUserTableBody');
       const badge = document.getElementById('pendingCountBadge');
       const statP = document.getElementById('statPending');
 
-      if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>';
+      if (!pendingList || pendingList.length === 0) {
+        pendingTbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>';
         badge.classList.add('hidden');
         statP.innerText = '0명';
-        return;
+      } else {
+        badge.classList.remove('hidden');
+        badge.innerText = pendingList.length;
+        statP.innerText = pendingList.length + '명';
+
+        pendingTbody.innerHTML = pendingList.map(u => `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 text-xs text-slate-400">${new Date(u.created_at).toLocaleDateString()}</td>
+            <td class="p-3 font-bold text-slate-800">${u.student_no ? u.student_no : u.email}</td>
+            <td class="p-3 font-bold text-blue-600">${u.name}</td>
+            <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${u.role}</span></td>
+            <td class="p-3">
+              <select id="roleSelect_${u.id}" class="text-xs border rounded px-2 py-1 bg-white">
+                <option value="student" ${u.role==='student'?'selected':''}>학생</option>
+                <option value="teacher" ${u.role==='teacher'?'selected':''}>교사(교과/부장)</option>
+                <option value="admin">담임(공동관리자)</option>
+                <option value="parent" ${u.role==='parent'?'selected':''}>학부모</option>
+              </select>
+            </td>
+            <td class="p-3 text-right space-x-1">
+              <button onclick="approveUser('${u.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition">승인</button>
+              <button onclick="rejectUser('${u.id}')" class="px-2 py-1 bg-slate-200 hover:bg-rose-100 text-slate-600 hover:text-rose-600 rounded text-xs transition">반려</button>
+            </td>
+          </tr>
+        `).join('');
       }
 
-      badge.classList.remove('hidden');
-      badge.innerText = list.length;
-      statP.innerText = list.length + '명';
+      // 2. 승인된 전체 회원 로드 (수정 가능 목록)
+      const { data: approvedList } = await supabaseClient.from('profiles').select('*').eq('is_approved', true).order('role');
+      const approvedTbody = document.getElementById('approvedUserTableBody');
 
-      tbody.innerHTML = list.map(u => `
-        <tr class="hover:bg-slate-50">
-          <td class="p-3 text-xs text-slate-400">${new Date(u.created_at).toLocaleDateString()}</td>
-          <td class="p-3 font-bold text-slate-800">${u.student_no ? u.student_no : u.email}</td>
-          <td class="p-3 font-bold text-blue-600">${u.name}</td>
-          <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${u.role}</span></td>
-          <td class="p-3">
-            <select id="roleSelect_${u.id}" class="text-xs border rounded px-2 py-1 bg-white">
-              <option value="student" ${u.role==='student'?'selected':''}>학생</option>
-              <option value="teacher">교사(교과/부장)</option>
-              <option value="parent">학부모</option>
-            </select>
-          </td>
-          <td class="p-3 text-right space-x-1">
-            <button onclick="approveUser('${u.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition">승인</button>
-            <button onclick="rejectUser('${u.id}')" class="px-2 py-1 bg-slate-200 hover:bg-rose-100 text-slate-600 hover:text-rose-600 rounded text-xs transition">반려</button>
-          </td>
-        </tr>
-      `).join('');
+      if (!approvedList || approvedList.length === 0) {
+        approvedTbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">등록된 회원이 없습니다.</td></tr>';
+      } else {
+        approvedTbody.innerHTML = approvedList.map(u => `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-xs font-semibold ${u.role==='admin'?'bg-amber-100 text-amber-800':(u.role==='student'?'bg-blue-100 text-blue-800':'bg-slate-100 text-slate-700')}">
+                ${u.role==='admin' ? '담임(관리자)' : (u.role==='student' ? '학생' : '교사/학부모')}
+              </span>
+            </td>
+            <td class="p-3 font-bold text-slate-800">${u.student_no || u.email}</td>
+            <td class="p-3 font-semibold text-slate-700">${u.name}</td>
+            <td class="p-3 text-xs text-slate-400">${u.role}</td>
+            <td class="p-3 text-right">
+              <button onclick="openEditUserModal('${u.id}', '${u.student_no || u.email}', '${u.name}')" class="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded text-xs font-bold transition flex items-center gap-1 inline-flex">
+                <i data-lucide="key" class="w-3 h-3"></i> 계정/비번 변경
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+      lucide.createIcons();
     }
 
     async function approveUser(userId) {
       const selectedRole = document.getElementById(`roleSelect_${userId}`).value;
       await supabaseClient.from('profiles').update({ is_approved: true, role: selectedRole }).eq('id', userId);
       alert('승인 및 권한 부여가 완료되었어.');
-      loadPendingUsers();
+      loadUsersData();
+      loadStudentListForTeacher();
     }
 
     async function rejectUser(userId) {
       if (confirm('이 가입 신청을 반려(삭제)할까?')) {
         await supabaseClient.from('profiles').delete().eq('id', userId);
-        loadPendingUsers();
+        loadUsersData();
       }
+    }
+
+    // 모달 열기
+    function openEditUserModal(userId, currentRawId, name) {
+      document.getElementById('modalUserId').value = userId;
+      document.getElementById('modalUserRawId').value = currentRawId;
+      document.getElementById('modalUserPw').value = '';
+      document.getElementById('modalUserName').innerText = `[${name}] 계정 수정`;
+      document.getElementById('editUserModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeEditUserModal() {
+      document.getElementById('editUserModal').classList.add('hidden');
+    }
+
+    // 아이디 & 비밀번호 변경 제출
+    async function submitUserEdit() {
+      const userId = document.getElementById('modalUserId').value;
+      const newRawId = document.getElementById('modalUserRawId').value.trim();
+      const newPw = document.getElementById('modalUserPw').value.trim();
+      const saveBtn = document.getElementById('modalSaveBtn');
+
+      if (!newRawId) return alert('아이디(학번)를 입력해줘.');
+      if (newPw && newPw.length < 6) return alert('새 비밀번호는 최소 6자 이상이어야 해.');
+
+      saveBtn.innerText = '저장 중...';
+      saveBtn.disabled = true;
+
+      // 1단계에서 만든 RPC 함수 호출
+      const { error } = await supabaseClient.rpc('admin_update_user_credentials', {
+        target_user_id: userId,
+        new_raw_id: newRawId,
+        new_password: newPw || null
+      });
+
+      if (error) {
+        alert('계정 정보 수정 실패: ' + error.message);
+      } else {
+        alert('아이디 / 비밀번호 변경이 성공적으로 적용되었어!');
+        closeEditUserModal();
+        loadUsersData();
+        loadStudentListForTeacher();
+      }
+
+      saveBtn.innerText = '저장하기';
+      saveBtn.disabled = false;
     }
 
     function renderStudent12CardInputs() {
