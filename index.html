@@ -17,7 +17,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
-  <!-- [화면 1: 로그인 / 회원가입] -->
+  <!-- [화면 1: 로그인 / 회원가입 화면] -->
   <div id="authScreen" class="flex min-h-screen items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-100 max-w-md w-full p-8">
       <div class="text-center mb-6">
@@ -96,7 +96,7 @@
         </div>
 
         <nav id="navMenu" class="hidden md:flex items-center gap-1 text-sm font-medium">
-          <!-- 교사용 메뉴 -->
+          <!-- 교사 메뉴 -->
           <div id="teacherNav" class="flex items-center gap-1">
             <button onclick="changeView('dashboard')" class="nav-btn px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 font-bold" data-view="dashboard">대시보드</button>
             <button onclick="changeView('approval')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1" data-view="approval">
@@ -108,7 +108,7 @@
             <button onclick="changeView('album')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="album">학급 앨범</button>
             <button onclick="changeView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="calendar">학사 달력</button>
           </div>
-          <!-- 학생용 메뉴 -->
+          <!-- 학생 메뉴 -->
           <div id="studentNav" class="hidden flex items-center gap-1">
             <button onclick="changeView('myCards')" class="nav-btn px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 font-bold" data-view="myCards">내 12장 원서</button>
             <button onclick="changeView('studentSurvey')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="studentSurvey">내 기본조사</button>
@@ -176,13 +176,54 @@
         </div>
       </section>
 
-      <!-- 2. [교사] 회원 관리 및 계정 수정 -->
+      <!-- 2. [교사] 회원 관리 & 학생 일괄 생성 -->
       <section id="view-approval" class="view-panel hidden space-y-6">
+
+        <!-- [신규 기능] 학생 계정 일괄 생성기 -->
+        <div class="bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-2xl border border-blue-200 p-6 shadow-sm space-y-4">
+          <div class="flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h2 class="text-base font-bold text-blue-900 flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-5 h-5 text-blue-600"></i> 학생 계정 일괄 등록기 (난수 비밀번호 자동 발급)
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">나이스나 엑셀에서 학번과 이름을 복사해 아래에 붙여넣기만 하면 계정이 즉시 생성됩니다.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">명렬표 붙여넣기 (한 줄에 "학번 이름" 형식)</label>
+              <textarea id="bulkStudentInput" rows="6" placeholder="예시:&#10;30201 강동원&#10;30202 김태리&#10;30203 박보검" class="w-full p-3 text-xs border rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+              <p class="text-[11px] text-slate-400 mt-1">※ 띄어쓰기 또는 탭(Tab)으로 구분되어 있으면 자동으로 인식합니다.</p>
+              <button onclick="handleBulkStudentCreate()" id="bulkCreateBtn" class="mt-2 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center justify-center gap-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4"></i> 일괄 계정 생성 및 임시 비밀번호 발급
+              </button>
+            </div>
+
+            <!-- 발급 결과창 (아이들에게 나눠줄 수 있도록 표와 복사 기능 제공) -->
+            <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-xs font-bold text-slate-700">생성 결과 및 학생 배포용 임시비번</span>
+                  <button onclick="copyBulkResultText()" id="copyResultBtn" class="hidden px-2.5 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 rounded text-[11px] font-bold transition flex items-center gap-1">
+                    <i data-lucide="copy" class="w-3 h-3"></i> 텍스트 전체 복사
+                  </button>
+                </div>
+                <div id="bulkResultContainer" class="max-h-48 overflow-y-auto text-xs border rounded-lg p-2 bg-slate-50 text-slate-500">
+                  <p class="text-center py-10 text-slate-400">명렬표를 입력하고 좌측 생성 버튼을 누르면 이곳에 배포용 비밀번호 목록이 나타납니다.</p>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-2">💡 발급된 임시 비밀번호로 학생이 처음 로그인하면 <strong>새 비밀번호 변경 창</strong>이 강제로 뜹니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-1. 승인 대기 목록 -->
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
             <div>
               <h2 class="text-base font-bold text-slate-800">가입 승인 대기 목록</h2>
-              <p class="text-xs text-slate-500">신청 후 승인해야 로그인 권한이 부여됩니다.</p>
+              <p class="text-xs text-slate-500">개별 가입 신청 시 이곳에 대기합니다.</p>
             </div>
             <button onclick="loadUsersData()" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-1">
               <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
@@ -205,6 +246,7 @@
           </table>
         </div>
 
+        <!-- 2-2. 등록된 회원 목록 -->
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <div class="p-4 border-b border-slate-200 bg-slate-50">
             <h2 class="text-base font-bold text-slate-800">등록된 회원 목록 (아이디 / 비밀번호 변경)</h2>
@@ -243,7 +285,7 @@
         </div>
       </section>
 
-      <!-- 4. [기본조사] 2·3학년 교육과정 선택과목 조사서 -->
+      <!-- 4. [기본조사] 2·3학년 교육과정 선택과목 -->
       <!-- 4-A. 학생 작성 화면 -->
       <section id="view-studentSurvey" class="view-panel hidden space-y-6">
         <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
@@ -253,7 +295,6 @@
           </div>
 
           <form id="studentSurveyForm" onsubmit="saveStudentSurvey(event)" class="space-y-6 text-xs">
-            <!-- 부모님 정보 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
               <div>
                 <label class="block font-semibold text-slate-600 mb-1">아버지 성함</label>
@@ -273,7 +314,6 @@
               </div>
             </div>
 
-            <!-- 학생 본인 정보 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block font-semibold text-slate-600 mb-1">학생 본인 연락처</label>
@@ -289,7 +329,6 @@
               </div>
             </div>
 
-            <!-- 진로희망 및 특이사항 -->
             <div class="space-y-4">
               <div>
                 <label class="block font-semibold text-slate-600 mb-1">희망 진로 / 진학 희망 학과</label>
@@ -301,7 +340,7 @@
               </div>
             </div>
 
-            <!-- [개편] 2학년 교육과정 선택과목 -->
+            <!-- 2학년 선택과목 -->
             <div class="p-4 bg-emerald-50/60 rounded-xl border border-emerald-200 space-y-3">
               <h3 class="font-bold text-emerald-900 text-sm flex items-center gap-1.5">
                 <i data-lucide="check-square" class="w-4 h-4 text-emerald-600"></i> [2학년] 학교 이수 선택과목 체크
@@ -350,7 +389,7 @@
               </div>
             </div>
 
-            <!-- [개편] 3학년 교육과정 선택과목 -->
+            <!-- 3학년 선택과목 -->
             <div class="p-4 bg-blue-50/60 rounded-xl border border-blue-200 space-y-3">
               <h3 class="font-bold text-blue-900 text-sm flex items-center gap-1.5">
                 <i data-lucide="check-square" class="w-4 h-4 text-blue-600"></i> [3학년] 현재 이수 중인 선택과목 체크
@@ -433,7 +472,7 @@
         </div>
       </section>
 
-      <!-- 5. [모의고사] 성적표 및 백분위 변동 그래프 (합산 및 개별 체크박스) -->
+      <!-- 5. [모의고사] 성적표 및 백분위 변동 그래프 -->
       <section id="view-studentMock" class="view-panel hidden space-y-6">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
           <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
@@ -479,14 +518,12 @@
           </div>
         </div>
 
-        <!-- 성적 그래프 및 체크박스 필터 -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap justify-between items-center gap-3">
             <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
               <i data-lucide="trending-up" class="w-4 h-4 text-blue-600"></i> 백분위 변동 추이 그래프
             </h3>
             
-            <!-- 과목별 On/Off 체크박스 -->
             <div class="flex flex-wrap items-center gap-3 text-xs bg-slate-50 p-2 rounded-lg border">
               <label class="inline-flex items-center gap-1 cursor-pointer font-bold text-blue-600">
                 <input type="checkbox" id="chk_kor" checked onchange="toggleDataset('student', 0, this.checked)"> 국어
@@ -529,7 +566,7 @@
         </div>
       </section>
 
-      <!-- 6. [학급 앨범] 사진 여러 장 올리기 & 라이트박스 -->
+      <!-- 6. [학급 앨범] -->
       <section id="view-album" class="view-panel hidden space-y-6">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
           <div>
@@ -646,7 +683,7 @@
     </main>
   </div>
 
-  <!-- [모달 1: 회원 계정 수정] -->
+  <!-- [모달 1: 관리자 전용 회원 계정 수정] -->
   <div id="editUserModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
       <div class="flex justify-between items-center">
@@ -700,6 +737,35 @@
     </button>
   </div>
 
+  <!-- [모달 4: 최초 로그인 학생 강제 비밀번호 변경 모달] -->
+  <div id="firstLoginPwModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-blue-100">
+      <div class="text-center space-y-1">
+        <div class="inline-flex p-3 bg-blue-50 text-blue-600 rounded-xl mb-1">
+          <i data-lucide="shield-alert" class="w-7 h-7"></i>
+        </div>
+        <h3 class="font-bold text-slate-800 text-base">새 비밀번호 설정 필수</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          담임선생님이 발급한 임시 비밀번호로 로그인했어.<br>안전한 이용을 위해 앞으로 사용할 <strong>새 비밀번호</strong>를 설정해줘!
+        </p>
+      </div>
+
+      <form onsubmit="handleFirstLoginPwChange(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">새 비밀번호 (6자 이상)</label>
+          <input type="password" id="firstNewPw" required minlength="6" placeholder="••••••••" class="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">새 비밀번호 확인</label>
+          <input type="password" id="firstNewPwConfirm" required minlength="6" placeholder="••••••••" class="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <button type="submit" id="firstPwSubmitBtn" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition">
+          비밀번호 변경 완료하고 시작하기
+        </button>
+      </form>
+    </div>
+  </div>
+
   <script>
     // =================================================================
     // 💡 Supabase 접속 정보
@@ -711,6 +777,7 @@
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
     let currentUser = null;
     let currentProfile = null;
+    let lastGeneratedResults = [];
 
     let currentAlbumPhotos = [];
     let currentLightboxIdx = 0;
@@ -736,6 +803,15 @@
             return;
           }
           currentProfile = profile;
+          
+          // 최초 로그인 시 비밀번호 변경 모달 강제 노출
+          if (currentProfile.needs_pw_change) {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('firstLoginPwModal').classList.remove('hidden');
+            lucide.createIcons();
+            return;
+          }
+
           enterPlatform();
         }
       }
@@ -807,7 +883,8 @@
           name: name,
           role: role,
           student_no: studentNo,
-          is_approved: false
+          is_approved: false,
+          needs_pw_change: false
         }]);
         alert(`가입 신청 완료! 아이디는 [${rawId}]야. 담임선생님이 승인하면 로그인할 수 있어.`);
         switchAuthTab('login');
@@ -845,9 +922,50 @@
 
       currentUser = data.user;
       currentProfile = profile;
+
+      // 임시 비밀번호로 발급된 계정일 경우 비밀번호 변경 팝업 강제 실행
+      if (currentProfile.needs_pw_change) {
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('firstLoginPwModal').classList.remove('hidden');
+        btn.innerText = '로그인';
+        btn.disabled = false;
+        lucide.createIcons();
+        return;
+      }
+
       enterPlatform();
       btn.innerText = '로그인';
       btn.disabled = false;
+    }
+
+    // 최초 로그인 시 비밀번호 변경 제출
+    async function handleFirstLoginPwChange(e) {
+      e.preventDefault();
+      const p1 = document.getElementById('firstNewPw').value;
+      const p2 = document.getElementById('firstNewPwConfirm').value;
+      const submitBtn = document.getElementById('firstPwSubmitBtn');
+
+      if (p1 !== p2) return alert('입력한 두 비밀번호가 서로 일치하지 않아.');
+      if (p1.length < 6) return alert('비밀번호는 최소 6자 이상이어야 해.');
+
+      submitBtn.innerText = '비밀번호 변경 중...';
+      submitBtn.disabled = true;
+
+      const { error: authErr } = await supabaseClient.auth.updateUser({ password: p1 });
+      if (authErr) {
+        alert('비밀번호 변경 실패: ' + authErr.message);
+        submitBtn.innerText = '비밀번호 변경 완료하고 시작하기';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // 프로필에서 needs_pw_change 플래그 해제
+      await supabaseClient.from('profiles').update({ needs_pw_change: false }).eq('id', currentUser.id);
+      currentProfile.needs_pw_change = false;
+
+      alert('비밀번호가 성공적으로 변경되었어! 이제 진학 플랫폼으로 이동할게.');
+      document.getElementById('firstLoginPwModal').classList.add('hidden');
+      enterPlatform();
     }
 
     function enterPlatform() {
@@ -907,7 +1025,106 @@
     }
 
     // =================================================================
-    // 💡 [기능 1: 학급 앨범] 사진 다중 업로드 & 에러 피드백 강화
+    // 💡 [신규] 학생 계정 일괄 생성 로직 (나이스 복사 & 난수 비밀번호 발급)
+    // =================================================================
+    async function handleBulkStudentCreate() {
+      const rawText = document.getElementById('bulkStudentInput').value.trim();
+      if (!rawText) return alert('학번과 이름 명렬표를 입력해줘.');
+
+      const lines = rawText.split('\n');
+      const students = [];
+
+      for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        // 공백이나 탭으로 학번과 이름 분리
+        const parts = line.split(/\s+/);
+        if (parts.length >= 2) {
+          students.push({
+            student_no: parts[0].trim(),
+            name: parts.slice(1).join(' ').trim()
+          });
+        }
+      }
+
+      if (students.length === 0) {
+        return alert('유효한 "학번 이름" 형식을 찾을 수 없어. 띄어쓰기로 구분되어 있는지 확인해줘.');
+      }
+
+      if (!confirm(`총 ${students.length}명의 학생 계정을 일괄 생성하고 임시 비밀번호를 발급할까?`)) return;
+
+      const btn = document.getElementById('bulkCreateBtn');
+      btn.innerText = '계정 및 임시비밀번호 발급 중...';
+      btn.disabled = true;
+
+      // Supabase RPC 호출
+      const { data: results, error } = await supabaseClient.rpc('admin_bulk_create_students', { students: students });
+
+      if (error) {
+        alert('일괄 생성 실패: ' + error.message);
+      } else {
+        lastGeneratedResults = results || [];
+        renderBulkResultTable(lastGeneratedResults);
+        alert(`학생 계정 생성이 완료되었어! 발급된 임시 비밀번호를 확인해줘.`);
+        document.getElementById('bulkStudentInput').value = '';
+        loadUsersData();
+        loadTeacherStudentSelects();
+      }
+
+      btn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4"></i> 일괄 계정 생성 및 임시 비밀번호 발급';
+      btn.disabled = false;
+      lucide.createIcons();
+    }
+
+    function renderBulkResultTable(list) {
+      const container = document.getElementById('bulkResultContainer');
+      const copyBtn = document.getElementById('copyResultBtn');
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<p class="text-center py-6 text-slate-400">생성 결과가 없습니다.</p>';
+        copyBtn.classList.add('hidden');
+        return;
+      }
+
+      copyBtn.classList.remove('hidden');
+      container.innerHTML = `
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b font-bold text-slate-700 bg-white">
+              <th class="p-1.5">학번</th>
+              <th class="p-1.5">이름</th>
+              <th class="p-1.5 text-blue-600">임시 비밀번호</th>
+              <th class="p-1.5 text-right">상태</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            ${list.map(s => `
+              <tr class="hover:bg-white/80">
+                <td class="p-1.5 font-bold text-slate-800">${s.student_no}</td>
+                <td class="p-1.5">${s.name}</td>
+                <td class="p-1.5 font-mono font-bold text-blue-600">${s.temp_pw}</td>
+                <td class="p-1.5 text-right"><span class="px-1.5 py-0.5 rounded text-[10px] ${s.status === '성공' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${s.status}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function copyBulkResultText() {
+      if (!lastGeneratedResults || lastGeneratedResults.length === 0) return;
+      let text = "=== 3학년 2반 진학 플랫폼 학생 계정 안내 ===\n";
+      text += "(최초 로그인 후 본인의 새 비밀번호로 변경해야 합니다)\n\n";
+      lastGeneratedResults.forEach(s => {
+        text += `[${s.student_no}] ${s.name} | 아이디: ${s.student_no} | 임시비번: ${s.temp_pw}\n`;
+      });
+      navigator.clipboard.writeText(text).then(() => {
+        alert('학생 배포용 명단 및 임시비밀번호가 클립보드에 복사되었어! 단톡방이나 인쇄물에 붙여넣어 활용해.');
+      });
+    }
+
+    // =================================================================
+    // 💡 [기능 1: 학급 앨범]
     // =================================================================
     async function loadAlbumFolders() {
       const { data: folders } = await supabaseClient.from('album_folders').select('*').order('created_at', { ascending: true });
@@ -993,7 +1210,6 @@
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const ext = file.name.split('.').pop() || 'jpg';
-        // 한글 파일명 오류 방지용 안전한 경로 생성
         const safeFilePath = `${activeFolderId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
         const { error: upErr } = await supabaseClient.storage
@@ -1022,7 +1238,7 @@
       e.target.value = '';
 
       if (successCount === 0) {
-        alert('사진 업로드 실패! 원인: ' + (lastErrorMessage || 'Supabase Storage RLS 권한을 확인해주세요. 1단계 SQL을 실행했는지 점검해봐!'));
+        alert('사진 업로드 실패! 원인: ' + (lastErrorMessage || '스토리지 권한을 확인해주세요.'));
       } else {
         alert(`${successCount}장의 사진이 성공적으로 업로드되었어!`);
         loadAlbumPhotos();
@@ -1062,7 +1278,7 @@
     });
 
     // =================================================================
-    // 💡 [기능 2: 기본조사] 2학년 & 3학년 학교 교육과정 선택과목
+    // 💡 [기능 2: 기본조사]
     // =================================================================
     async function loadMySurveyData() {
       const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', currentUser.id).single();
@@ -1078,13 +1294,11 @@
         document.getElementById('surv_notes').value = data.special_notes || '';
 
         const subj = data.selected_subjects || {};
-        // 2학년 과목 복원
         const g2List = subj.grade2 || [];
         document.querySelectorAll('input[name="grade2_sub"]').forEach(cb => {
           cb.checked = g2List.includes(cb.value);
         });
 
-        // 3학년 과목 복원
         const g3List = subj.grade3 || [];
         document.querySelectorAll('input[name="grade3_sub"]').forEach(cb => {
           cb.checked = g3List.includes(cb.value);
@@ -1183,7 +1397,7 @@
     }
 
     // =================================================================
-    // 💡 [기능 3: 모의고사 관리] 합산 백분위 및 과목별 체크박스 필터
+    // 💡 [기능 3: 모의고사]
     // =================================================================
     const SUBJECT_ROWS = [
       { key: 'korean', name: '국어', options: ['화법과 작문', '언어와 매체'] },
@@ -1288,7 +1502,7 @@
       const mathData = [];
       const tam1Data = [];
       const tam2Data = [];
-      const totalAvgData = []; // 국수탐(2) 합산 평균 백분위
+      const totalAvgData = [];
 
       rounds.forEach(r => {
         const rScores = allScores ? allScores.filter(s => s.exam_round === r) : [];
@@ -1307,7 +1521,6 @@
         tam1Data.push(t1Pct);
         tam2Data.push(t2Pct);
 
-        // 국·수·탐 평균 백분위 계산: [국어 + 수학 + (탐1+탐2)/2] / 3
         let tamAvg = null;
         if (t1Pct !== null && t2Pct !== null) tamAvg = (t1Pct + t2Pct) / 2;
         else if (t1Pct !== null) tamAvg = t1Pct;
@@ -1342,9 +1555,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false } // 상단 커스텀 체크박스로 제어
-          },
+          plugins: { legend: { display: false } },
           scales: {
             y: { min: 0, max: 100, title: { display: true, text: '백분위 (%)' } }
           }
@@ -1355,7 +1566,6 @@
       else teacherChartInstance = newChart;
     }
 
-    // 과목별 체크박스 On/Off 제어
     function toggleDataset(type, datasetIndex, isVisible) {
       const chart = (type === 'student') ? studentChartInstance : teacherChartInstance;
       if (chart) {
@@ -1403,7 +1613,7 @@
     }
 
     // =================================================================
-    // 💡 [기타 공통] 회원 관리, 상담, 12장 카드, 달력
+    // 💡 [공통] 회원 데이터, 카드, 달력 등
     // =================================================================
     async function loadTeacherStudentSelects() {
       const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student').eq('is_approved', true).order('student_no');
