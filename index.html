@@ -976,7 +976,7 @@
         const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
         if (profile) {
           if (!profile.is_approved) {
-            alert('선생님의 가입 승인이 아직 완료되지 않았어. 승인 후 다시 로그인해줘!');
+            alert('선생님의 가입 승인이 아직 완료되지 않았습니다. 승인 후 다시 로그인해주세요!');
             await supabaseClient.auth.signOut();
             return;
           }
@@ -1043,18 +1043,18 @@
 
       if (role === 'student') {
         studentNo = document.getElementById('regStudentNo').value.trim();
-        if (!studentNo) return alert('학번을 입력해줘.');
+        if (!studentNo) return alert('학번을 입력해주세요.');
         rawId = studentNo;
         if (studentNo.length >= 3 && studentNo.startsWith('3')) {
           classNum = parseInt(studentNo.substring(1, 3)) || classNum;
         }
       } else if (role === 'head') {
         rawId = document.getElementById('regCustomId').value.trim();
-        if (!rawId) return alert('사용할 아이디를 입력해줘.');
+        if (!rawId) return alert('사용할 아이디를 입력해주세요.');
         classNum = 0;
       } else {
         rawId = document.getElementById('regCustomId').value.trim();
-        if (!rawId) return alert('사용할 아이디를 입력해줘.');
+        if (!rawId) return alert('사용할 아이디를 입력해주세요.');
       }
 
       const regBtn = document.getElementById('regSubmitBtn');
@@ -1065,7 +1065,7 @@
       const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: authEmail, password: pw });
 
       if (authError) {
-        alert('가입 에러: 이미 등록된 아이디이거나 비밀번호 규격(6자 이상)을 확인해줘.');
+        alert('가입 에러: 이미 등록된 아이디이거나 비밀번호 규격(6자 이상)을 확인해주세요.');
         regBtn.innerText = '가입 신청 완료';
         regBtn.disabled = false;
         return;
@@ -1082,7 +1082,7 @@
           is_approved: false,
           needs_pw_change: false
         }]);
-        alert(`가입 신청 완료! [${classNum === 0 ? '전체' : classNum + '반'} / 아이디: ${rawId}] 담임선생님이 승인하면 로그인할 수 있어.`);
+        alert(`가입 신청 완료! [${classNum === 0 ? '전체' : classNum + '반'} / 아이디: ${rawId}] 담임선생님이 승인하면 로그인할 수 있습니다.`);
         switchAuthTab('login');
       }
       regBtn.innerText = '가입 신청 완료';
@@ -1101,7 +1101,7 @@
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email: authEmail, password: pw });
 
       if (error) {
-        alert('로그인 실패: 아이디(학번) 또는 비밀번호를 다시 확인해줘.');
+        alert('로그인 실패: 아이디(학번) 또는 비밀번호를 다시 확인해주세요.');
         btn.innerText = '로그인';
         btn.disabled = false;
         return;
@@ -1109,7 +1109,7 @@
 
       const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', data.user.id).single();
       if (!profile || !profile.is_approved) {
-        alert('선생님의 가입 승인이 아직 완료되지 않았어. 승인 후 다시 로그인해줘!');
+        alert('선생님의 가입 승인이 아직 완료되지 않았습니다. 승인 후 다시 로그인해주세요!');
         await supabaseClient.auth.signOut();
         btn.innerText = '로그인';
         btn.disabled = false;
@@ -1139,8 +1139,8 @@
       const p2 = document.getElementById('firstNewPwConfirm').value;
       const submitBtn = document.getElementById('firstPwSubmitBtn');
 
-      if (p1 !== p2) return alert('입력한 두 비밀번호가 서로 일치하지 않아.');
-      if (p1.length < 6) return alert('비밀번호는 최소 6자 이상이어야 해.');
+      if (p1 !== p2) return alert('입력한 두 비밀번호가 서로 일치하지 않습니다.');
+      if (p1.length < 6) return alert('비밀번호는 최소 6자 이상이어야 합니다.');
 
       submitBtn.innerText = '비밀번호 변경 중...';
       submitBtn.disabled = true;
@@ -1156,7 +1156,7 @@
       await supabaseClient.from('profiles').update({ needs_pw_change: false }).eq('id', currentUser.id);
       currentProfile.needs_pw_change = false;
 
-      alert('비밀번호가 안전하게 변경되었어! 플랫폼으로 이동할게.');
+      alert('비밀번호가 안전하게 변경되었습니다! 플랫폼으로 이동합니다.');
       document.getElementById('firstLoginPwModal').classList.add('hidden');
       enterPlatform();
     }
@@ -1252,7 +1252,7 @@
     }
 
     async function handleLogout() {
-      if (confirm('로그아웃 할까?')) {
+      if (confirm('로그아웃 하시겠습니까?')) {
         await supabaseClient.auth.signOut();
         currentUser = null;
         currentProfile = null;
@@ -1441,7 +1441,7 @@
     }
 
     async function confirmCounselRequest(requestId, targetDate, targetPeriod, studentName) {
-      if (!confirm(`[${studentName}] 학생의 ${targetDate} (${targetPeriod}) 상담 신청을 확인 처리할까?`)) return;
+      if (!confirm(`[${studentName}] 학생의 ${targetDate} (${targetPeriod}) 상담 신청을 확인 처리할까요?`)) return;
 
       const { error } = await supabaseClient.from('counsel_requests').update({ status: 'confirmed' }).eq('id', requestId);
       if (error) {
@@ -1458,7 +1458,7 @@
         class_num: cls
       }]);
 
-      alert(`[${studentName}] 상담이 확인 처리되었고, 학사 달력에도 자동으로 일정이 등록되었어!`);
+      alert(`[${studentName}] 상담이 확인 처리되었고, 학사 달력에도 자동으로 일정이 등록되었습니다!`);
       loadTeacherCounselRequests();
       loadHomeDashboardData();
       renderCalendar();
@@ -1513,7 +1513,7 @@
       currentAlbumPhotos = photos || [];
 
       if (!photos || photos.length === 0) {
-        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-16">이 폴더에 등록된 사진이 없습니다. [사진 여러 장 올리기]를 눌러 업로드해 봐.</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-16">이 폴더에 등록된 사진이 없습니다. [사진 여러 장 올리기]를 눌러 업로드해 보세요.</p>';
         return;
       }
 
@@ -1551,7 +1551,7 @@
     }
 
     async function deleteAlbumFolder(folderId, folderName) {
-      if (!confirm(`'${folderName}' 폴더와 폴더에 담긴 모든 사진을 완전히 삭제할까?`)) return;
+      if (!confirm(`'${folderName}' 폴더와 폴더에 담긴 모든 사진을 완전히 삭제할까요?`)) return;
 
       const { data: photos } = await supabaseClient.from('album_photos').select('*').eq('folder_id', folderId);
       if (photos && photos.length > 0) {
@@ -1574,7 +1574,7 @@
         return;
       }
 
-      alert(`'${folderName}' 폴더가 삭제되었어.`);
+      alert(`'${folderName}' 폴더가 삭제되었습니다.`);
       if (activeFolderId === folderId) {
         activeFolderId = null;
       }
@@ -1583,7 +1583,7 @@
     }
 
     async function deleteAlbumPhoto(photoId, photoUrl) {
-      if (!confirm('이 사진을 정말 삭제할까?')) return;
+      if (!confirm('이 사진을 정말 삭제할까요?')) return;
       
       const { error } = await supabaseClient.from('album_photos').delete().eq('id', photoId);
       if (error) {
@@ -1611,7 +1611,7 @@
     async function deleteCurrentLightboxPhoto() {
       if (currentAlbumPhotos.length === 0) return;
       const photo = currentAlbumPhotos[currentLightboxIdx];
-      if (!confirm('현재 확대 중인 이 사진을 삭제할까?')) return;
+      if (!confirm('현재 확대 중인 이 사진을 삭제할까요?')) return;
 
       const { error } = await supabaseClient.from('album_photos').delete().eq('id', photo.id);
       if (error) {
@@ -1640,7 +1640,7 @@
     async function handleMultiPhotoUpload(e) {
       const files = e.target.files;
       if (!files || files.length === 0) return;
-      if (!activeFolderId) return alert('사진을 올릴 폴더를 먼저 선택해줘.');
+      if (!activeFolderId) return alert('사진을 올릴 폴더를 먼저 선택해주세요.');
 
       const uploadLabel = e.target.parentElement;
       const originHtml = uploadLabel.innerHTML;
@@ -1670,7 +1670,7 @@
 
       uploadLabel.innerHTML = originHtml;
       e.target.value = '';
-      alert(`${successCount}장의 사진이 성공적으로 업로드되었어!`);
+      alert(`${successCount}장의 사진이 성공적으로 업로드되었습니다!`);
       loadAlbumPhotos();
       loadHomeDashboardData();
     }
@@ -1733,11 +1733,11 @@
       const cat = document.getElementById('eventCatInput').value;
       const title = document.getElementById('eventTitleInput').value.trim();
 
-      if (!startDate || !title) return alert('시작 날짜와 일정 내용을 입력해줘.');
+      if (!startDate || !title) return alert('시작 날짜와 일정 내용을 입력해주세요.');
       if (!endDate) endDate = startDate;
 
       if (startDate > endDate) {
-        return alert('종료일은 시작일보다 이전일 수 없어.');
+        return alert('종료일은 시작일보다 이전일 수 없습니다.');
       }
 
       const submitBtn = document.getElementById('eventSubmitBtn');
@@ -1771,7 +1771,7 @@
         return;
       }
 
-      alert(records.length > 1 ? `${records.length}일간의 일정이 등록되었어!` : '일정이 등록되었어!');
+      alert(records.length > 1 ? `${records.length}일간의 일정이 등록되었습니다!` : '일정이 등록되었습니다!');
       submitBtn.innerText = '추가';
       submitBtn.disabled = false;
       closeNewEventModal();
@@ -1780,7 +1780,7 @@
     }
 
     async function deleteCalendarEvent(id, title) {
-      if (!confirm(`'${title}' 일정을 달력에서 삭제할까?`)) return;
+      if (!confirm(`'${title}' 일정을 달력에서 삭제할까요?`)) return;
       await supabaseClient.from('calendar_events').delete().eq('id', id);
       renderCalendar();
       loadHomeDashboardData();
@@ -1940,12 +1940,12 @@
     async function approveUser(userId) {
       const selectedRole = document.getElementById(`roleSelect_${userId}`).value;
       await supabaseClient.from('profiles').update({ is_approved: true, role: selectedRole }).eq('id', userId);
-      alert('승인 및 역할 부여가 완료되었어.');
+      alert('승인 및 역할 부여가 완료되었습니다.');
       loadUsersData();
       loadTeacherStudentSelects();
     }
     async function rejectUser(userId) {
-      if (confirm('이 회원을 삭제(반려)할까?')) {
+      if (confirm('이 회원을 삭제(반려)할까요?')) {
         await supabaseClient.from('profiles').delete().eq('id', userId);
         loadUsersData();
       }
@@ -2002,7 +2002,7 @@
       if (rpcError) {
         alert('계정 로그인 정보 수정 오류: ' + rpcError.message);
       } else {
-        alert('회원 구분, 학급 및 계정 정보가 성공적으로 변경되었어!');
+        alert('회원 구분, 학급 및 계정 정보가 성공적으로 변경되었습니다!');
         closeEditUserModal();
         loadUsersData();
         loadTeacherStudentSelects();
@@ -2016,7 +2016,7 @@
     // =================================================================
     async function handleBulkStudentCreate() {
       const rawText = document.getElementById('bulkStudentInput').value.trim();
-      if (!rawText) return alert('학번과 이름 명렬표를 입력해줘.');
+      if (!rawText) return alert('학번과 이름 명렬표를 입력해주세요.');
 
       const lines = rawText.split('\n');
       const students = [];
@@ -2039,7 +2039,7 @@
         }
       }
 
-      if (students.length === 0) return alert('유효한 명렬표 형식을 찾을 수 없어.');
+      if (students.length === 0) return alert('유효한 명렬표 형식을 찾을 수 없습니다.');
 
       const btn = document.getElementById('bulkCreateBtn');
       btn.innerText = '생성 중...';
@@ -2051,7 +2051,7 @@
       else {
         lastGeneratedResults = results || [];
         renderBulkResultTable(lastGeneratedResults);
-        alert(`학생 계정 생성이 완료되었어!`);
+        alert(`학생 계정 생성이 완료되었습니다!`);
         document.getElementById('bulkStudentInput').value = '';
         loadUsersData();
         loadTeacherStudentSelects();
@@ -2104,7 +2104,7 @@
         text += `[${s.student_no}] ${s.name} | 아이디: ${s.student_no} | 임시비번: ${s.temp_pw}\n`;
       });
       navigator.clipboard.writeText(text).then(() => {
-        alert('학생 배포용 명단 및 임시비밀번호가 복사되었어!');
+        alert('학생 배포용 명단 및 임시비밀번호가 복사되었습니다!');
       });
     }
 
@@ -2192,7 +2192,7 @@
 
       await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
       await supabaseClient.from('applications_12').insert(records);
-      alert('12장 지원 카드가 성공적으로 저장되었어!');
+      alert('12장 지원 카드가 성공적으로 저장되었습니다!');
       loadHomeDashboardData();
     }
 
@@ -2214,7 +2214,7 @@
         status: 'pending'
       }]);
 
-      alert('상담 신청서가 담임선생님께 제출되었어!');
+      alert('상담 신청서가 담임선생님께 제출되었습니다!');
       document.getElementById('counselDetail').value = '';
       loadHomeDashboardData();
     }
@@ -2460,7 +2460,7 @@
       };
 
       await supabaseClient.from('student_surveys').upsert(surveyObj);
-      alert('기초조사서가 성공적으로 저장되었어!');
+      alert('기초조사서가 성공적으로 저장되었습니다!');
     }
 
     async function loadStudentSurveyForTeacher() {
