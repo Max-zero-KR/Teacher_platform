@@ -131,6 +131,7 @@
             <button onclick="changeView('approval')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1" data-view="approval">
               회원 관리 <span id="pendingCountBadge" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
             </button>
+            <button onclick="changeView('counselRequests')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="counselRequests">상담 신청 목록</button>
             <button onclick="changeView('counselList')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="counselList">12장 상담카드</button>
             <button onclick="changeView('teacherSurvey')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="teacherSurvey">기초조사서</button>
             <button onclick="changeView('teacherMock')" class="nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-view="teacherMock">모의고사 분석</button>
@@ -243,7 +244,8 @@
                   <span class="text-[11px] font-semibold text-rose-600">가입 승인 대기</span>
                   <p id="homeTeacherStatPending" class="text-xl font-black text-rose-700 mt-1">0명</p>
                 </div>
-                <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer" onclick="changeView('counselList')">
+                <!-- 수정: 클릭 시 12장 카드가 아닌 '상담 신청 목록'으로 바로 이동 -->
+                <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer hover:bg-blue-100/70 transition" onclick="changeView('counselRequests')">
                   <span class="text-[11px] font-semibold text-blue-600">미확인 상담 신청</span>
                   <p id="homeTeacherStatCounsel" class="text-xl font-black text-blue-700 mt-1">0건</p>
                 </div>
@@ -370,7 +372,45 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 2. [교사] 학생별 12장 상담카드 -->
+      <!-- 2. [교사] 학생 1:1 상담 신청 내역 확인 및 승인 관리 -->
+      <!-- ======================================================= -->
+      <section id="view-counselRequests" class="view-panel hidden space-y-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i> 학생 1:1 상담 신청 내역
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">학생들이 작성한 상담 일시, 주제 및 구체적인 고민 내용을 확인하고 접수할 수 있어.</p>
+          </div>
+          <button onclick="loadTeacherCounselRequests()" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-1">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 새로고침
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
+                <tr>
+                  <th class="p-3 w-28">희망 날짜</th>
+                  <th class="p-3 w-28">희망 교시/시간</th>
+                  <th class="p-3 w-32">학생(학번)</th>
+                  <th class="p-3 w-48">상담 주제</th>
+                  <th class="p-3">고민 및 질문 내용</th>
+                  <th class="p-3 w-20 text-center">상태</th>
+                  <th class="p-3 w-28 text-right">처리</th>
+                </tr>
+              </thead>
+              <tbody id="teacherCounselTableBody" class="divide-y divide-slate-100 text-xs">
+                <tr><td colspan="7" class="p-6 text-center text-slate-400">접수된 상담 신청 내역이 없습니다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 3. [교사] 학생별 12장 상담카드 -->
       <!-- ======================================================= -->
       <section id="view-counselList" class="view-panel hidden space-y-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
@@ -391,7 +431,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 3. [기본조사] 2·3학년 교육과정 선택과목 -->
+      <!-- 4. [기본조사] 2·3학년 교육과정 선택과목 -->
       <!-- ======================================================= -->
       <section id="view-studentSurvey" class="view-panel hidden space-y-6">
         <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
@@ -520,7 +560,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 4. [모의고사] 성적표 및 백분위 변동 그래프 -->
+      <!-- 5. [모의고사] 성적표 및 백분위 변동 그래프 -->
       <!-- ======================================================= -->
       <section id="view-studentMock" class="view-panel hidden space-y-6">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
@@ -594,7 +634,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 5. [학급 앨범] (폴더/사진 삭제 및 대형 뷰어) -->
+      <!-- 6. [학급 앨범] -->
       <!-- ======================================================= -->
       <section id="view-album" class="view-panel hidden space-y-6">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
@@ -622,7 +662,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 6. [학생] 내 12장 원서 -->
+      <!-- 7. [학생] 내 12장 원서 -->
       <!-- ======================================================= -->
       <section id="view-myCards" class="view-panel hidden space-y-6">
         <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
@@ -651,7 +691,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 7. [학생] 1:1 상담 신청 -->
+      <!-- 8. [학생] 1:1 상담 신청 -->
       <!-- ======================================================= -->
       <section id="view-myCounsel" class="view-panel hidden space-y-4">
         <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -693,7 +733,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 8. [공통] 학사 및 상담 캘린더 -->
+      <!-- 9. [공통] 학사 및 상담 캘린더 -->
       <!-- ======================================================= -->
       <section id="view-calendar" class="view-panel hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200">
@@ -783,7 +823,7 @@
     </div>
   </div>
 
-  <!-- [모달 2: 관리자 전용 회원 계정 수정 (구분/역할 변경 기능 포함)] -->
+  <!-- [모달 2: 관리자 전용 회원 계정 수정] -->
   <div id="editUserModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
       <div class="flex justify-between items-center">
@@ -792,7 +832,6 @@
       </div>
       <input type="hidden" id="modalUserId">
       <div class="space-y-3 text-xs">
-        <!-- 구분(역할) 변경 셀렉트박스 -->
         <div>
           <label class="block font-semibold text-slate-600 mb-1">구분 (역할)</label>
           <select id="modalUserRole" class="w-full px-3 py-2 border rounded-lg outline-none font-bold bg-white text-slate-700 focus:ring-2 focus:ring-blue-500">
@@ -1145,6 +1184,7 @@
         document.getElementById('studentHomeSummary').classList.add('hidden');
         loadUsersData();
         loadTeacherStudentSelects();
+        loadTeacherCounselRequests(); // 상담 신청 목록 자동 로드
       } else {
         document.getElementById('teacherNav').classList.add('hidden');
         document.getElementById('studentNav').classList.remove('hidden');
@@ -1207,6 +1247,7 @@
       loadAlbumFolders();
       renderCalendar();
       loadUsersData();
+      loadTeacherCounselRequests();
       lucide.createIcons();
     }
 
@@ -1232,6 +1273,11 @@
           btn.className = 'nav-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100';
         }
       });
+
+      if (viewId === 'counselRequests') {
+        loadTeacherCounselRequests();
+      }
+
       lucide.createIcons();
     }
 
@@ -1274,7 +1320,8 @@
         const { data: counsel } = await supabaseClient.from('counsel_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(1);
         const counselStatusEl = document.getElementById('homeMyCounselStatus');
         if (counsel && counsel.length > 0) {
-          counselStatusEl.innerText = `${counsel[0].target_date} (${counsel[0].target_period}) 신청완료`;
+          const statusText = counsel[0].status === 'confirmed' ? '담임선생님 확인완료' : '신청완료 (확인대기)';
+          counselStatusEl.innerText = `${counsel[0].target_date} [${statusText}]`;
         } else {
           counselStatusEl.innerText = '신청 내역 없음';
         }
@@ -1350,6 +1397,71 @@
       alert('담임 알림이 등록되었어!');
       closeNewNoticeModal();
       loadHomeDashboardData();
+    }
+
+    // =================================================================
+    // 💡 [교사용] 1:1 상담 신청 목록 로드 및 접수/확인 처리
+    // =================================================================
+    async function loadTeacherCounselRequests() {
+      const tbody = document.getElementById('teacherCounselTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">내역을 불러오는 중...</td></tr>';
+
+      const { data: list, error } = await supabaseClient
+        .from('counsel_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error || !list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">접수된 상담 신청 내역이 없습니다.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="p-3 font-bold text-slate-800">${item.target_date || '-'}</td>
+          <td class="p-3 font-semibold text-blue-600">${item.target_period || '-'}</td>
+          <td class="p-3 font-bold text-slate-800">${item.student_name || '-'} <span class="text-slate-400 text-[11px] font-normal">(${item.student_no || '-'})</span></td>
+          <td class="p-3 font-semibold text-slate-700">${item.topic || '-'}</td>
+          <td class="p-3 text-slate-600 whitespace-pre-wrap leading-relaxed max-w-md">${item.detail || '-'}</td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 rounded text-[11px] font-bold ${item.status === 'pending' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+              ${item.status === 'pending' ? '미확인' : '확인 완료'}
+            </span>
+          </td>
+          <td class="p-3 text-right">
+            ${item.status === 'pending' 
+              ? `<button onclick="confirmCounselRequest('${item.id}', '${item.target_date}', '${item.target_period}', '${item.student_name}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition shadow-sm">접수/일정등록</button>`
+              : `<span class="text-slate-400 text-xs">처리 완료</span>`
+            }
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    async function confirmCounselRequest(requestId, targetDate, targetPeriod, studentName) {
+      if (!confirm(`[${studentName}] 학생의 ${targetDate} (${targetPeriod}) 상담 신청을 확인 처리할까?`)) return;
+
+      const { error } = await supabaseClient.from('counsel_requests').update({ status: 'confirmed' }).eq('id', requestId);
+      if (error) {
+        alert('상태 변경 실패: ' + error.message);
+        return;
+      }
+
+      // 학사 달력(calendar_events)에도 학생 상담 일정 자동 등록
+      const cls = (activeClassNum === 'all') ? 0 : activeClassNum;
+      await supabaseClient.from('calendar_events').insert([{
+        event_date: targetDate,
+        category: 'counsel',
+        title: `[상담] ${studentName} (${targetPeriod})`,
+        class_num: cls
+      }]);
+
+      alert(`[${studentName}] 상담이 확인 처리되었고, 학사 달력에도 자동으로 일정이 등록되었어!`);
+      loadTeacherCounselRequests();
+      loadHomeDashboardData();
+      renderCalendar();
     }
 
     // =================================================================
@@ -1839,7 +1951,6 @@
       }
     }
 
-    // 회원 계정 수정 모달 열기 (역할 파라미터 수신 및 반영)
     function openEditUserModal(userId, currentRawId, name, classNum, role) {
       document.getElementById('modalUserId').value = userId;
       document.getElementById('modalUserRawId').value = currentRawId;
@@ -1855,7 +1966,6 @@
       document.getElementById('editUserModal').classList.add('hidden');
     }
 
-    // 회원 정보 및 구분(역할) 저장 로직
     async function submitUserEdit() {
       const userId = document.getElementById('modalUserId').value;
       const newRawId = document.getElementById('modalUserRawId').value.trim();
@@ -1867,7 +1977,6 @@
       saveBtn.innerText = '저장 중...';
       saveBtn.disabled = true;
 
-      // profiles 테이블에 역할(role) 및 학급(class_num) 업데이트
       const updateFields = {
         class_num: newClassNum,
         role: newRole
@@ -1878,13 +1987,12 @@
 
       const { error: profileError } = await supabaseClient.from('profiles').update(updateFields).eq('id', userId);
       if (profileError) {
-        alert('회원 프로필(역할/학급) 수정 실패: ' + profileError.message);
+        alert('회원 프로필 수정 실패: ' + profileError.message);
         saveBtn.innerText = '저장하기';
         saveBtn.disabled = false;
         return;
       }
 
-      // auth 자격증명 업데이트 RPC 호출
       const { error: rpcError } = await supabaseClient.rpc('admin_update_user_credentials', {
         target_user_id: userId,
         new_raw_id: newRawId,
@@ -1894,7 +2002,7 @@
       if (rpcError) {
         alert('계정 로그인 정보 수정 오류: ' + rpcError.message);
       } else {
-        alert('회원 구분(역할), 학급 및 계정 정보가 성공적으로 변경되었어!');
+        alert('회원 구분, 학급 및 계정 정보가 성공적으로 변경되었어!');
         closeEditUserModal();
         loadUsersData();
         loadTeacherStudentSelects();
