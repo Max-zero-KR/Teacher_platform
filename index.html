@@ -183,7 +183,6 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="lg:col-span-2 space-y-6">
-            <!-- 담임 알림 카드 -->
             <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
               <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
@@ -198,7 +197,6 @@
               </div>
             </div>
 
-            <!-- 학생 홈 요약 -->
             <div id="studentHomeSummary" class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 hidden">
               <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
                 <i data-lucide="target" class="w-5 h-5 text-indigo-600"></i> 내 대입 지원 현황 요약
@@ -236,7 +234,6 @@
               </div>
             </div>
 
-            <!-- 교사 홈 요약 -->
             <div id="teacherHomeSummary" class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
               <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
                 <i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-600"></i> 교무실 업무 요약
@@ -259,7 +256,6 @@
           </div>
 
           <div class="space-y-6">
-            <!-- 이달의 학사 일정 -->
             <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
               <div class="flex justify-between items-center">
                 <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
@@ -272,7 +268,6 @@
               </div>
             </div>
 
-            <!-- 학급 앨범 사진 미리보기 -->
             <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
               <div class="flex justify-between items-center">
                 <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
@@ -355,7 +350,7 @@
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <div class="p-4 border-b border-slate-200 bg-slate-50">
             <h2 class="text-base font-bold text-slate-800">등록된 회원 목록</h2>
-            <p class="text-xs text-slate-500">학생이나 교사의 학급 소속과 비밀번호를 관리할 수 있습니다.</p>
+            <p class="text-xs text-slate-500">회원의 구분(역할), 학급 소속, 아이디 및 비밀번호를 관리할 수 있습니다.</p>
           </div>
           <table class="w-full text-left border-collapse text-sm">
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
@@ -599,7 +594,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 5. [학급 앨범] (폴더/사진 삭제 및 대형 뷰어 적용) -->
+      <!-- 5. [학급 앨범] (폴더/사진 삭제 및 대형 뷰어) -->
       <!-- ======================================================= -->
       <section id="view-album" class="view-panel hidden space-y-6">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
@@ -620,10 +615,7 @@
           </div>
         </div>
 
-        <!-- 앨범 폴더 탭 (개별 삭제 지원) -->
         <div id="albumFolderTabs" class="flex gap-2 overflow-x-auto pb-2 text-xs"></div>
-
-        <!-- 앨범 사진 그리드 (사진별 삭제 아이콘 포함) -->
         <div id="albumPhotosGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <p class="col-span-full text-center text-slate-400 py-16">선택된 폴더에 등록된 사진이 없습니다.</p>
         </div>
@@ -701,7 +693,7 @@
       </section>
 
       <!-- ======================================================= -->
-      <!-- 8. [공통] 학사 및 상담 캘린더 (범위 지정 일정 표기) -->
+      <!-- 8. [공통] 학사 및 상담 캘린더 -->
       <!-- ======================================================= -->
       <section id="view-calendar" class="view-panel hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200">
@@ -759,10 +751,8 @@
         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
           <i data-lucide="calendar-plus" class="w-4 h-4 text-blue-600"></i> 새 학사/상담 일정 추가
         </h3>
-        <button onclick="closeNewEventModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button onclick="closeNewEventModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      
-      <!-- 날짜 범위 지정 필드 -->
       <div class="grid grid-cols-2 gap-2">
         <div>
           <label class="block font-semibold text-slate-600 mb-1">시작일</label>
@@ -774,7 +764,6 @@
         </div>
       </div>
       <p class="text-[11px] text-slate-400">※ 하루 일정인 경우 시작일과 종료일을 동일하게 선택하면 돼.</p>
-
       <div>
         <label class="block font-semibold text-slate-600 mb-1">구분</label>
         <select id="eventCatInput" class="w-full px-3 py-1.5 border rounded-lg outline-none">
@@ -794,7 +783,7 @@
     </div>
   </div>
 
-  <!-- [모달 2: 관리자 전용 회원 계정 수정] -->
+  <!-- [모달 2: 관리자 전용 회원 계정 수정 (구분/역할 변경 기능 포함)] -->
   <div id="editUserModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
       <div class="flex justify-between items-center">
@@ -803,6 +792,16 @@
       </div>
       <input type="hidden" id="modalUserId">
       <div class="space-y-3 text-xs">
+        <!-- 구분(역할) 변경 셀렉트박스 -->
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">구분 (역할)</label>
+          <select id="modalUserRole" class="w-full px-3 py-2 border rounded-lg outline-none font-bold bg-white text-slate-700 focus:ring-2 focus:ring-blue-500">
+            <option value="student">학생</option>
+            <option value="teacher">담임교사</option>
+            <option value="admin">학년부장 / 관리자</option>
+            <option value="parent">학부모</option>
+          </select>
+        </div>
         <div>
           <label class="block font-semibold text-slate-600 mb-1">소속 학급 (1~10반 / 0: 전체)</label>
           <input type="number" id="modalUserClassNum" min="0" max="10" class="w-full px-3 py-2 border rounded-lg outline-none font-bold">
@@ -818,7 +817,7 @@
       </div>
       <div class="flex gap-2 pt-2">
         <button onclick="closeEditUserModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">취소</button>
-        <button onclick="submitUserEdit()" id="modalSaveBtn" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold">저장하기</button>
+        <button onclick="submitUserEdit()" id="modalSaveBtn" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow transition">저장하기</button>
       </div>
     </div>
   </div>
@@ -835,9 +834,8 @@
     </div>
   </div>
 
-  <!-- [모달 4: 대형 고화질 라이트박스 뷰어 (삭제 기능 포함)] -->
+  <!-- [모달 4: 대형 고화질 라이트박스 뷰어] -->
   <div id="photoLightboxModal" class="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-between p-4 hidden select-none">
-    <!-- 상단 툴바 -->
     <div class="w-full flex items-center justify-between px-2 py-1 z-20">
       <div class="text-white/80 text-xs font-semibold" id="lightboxCounter">1 / 1</div>
       <div class="flex items-center gap-3">
@@ -850,7 +848,6 @@
       </div>
     </div>
 
-    <!-- 대형 이미지 뷰어 영역 -->
     <div class="relative flex-1 w-full flex items-center justify-center overflow-hidden my-2">
       <button onclick="navigateLightbox(-1)" class="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/50 hover:bg-black/80 p-3 rounded-full transition z-10 shadow-lg border border-white/10">
         <i data-lucide="chevron-left" class="w-8 h-8"></i>
@@ -1356,7 +1353,7 @@
     }
 
     // =================================================================
-    // 💡 [학급 앨범 로직 - 폴더/사진 삭제 및 대형 뷰어]
+    // 💡 학급 앨범 로직
     // =================================================================
     async function loadAlbumFolders() {
       let fQuery = supabaseClient.from('album_folders').select('*').order('created_at', { ascending: true });
@@ -1411,7 +1408,6 @@
       grid.innerHTML = photos.map((p, idx) => `
         <div class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition">
           <img src="${p.photo_url}" onclick="openPhotoLightbox(${idx})" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300 cursor-pointer">
-          <!-- 사진 삭제 버튼 (썸네일 호버 시 표시) -->
           <button onclick="event.stopPropagation(); deleteAlbumPhoto('${p.id}', '${p.photo_url}')" title="사진 삭제" class="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-rose-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
           </button>
@@ -1442,7 +1438,6 @@
       }
     }
 
-    // [신규] 폴더 삭제 로직
     async function deleteAlbumFolder(folderId, folderName) {
       if (!confirm(`'${folderName}' 폴더와 폴더에 담긴 모든 사진을 완전히 삭제할까?`)) return;
 
@@ -1475,7 +1470,6 @@
       loadHomeDashboardData();
     }
 
-    // [신규] 사진 개별 삭제 로직
     async function deleteAlbumPhoto(photoId, photoUrl) {
       if (!confirm('이 사진을 정말 삭제할까?')) return;
       
@@ -1502,7 +1496,6 @@
       loadHomeDashboardData();
     }
 
-    // [신규] 현재 라이트박스에서 보고 있는 사진 삭제
     async function deleteCurrentLightboxPhoto() {
       if (currentAlbumPhotos.length === 0) return;
       const photo = currentAlbumPhotos[currentLightboxIdx];
@@ -1570,7 +1563,6 @@
       loadHomeDashboardData();
     }
 
-    // 라이트박스 열기 / 닫기 / 내비게이션
     function openPhotoLightbox(index) {
       currentLightboxIdx = index;
       updateLightboxContent();
@@ -1592,7 +1584,6 @@
       document.getElementById('lightboxCounter').innerText = `${currentLightboxIdx + 1} / ${currentAlbumPhotos.length}`;
     }
 
-    // 키보드로 라이트박스 제어
     window.addEventListener('keydown', (e) => {
       const modal = document.getElementById('photoLightboxModal');
       if (!modal.classList.contains('hidden')) {
@@ -1603,7 +1594,7 @@
     });
 
     // =================================================================
-    // 💡 [학사 & 상담 달력 로직 - 날짜 범위 지정]
+    // 💡 학사 & 상담 달력 로직
     // =================================================================
     function openNewEventModal() {
       const defaultDate = '2026-09-01';
@@ -1624,7 +1615,6 @@
       }
     }
 
-    // [신규] 일정 시작일~종료일 범위 일괄 등록
     async function submitCalendarEvent() {
       const startDate = document.getElementById('eventStartDateInput').value;
       let endDate = document.getElementById('eventEndDateInput').value;
@@ -1644,7 +1634,6 @@
 
       const cls = (activeClassNum === 'all') ? 0 : activeClassNum;
 
-      // 시작일부터 종료일까지 각 날짜 레코드 생성
       const records = [];
       let cur = new Date(startDate);
       const end = new Date(endDate);
@@ -1678,7 +1667,6 @@
       loadHomeDashboardData();
     }
 
-    // [신규] 달력에서 클릭 시 일정 삭제 기능
     async function deleteCalendarEvent(id, title) {
       if (!confirm(`'${title}' 일정을 달력에서 삭제할까?`)) return;
       await supabaseClient.from('calendar_events').delete().eq('id', id);
@@ -1696,7 +1684,6 @@
 
       let cells = '';
 
-      // 2026년 9월 1일 화요일 시작 (앞쪽 빈 칸 2개)
       for (let b = 0; b < 2; b++) {
         cells += '<div class="bg-slate-50/50 min-h-[115px] p-2 rounded border border-slate-100"></div>';
       }
@@ -1790,6 +1777,7 @@
                 <option value="student" ${u.role==='student'?'selected':''}>학생</option>
                 <option value="teacher" ${u.role==='teacher'?'selected':''}>담임교사</option>
                 <option value="admin" ${u.role==='admin'?'selected':''}>학년부장/관리자</option>
+                <option value="parent" ${u.role==='parent'?'selected':''}>학부모</option>
               </select>
             </td>
             <td class="p-3 text-right space-x-1">
@@ -1814,14 +1802,20 @@
           <tr class="hover:bg-slate-50">
             <td class="p-3 font-bold text-blue-600">${u.class_num ? u.class_num + '반' : '전체(관리자)'}</td>
             <td class="p-3">
-              <span class="px-2 py-0.5 rounded text-xs font-semibold ${u.role==='admin'?'bg-amber-100 text-amber-800':(u.role==='student'?'bg-blue-100 text-blue-800':'bg-slate-100 text-slate-700')}">
-                ${u.role==='admin' ? '부장/관리자' : (u.role==='student' ? '학생' : '담임교사')}
+              <span class="px-2 py-0.5 rounded text-xs font-semibold ${
+                u.role === 'admin'
+                  ? 'bg-amber-100 text-amber-800'
+                  : (u.role === 'student'
+                      ? 'bg-blue-100 text-blue-800'
+                      : (u.role === 'teacher' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'))
+              }">
+                ${u.role === 'admin' ? '부장/관리자' : (u.role === 'student' ? '학생' : (u.role === 'teacher' ? '담임교사' : '학부모'))}
               </span>
             </td>
             <td class="p-3 font-bold text-slate-800">${u.student_no || u.email}</td>
             <td class="p-3 font-semibold text-slate-700">${u.name}</td>
             <td class="p-3 text-right">
-              <button onclick="openEditUserModal('${u.id}', '${u.student_no || u.email}', '${u.name}', ${u.class_num || 2})" class="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded text-xs font-bold transition inline-flex items-center gap-1">
+              <button onclick="openEditUserModal('${u.id}', '${u.student_no || u.email}', '${u.name}', ${u.class_num !== null && u.class_num !== undefined ? u.class_num : 2}, '${u.role || 'student'}')" class="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded text-xs font-bold transition inline-flex items-center gap-1">
                 <i data-lucide="key" class="w-3 h-3"></i> 수정
               </button>
             </td>
@@ -1845,39 +1839,62 @@
       }
     }
 
-    function openEditUserModal(userId, currentRawId, name, classNum) {
+    // 회원 계정 수정 모달 열기 (역할 파라미터 수신 및 반영)
+    function openEditUserModal(userId, currentRawId, name, classNum, role) {
       document.getElementById('modalUserId').value = userId;
       document.getElementById('modalUserRawId').value = currentRawId;
-      document.getElementById('modalUserClassNum').value = classNum || 2;
+      document.getElementById('modalUserClassNum').value = (classNum !== null && classNum !== undefined) ? classNum : 2;
+      document.getElementById('modalUserRole').value = role || 'student';
       document.getElementById('modalUserPw').value = '';
       document.getElementById('modalUserName').innerText = `[${name}] 계정 수정`;
       document.getElementById('editUserModal').classList.remove('hidden');
       lucide.createIcons();
     }
+
     function closeEditUserModal() {
       document.getElementById('editUserModal').classList.add('hidden');
     }
+
+    // 회원 정보 및 구분(역할) 저장 로직
     async function submitUserEdit() {
       const userId = document.getElementById('modalUserId').value;
       const newRawId = document.getElementById('modalUserRawId').value.trim();
       const newClassNum = parseInt(document.getElementById('modalUserClassNum').value) || 0;
+      const newRole = document.getElementById('modalUserRole').value;
       const newPw = document.getElementById('modalUserPw').value.trim();
       const saveBtn = document.getElementById('modalSaveBtn');
 
       saveBtn.innerText = '저장 중...';
       saveBtn.disabled = true;
 
-      await supabaseClient.from('profiles').update({ class_num: newClassNum }).eq('id', userId);
+      // profiles 테이블에 역할(role) 및 학급(class_num) 업데이트
+      const updateFields = {
+        class_num: newClassNum,
+        role: newRole
+      };
+      if (newRole === 'student') {
+        updateFields.student_no = newRawId;
+      }
 
-      const { error } = await supabaseClient.rpc('admin_update_user_credentials', {
+      const { error: profileError } = await supabaseClient.from('profiles').update(updateFields).eq('id', userId);
+      if (profileError) {
+        alert('회원 프로필(역할/학급) 수정 실패: ' + profileError.message);
+        saveBtn.innerText = '저장하기';
+        saveBtn.disabled = false;
+        return;
+      }
+
+      // auth 자격증명 업데이트 RPC 호출
+      const { error: rpcError } = await supabaseClient.rpc('admin_update_user_credentials', {
         target_user_id: userId,
         new_raw_id: newRawId,
         new_password: newPw || null
       });
 
-      if (error) alert('수정 실패: ' + error.message);
-      else {
-        alert('계정 정보 및 학급 소속이 성공적으로 변경되었어!');
+      if (rpcError) {
+        alert('계정 로그인 정보 수정 오류: ' + rpcError.message);
+      } else {
+        alert('회원 구분(역할), 학급 및 계정 정보가 성공적으로 변경되었어!');
         closeEditUserModal();
         loadUsersData();
         loadTeacherStudentSelects();
