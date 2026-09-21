@@ -108,8 +108,9 @@
 
   <!-- [화면 2: 메인 시스템] -->
   <div id="mainScreen" class="hidden">
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+<header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <!-- 1. 좌측 로고 및 학급 표시 -->
         <div class="flex items-center gap-3">
           <div id="headerClassBadge" class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-sm">3-2</div>
           <div>
@@ -126,13 +127,14 @@
           </div>
         </div>
 
-<nav id="navMenu" class="hidden lg:flex items-center gap-1 text-sm font-medium">
-          <!-- 1. 메인 홈 -->
+        <!-- 2. 데스크톱 전용 네비게이션 (lg 이상에서만 보임) -->
+        <nav id="navMenu" class="hidden lg:flex items-center gap-1 text-sm font-medium">
+          <!-- 메인 홈 -->
           <button onclick="changeView('home')" class="nav-btn px-3 py-2 rounded-lg text-blue-600 bg-blue-50 font-bold flex items-center gap-1" data-view="home">
             <i data-lucide="home" class="w-4 h-4"></i> 메인 홈
           </button>
 
-          <!-- 2. 학급지도 (Hover 드롭다운) -->
+          <!-- 학급지도 드롭다운 -->
           <div class="relative group">
             <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
               <i data-lucide="users" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
@@ -140,7 +142,6 @@
               <span id="counselNavBadge" class="hidden bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
             </button>
-
             <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-48 hidden group-hover:block z-50">
               <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
                 <button onclick="changeView(isCurrentTeacher() ? 'teacherSurvey' : 'studentSurvey')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between">
@@ -154,14 +155,13 @@
             </div>
           </div>
 
-          <!-- 3. [복구됨] 입시지도 (Hover 드롭다운) -->
+          <!-- 입시지도 드롭다운 -->
           <div class="relative group">
             <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
               <i data-lucide="compass" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
               <span>입시지도</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
             </button>
-
             <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-52 hidden group-hover:block z-50">
               <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
                 <button onclick="changeView(isCurrentTeacher() ? 'counselList' : 'myCards')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
@@ -184,14 +184,13 @@
             </div>
           </div>
 
-          <!-- 4. [신규] 입시자료 (Hover 드롭다운) -->
+          <!-- 입시자료 드롭다운 -->
           <div class="relative group">
             <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
               <i data-lucide="book-open" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
               <span>입시자료</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
             </button>
-
             <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-48 hidden group-hover:block z-50">
               <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
                 <button onclick="changeViewWithFilter('materials', 'interview')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
@@ -214,23 +213,7 @@
             </div>
           </div>
 
-<!-- 헤더 우측 영역에 햄버거 버튼 추가 -->
-<div class="flex items-center gap-2">
-  <div class="text-right">
-    <div id="headerUserName" class="text-sm font-bold text-slate-800">-</div>
-    <div id="headerUserSub" class="text-xs text-slate-400">-</div>
-  </div>
-  <button onclick="handleLogout()" title="로그아웃" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition">
-    <i data-lucide="log-out" class="w-5 h-5"></i>
-  </button>
-  <!-- 모바일 햄버거 버튼 (lg 이상에서는 숨김) -->
-  <button onclick="toggleMobileMenu()" class="p-2 lg:hidden text-slate-700 hover:bg-slate-100 rounded-lg transition" aria-label="메뉴 열기">
-    <i data-lucide="menu" class="w-6 h-6"></i>
-  </button>
-</div>
-
-  
-          <!-- 5. 학사 및 학급 공통 메뉴 -->
+          <!-- 학사 및 학급 공통 메뉴 -->
           <div class="relative group">
             <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
               <i data-lucide="school" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
@@ -255,7 +238,9 @@
             </div>
           </div>
         </nav>
-        <div class="flex items-center gap-3">
+
+        <!-- 3. 헤더 우측: 사용자 정보 + 로그아웃 + 모바일 햄버거 버튼 -->
+        <div class="flex items-center gap-2">
           <div class="text-right">
             <div id="headerUserName" class="text-sm font-bold text-slate-800">-</div>
             <div id="headerUserSub" class="text-xs text-slate-400">-</div>
@@ -263,10 +248,14 @@
           <button onclick="handleLogout()" title="로그아웃" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition">
             <i data-lucide="log-out" class="w-5 h-5"></i>
           </button>
+          <!-- 모바일 햄버거 버튼 (lg 이상에서는 숨김) -->
+          <button onclick="toggleMobileMenu()" class="p-2 lg:hidden text-slate-700 hover:bg-slate-100 rounded-lg transition" aria-label="메뉴 열기">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
         </div>
       </div>
     </header>
-
+    
 <!-- 모바일 오프캔버스 메뉴 드로어 -->
 <div id="mobileMenuDrawer" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden lg:hidden">
   <div class="fixed top-0 right-0 w-4/5 max-w-xs h-full bg-white shadow-2xl p-5 overflow-y-auto space-y-4 flex flex-col justify-between">
