@@ -1518,35 +1518,53 @@
       loadHomeDashboardData();
     }
 
-    async function renderCalendar() {
-      const grid = document.getElementById('calendarGrid');
-      let calQuery = supabaseClient.from('calendar_events').select('*');
-      if (activeClassNum !== 'all') {
-        calQuery = calQuery.or(`class_num.eq.${activeClassNum},class_num.eq.0,class_num.is.null`);
-      }
-      const { data: events } = await calQuery;
+async function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  let calQuery = supabaseClient.from('calendar_events').select('*');
+  if (activeClassNum !== 'all') {
+    calQuery = calQuery.or(`class_num.eq.${activeClassNum},class_num.eq.0,class_num.is.null`);
+  }
+  const { data: events } = await calQuery;
 
-      let cells = '';
-      for (let b = 0; b < 2; b++) cells += '<div class="bg-white min-h-[70px] p-1 opacity-50"></div>';
+  let cells = '';
 
-      for (let day = 1; day <= 30; day++) {
-        const dateStr = `2026-09-${String(day).padStart(2, '0')}`;
-        const dayEvents = events ? events.filter(e => e.event_date === dateStr) : [];
-        cells += `
-          <div class="bg-white min-h-[70px] p-1 border border-slate-100 rounded flex flex-col justify-between">
-            <span class="font-bold text-slate-700">${day}</span>
-            <div class="space-y-1">
-              ${dayEvents.map(e => `
-                <div class="px-1 py-0.5 rounded text-[10px] truncate ${e.category==='counsel'?'bg-emerald-100 text-emerald-800 font-bold':'bg-blue-100 text-blue-800'}">
-                  ${e.title}
-                </div>
-              `).join('')}
+  // 2026년 9월 1일 화요일 시작 (앞쪽 빈 칸 2개)
+  // 빈 칸 높이도 본 칸과 동일하게 맞춰줌 (min-h-[115px])
+  for (let b = 0; b < 2; b++) {
+    cells += '<div class="bg-slate-50/50 min-h-[115px] p-2 rounded border border-slate-100"></div>';
+  }
+
+  for (let day = 1; day <= 30; day++) {
+    const dateStr = `2026-09-${String(day).padStart(2, '0')}`;
+    const dayEvents = events ? events.filter(e => e.event_date === dateStr) : [];
+    
+    // 요일 계산 (0: 일요일, 6: 토요일)
+    const dayOfWeek = (day + 1) % 7; 
+    let dayColor = 'text-slate-700';
+    if (dayOfWeek === 0) dayColor = 'text-rose-500 font-bold';
+    else if (dayOfWeek === 6) dayColor = 'text-blue-500 font-bold';
+
+    cells += `
+      <div class="bg-white min-h-[115px] p-2 border border-slate-100 rounded-lg flex flex-col justify-start gap-1.5 shadow-sm hover:border-blue-300 transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs ${dayColor}">${day}</span>
+          ${dayEvents.length > 0 ? `<span class="text-[9px] px-1 bg-slate-100 text-slate-500 rounded font-semibold">${dayEvents.length}</span>` : ''}
+        </div>
+        <div class="space-y-1 overflow-y-auto max-h-[85px] pr-0.5">
+          ${dayEvents.map(e => `
+            <div class="px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center gap-1 ${               e.category === 'counsel'                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'                  : (e.category === 'exam'                      ? 'bg-rose-50 text-rose-800 border border-rose-200 font-bold'                      : 'bg-blue-50 text-blue-800 border border-blue-100')             }" title="${e.title}">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0 ${
+                e.category === 'counsel' ? 'bg-emerald-500' : (e.category === 'exam' ? 'bg-rose-500' : 'bg-blue-500')
+              }"></span>
+              <span class="truncate">${e.title}</span>
             </div>
-          </div>
-        `;
-      }
-      grid.innerHTML = cells;
-    }
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  grid.innerHTML = cells;
+}
 
     // =================================================================
     // 💡 [회원 관리 및 학생 선택자]
