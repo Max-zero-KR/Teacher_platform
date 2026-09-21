@@ -37,8 +37,8 @@
       <!-- 로그인 폼 -->
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">이메일 (아이디)</label>
-          <input type="email" id="loginEmail" required placeholder="example@school.kr" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">아이디 (학생: 학번 / 교사: 아이디)</label>
+          <input type="text" id="loginUserId" required placeholder="학생: 30201 / 교사: 아이디 입력" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">비밀번호</label>
@@ -57,30 +57,38 @@
             <option value="parent">학부모</option>
           </select>
         </div>
+
+        <!-- 학생용 아이디: 학번 -->
         <div id="studentNoField">
-          <label class="block text-xs font-semibold text-slate-600 mb-1">학번 (5자리)</label>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">학번 5자리 (로그인 아이디가 됩니다)</label>
           <input type="text" id="regStudentNo" placeholder="예: 30201" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
+
+        <!-- 교사/학부모용 자유 아이디 -->
+        <div id="customIdField" class="hidden">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">희망 아이디 (영문 또는 숫자)</label>
+          <input type="text" id="regCustomId" placeholder="예: teacher1, kor_cjh" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">이름</label>
           <input type="text" id="regName" required placeholder="홍길동" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">로그인 이메일</label>
-          <input type="email" id="regEmail" required placeholder="student@school.kr" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
+
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">비밀번호 (6자 이상)</label>
           <input type="password" id="regPw" required minlength="6" placeholder="••••••••" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
+
         <!-- 교사 마스터 코드 -->
         <div id="masterCodeField" class="hidden bg-amber-50 p-3 rounded-lg border border-amber-200">
           <label class="block text-xs font-bold text-amber-800 mb-1">교사용 관리자 마스터 코드</label>
           <input type="password" id="regMasterCode" placeholder="기본코드: TEACHER302" class="w-full px-3 py-1.5 text-sm border border-amber-300 rounded focus:ring-2 focus:ring-amber-500 outline-none bg-white">
           <p class="text-[10px] text-amber-700 mt-1">※ 정확히 입력하면 대기 없이 즉시 담임 관리자로 승인됩니다.</p>
         </div>
-        <p class="text-[11px] text-slate-500 bg-slate-100 p-2 rounded leading-relaxed">
-          💡 <strong>별도의 이메일 인증 링크는 없습니다.</strong> 가입 신청 즉시 대기 상태가 되며 담임교사 승인 후 로그인할 수 있습니다.
+
+        <p class="text-[11px] text-slate-500 bg-slate-100 p-2.5 rounded-lg leading-relaxed">
+          💡 <strong>이메일 인증 절차가 없습니다.</strong><br>학생은 가입 신청 후 담임선생님이 승인하면 바로 로그인할 수 있습니다.
         </p>
         <button type="submit" id="regSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm shadow-md transition">가입 신청 완료</button>
       </form>
@@ -152,16 +160,15 @@
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs">
               <tr>
                 <th class="p-3">신청일자</th>
-                <th class="p-3">학번</th>
+                <th class="p-3">아이디 (학번)</th>
                 <th class="p-3">이름</th>
-                <th class="p-3">아이디 (이메일)</th>
                 <th class="p-3">신청구분</th>
                 <th class="p-3">승인 역할 지정</th>
                 <th class="p-3 text-right">처리</th>
               </tr>
             </thead>
             <tbody id="pendingUserTableBody" class="divide-y divide-slate-100">
-              <tr><td colspan="7" class="p-8 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>
+              <tr><td colspan="6" class="p-8 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>
             </tbody>
           </table>
         </div>
@@ -329,6 +336,12 @@
     let currentUser = null;
     let currentProfile = null;
 
+    // 아이디를 수파베이스 내부 인증용 규격으로 자동 변환해주는 헬퍼
+    function toAuthEmail(rawId) {
+      const clean = rawId.trim().toLowerCase();
+      return clean.includes('@') ? clean : `${clean}@school.net`;
+    }
+
     async function checkSession() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
@@ -363,15 +376,20 @@
     function toggleRoleFields() {
       const role = document.getElementById('regRole').value;
       const sField = document.getElementById('studentNoField');
+      const cField = document.getElementById('customIdField');
       const mField = document.getElementById('masterCodeField');
+
       if (role === 'student') {
         sField.classList.remove('hidden');
+        cField.classList.add('hidden');
         mField.classList.add('hidden');
       } else if (role === 'teacher') {
         sField.classList.add('hidden');
+        cField.classList.remove('hidden');
         mField.classList.remove('hidden');
       } else {
         sField.classList.add('hidden');
+        cField.classList.remove('hidden');
         mField.classList.add('hidden');
       }
     }
@@ -380,11 +398,21 @@
       e.preventDefault();
       const role = document.getElementById('regRole').value;
       const name = document.getElementById('regName').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
       const pw = document.getElementById('regPw').value;
-      const studentNo = document.getElementById('regStudentNo').value.trim();
-      const masterCode = document.getElementById('regMasterCode').value.trim();
+      
+      let rawId = '';
+      let studentNo = null;
 
+      if (role === 'student') {
+        studentNo = document.getElementById('regStudentNo').value.trim();
+        if (!studentNo) return alert('학번을 입력해줘.');
+        rawId = studentNo;
+      } else {
+        rawId = document.getElementById('regCustomId').value.trim();
+        if (!rawId) return alert('사용할 아이디를 입력해줘.');
+      }
+
+      const masterCode = document.getElementById('regMasterCode').value.trim();
       const isTeacherMaster = (role === 'teacher' && masterCode === 'TEACHER302');
       const isApproved = isTeacherMaster;
       const assignedRole = isTeacherMaster ? 'admin' : role;
@@ -393,9 +421,15 @@
       regBtn.innerText = '가입 신청 처리 중...';
       regBtn.disabled = true;
 
-      const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password: pw });
+      // 수파베이스 Auth 회원 생성 (내부적으로 @school.net 가상 주소 매핑)
+      const authEmail = toAuthEmail(rawId);
+      const { data: authData, error: authError } = await supabaseClient.auth.signUp({ 
+        email: authEmail, 
+        password: pw 
+      });
+
       if (authError) {
-        alert('가입 에러: ' + authError.message);
+        alert('가입 에러: 이미 등록된 아이디(학번)이거나 비밀번호가 너무 짧습니다.');
         regBtn.innerText = '가입 신청 완료';
         regBtn.disabled = false;
         return;
@@ -404,17 +438,17 @@
       if (authData.user) {
         await supabaseClient.from('profiles').insert([{
           id: authData.user.id,
-          email: email,
+          email: rawId, // 화면 표기용 아이디 저장
           name: name,
           role: assignedRole,
-          student_no: role === 'student' ? studentNo : null,
+          student_no: studentNo,
           is_approved: isApproved
         }]);
 
         if (isApproved) {
-          alert('선생님 관리자 계정 생성 완료! 바로 로그인해줘.');
+          alert('선생님 관리자 계정 생성 완료! 등록하신 아이디로 로그인해줘.');
         } else {
-          alert('가입 신청 완료! 담임선생님이 승인하면 로그인할 수 있어.');
+          alert(`가입 신청 완료! 아이디는 [${rawId}]야. 담임선생님이 승인하면 로그인할 수 있어.`);
         }
         switchAuthTab('login');
       }
@@ -424,15 +458,20 @@
 
     async function handleLogin(e) {
       e.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim();
+      const rawId = document.getElementById('loginUserId').value.trim();
       const pw = document.getElementById('loginPw').value;
       const btn = document.getElementById('loginSubmitBtn');
       btn.innerText = '로그인 중...';
       btn.disabled = true;
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
+      const authEmail = toAuthEmail(rawId);
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+        email: authEmail, 
+        password: pw 
+      });
+
       if (error) {
-        alert('로그인 실패: ' + error.message);
+        alert('로그인 실패: 아이디(학번) 또는 비밀번호를 다시 확인해줘.');
         btn.innerText = '로그인';
         btn.disabled = false;
         return;
@@ -512,7 +551,7 @@
       const statP = document.getElementById('statPending');
 
       if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400">대기 중인 회원이 없습니다.</td></tr>';
         badge.classList.add('hidden');
         statP.innerText = '0명';
         return;
@@ -525,9 +564,8 @@
       tbody.innerHTML = list.map(u => `
         <tr class="hover:bg-slate-50">
           <td class="p-3 text-xs text-slate-400">${new Date(u.created_at).toLocaleDateString()}</td>
-          <td class="p-3 font-bold text-slate-700">${u.student_no || '-'}</td>
-          <td class="p-3 font-bold">${u.name}</td>
-          <td class="p-3 text-xs text-slate-500">${u.email}</td>
+          <td class="p-3 font-bold text-slate-800">${u.student_no ? u.student_no : u.email}</td>
+          <td class="p-3 font-bold text-blue-600">${u.name}</td>
           <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${u.role}</span></td>
           <td class="p-3">
             <select id="roleSelect_${u.id}" class="text-xs border rounded px-2 py-1 bg-white">
