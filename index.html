@@ -1901,6 +1901,28 @@
       loadHomeDashboardData();
     }
 
+    // 수능 시험일 설정 (2027학년도 대입 수능: 2026-11-19)
+const SUNEUNG_DATE = '2026-11-19';
+
+function updateSuneungDday() {
+  const target = new Date(SUNEUNG_DATE);
+  target.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+  const el = document.getElementById('homeDdayCount');
+  if (!el) return;
+
+  if (diffDays === 0) {
+    el.innerText = 'D-DAY';
+  } else if (diffDays > 0) {
+    el.innerText = `D-${diffDays}`;
+  } else {
+    el.innerText = `D+${Math.abs(diffDays)}`;
+  }
+}
+    
     // =================================================================
     // 💡 [학급지도: 상담 신청 관리] 교사 승인 및 반려
     // =================================================================
