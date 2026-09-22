@@ -2095,6 +2095,7 @@ updateSuneungDday();
       } else {
         photoGrid.innerHTML = '<p class="col-span-3 text-slate-400 py-6 text-center text-xs">우리 반에 등록된 사진이 없습니다.</p>';
       }
+    }
 
     let currentNoticeList = [];
     let selectedNoticeId = null;
@@ -2121,7 +2122,6 @@ updateSuneungDday();
       document.getElementById('detailNoticeDate').innerText = new Date(notice.created_at).toLocaleString();
       document.getElementById('detailNoticeContent').innerText = notice.content;
 
-      // 교사(담임/관리자)인 경우에만 수정/삭제 버튼 노출
       const teacherBtns = document.getElementById('noticeTeacherActionBtns');
       if (isCurrentTeacher()) {
         teacherBtns.classList.remove('hidden');
@@ -2183,7 +2183,6 @@ updateSuneungDday();
       const targetClass = (activeClassNum === 'all') ? (currentProfile.class_num || 2) : activeClassNum;
 
       if (editId) {
-        // [수정 모드]
         const { error } = await supabaseClient.from('class_notices').update({
           title: title,
           content: content
@@ -2192,7 +2191,6 @@ updateSuneungDday();
         if (error) alert('수정 오류: ' + error.message);
         else alert('알림장이 성공적으로 수정되었습니다!');
       } else {
-        // [새 등록 모드]
         const { error } = await supabaseClient.from('class_notices').insert([{
           class_num: targetClass,
           title: title,
@@ -2206,19 +2204,6 @@ updateSuneungDday();
 
       submitBtn.innerText = '저장하기';
       submitBtn.disabled = false;
-      closeNewNoticeModal();
-      loadHomeDashboardData();
-    }
-
-      const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
-      await supabaseClient.from('class_notices').insert([{
-        class_num: targetClass,
-        title: title,
-        content: content,
-        author_name: currentProfile.name
-      }]);
-
-      alert('담임 알림이 등록되었습니다!');
       closeNewNoticeModal();
       loadHomeDashboardData();
     }
@@ -2366,12 +2351,6 @@ async function confirmCounselRequest(requestId) {
     class_num: studentClassNum
   }]);
   
-    event_date: targetDate,
-    category: 'counsel',
-    title: `[상담] ${studentName} (${targetPeriod})`,
-    class_num: cls
-  }]);
-
   alert(`[${studentName}] 상담이 확정되었고, 학사 달력에도 자동으로 등록되었습니다!`);
   loadTeacherCounselRequests();
   loadHomeDashboardData();
@@ -4329,6 +4308,7 @@ eventsHtml = dayEvents.map(e => {
            delBtn +
          '</div>';
 }).join('');
+        }
 
         const countBadge = dayEvents.length > 0 ? '<span class="text-[9px] px-1 bg-slate-100 text-slate-500 rounded font-semibold">' + dayEvents.length + '</span>' : '';
 
