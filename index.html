@@ -248,10 +248,13 @@
             <div id="headerUserName" class="text-xs sm:text-sm font-bold text-slate-800 leading-tight whitespace-nowrap">-</div>
             <div id="headerUserSub" class="text-[10px] sm:text-xs text-slate-400 leading-tight whitespace-nowrap">-</div>
           </div>
-          <!-- 데스크톱용 로그아웃 버튼 (모바일에서는 공간 확보를 위해 숨김) -->
-          <button onclick="handleLogout()" title="로그아웃" class="hidden sm:flex p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition">
-            <i data-lucide="log-out" class="w-5 h-5"></i>
-          </button>
+<!-- 데스크톱용 로그아웃 & 회원탈퇴 버튼 -->
+<button onclick="handleLogout()" title="로그아웃" class="hidden sm:flex p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition">
+  <i data-lucide="log-out" class="w-5 h-5"></i>
+</button>
+<button onclick="handleDeleteAccount()" title="회원 탈퇴" class="hidden sm:flex p-2 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition">
+  <i data-lucide="user-minus" class="w-5 h-5"></i>
+</button>
           <!-- 모바일 햄버거 버튼 (lg 이상 숨김) -->
           <button onclick="toggleMobileMenu()" class="p-1.5 sm:p-2 lg:hidden text-slate-700 hover:bg-slate-100 rounded-lg transition" aria-label="메뉴 열기">
             <i data-lucide="menu" class="w-6 h-6"></i>
@@ -331,12 +334,15 @@
       </div>
     </div>
 
-    <!-- 하단 로그아웃 -->
-    <div class="pt-4 border-t">
-      <button onclick="handleLogout()" class="w-full py-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5">
-        <i data-lucide="log-out" class="w-4 h-4"></i> 로그아웃
-      </button>
-    </div>
+<!-- 하단 로그아웃 및 회원 탈퇴 -->
+<div class="pt-4 border-t space-y-2">
+  <button onclick="handleLogout()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5">
+    <i data-lucide="log-out" class="w-4 h-4"></i> 로그아웃
+  </button>
+  <button onclick="handleDeleteAccount()" class="w-full py-2 text-slate-400 hover:text-rose-600 font-medium text-[11px] transition flex items-center justify-center gap-1">
+    <i data-lucide="user-minus" class="w-3.5 h-3.5"></i> 회원 탈퇴
+  </button>
+</div>
   </div>
 </div>
     
@@ -1922,6 +1928,56 @@ if (isTeacher) {
       }
     }
 
+    // 회원 탈퇴 처리 함수 (작성한 데이터 정리 후 계정 삭제)
+    async function handleDeleteAccount() {
+      if (!confirm('정말로 회원 탈퇴를 진행하시겠습니까?\n\n탈퇴 시 작성하신 입시상담카드, 모의고사 성적, 기초조사서 등 모든 데이터가 함께 삭제되며 복구할 수 없습니다.')) {
+        return;
+      }
+
+      const confirmPrompt = prompt('탈퇴를 확정하시려면 아래 입력창에 "탈퇴"라고 정확히 입력해 주세요.');
+      if (confirmPrompt !== '탈퇴') {
+        alert('입력하신 내용이 일치하지 않아 회원 탈퇴가 취소되었습니다.');
+        return;
+      }
+
+      try {
+        const userId = currentUser.id;
+
+        // 1. 회원이 작성한 상담카드, 성적, 기초조사서, 상담신청 등 연동 데이터 정리
+        await supabaseClient.from('applications_12').delete().eq('user_id', userId);
+        await supabaseClient.from('mock_scores').delete().eq('user_id', userId);
+        await supabaseClient.from('student_surveys').delete().eq('user_id', userId);
+        await supabaseClient.from('counsel_requests').delete().eq('user_id', userId);
+        await supabaseClient.from('admission_schedules').delete().eq('user_id', userId);
+
+        // 2. 프로필 데이터 삭제
+        const { error: profileErr } = await supabaseClient.from('profiles').delete().eq('id', userId);
+        if (profileErr) {
+          console.warn('프로필 삭제 오류:', profileErr.message);
+        }
+
+        // 3. 로그아웃 및 세션 종료
+        await supabaseClient.auth.signOut();
+        currentUser = null;
+        currentProfile = null;
+
+        alert('회원 탈퇴 처리가 완료되었습니다.\n이용해 주셔서 감사합니다.');
+
+        // 모바일 메뉴 열려있으면 닫기
+        const mobDrawer = document.getElementById('mobileMenuDrawer');
+        if (mobDrawer) mobDrawer.classList.add('hidden');
+
+        // 메인 화면 숨기고 로그인 화면으로 이동
+        document.getElementById('mainScreen').classList.add('hidden');
+        document.getElementById('authScreen').classList.remove('hidden');
+        switchAuthTab('login');
+
+      } catch (err) {
+        console.error('회원 탈퇴 중 오류 발생:', err);
+        alert('회원 탈퇴 처리 중 오류가 발생했습니다: ' + err.message);
+      }
+    }
+    
     function changeView(viewId) {
       document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
       const target = document.getElementById('view-' + viewId);
