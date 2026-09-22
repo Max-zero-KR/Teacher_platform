@@ -356,7 +356,7 @@
           </div>
           <div class="bg-white/10 backdrop-blur-md px-6 py-4 rounded-xl border border-white/20 text-center min-w-[140px]">
             <p class="text-[11px] font-semibold text-blue-200">2027 수능 D-Day</p>
-            <h3 id="homeDdayCount" class="text-3xl font-black text-amber-300 mt-0.5">D-52</h3>
+            <h3 id="homeDdayCount" class="text-3xl font-black text-amber-300 mt-0.5">D-</h3>
           </div>
         </div>
 
@@ -967,17 +967,26 @@
                 </h3>
                 <p class="text-[11px] text-slate-500">학생이 입력한 수시 6장의 '수능최저' 조건에 대해 현재 모의고사 성적이 충족되는지 실시간 판정합니다.</p>
               </div>
-              <div class="flex items-center gap-2 text-xs">
-                <label class="font-bold text-slate-600">판정 기준 모의고사:</label>
-                <select id="minCheckSimRoundSelect" onchange="renderMinimumCheckAnalysis()" class="px-2.5 py-1 border rounded-lg font-bold text-blue-600 bg-white outline-none">
-                  <option value="9월모평" selected>2026 9월 모평</option>
-                  <option value="6월모평">2026 6월 모평</option>
-                  <option value="7월학평">2026 7월 학평</option>
-                  <option value="5월학평">2026 5월 학평</option>
-                  <option value="3월학평">2026 3월 학평</option>
-                </select>
+              <div class="flex flex-wrap items-center gap-3 text-xs">
+                <div class="flex items-center gap-1.5">
+                  <label class="font-bold text-slate-600">판정 모평:</label>
+                  <select id="minCheckSimRoundSelect" onchange="renderMinimumCheckAnalysis()" class="px-2.5 py-1 border rounded-lg font-bold text-blue-600 bg-white outline-none">
+                    <option value="9월모평" selected>2026 9월 모평</option>
+                    <option value="6월모평">2026 6월 모평</option>
+                    <option value="7월학평">2026 7월 학평</option>
+                    <option value="5월학평">2026 5월 학평</option>
+                    <option value="3월학평">2026 3월 학평</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <label class="font-bold text-slate-600">탐구 반영 방식:</label>
+                  <select id="minCheckTamMethodSelect" onchange="renderMinimumCheckAnalysis()" class="px-2.5 py-1 border rounded-lg font-bold text-indigo-600 bg-white outline-none">
+                    <option value="top1" selected>상위 1과목 반영</option>
+                    <option value="floor">2과목 평균 [버림/절사]</option>
+                    <option value="round">2과목 평균 [반올림]</option>
+                  </select>
+                </div>
               </div>
-            </div>
 
             <div id="minCheckSusiCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               <p class="col-span-full text-center text-slate-400 py-8">작성된 수시 지원 카드가 없습니다. [입시지도 > 입시상담카드]에서 수시 원서와 최저기준을 먼저 입력해주세요.</p>
@@ -2343,12 +2352,13 @@ async function confirmCounselRequest(requestId) {
     studentClassNum = (activeClassNum === 'all') ? (currentProfile.class_num || 2) : activeClassNum;
   }
 
-  // 상담 일정은 전체(0)가 아닌 해당 학급 번호로만 등록!
+  // 상담 일정 등록 시 학생 본인 ID(target_user_id)를 함께 기록하여 본인 달력에도 표시되게 함!
   await supabaseClient.from('calendar_events').insert([{
     event_date: targetDate,
     category: 'counsel',
     title: `[상담] ${studentName} (${targetPeriod})`,
-    class_num: studentClassNum
+    class_num: studentClassNum,
+    target_user_id: targetItem.user_id
   }]);
   
   alert(`[${studentName}] 상담이 확정되었고, 학사 달력에도 자동으로 등록되었습니다!`);
@@ -2756,12 +2766,24 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
       }
 
       const simRound = document.getElementById('minCheckSimRoundSelect')?.value || '9월모평';
+      const tamMethod = document.getElementById('minCheckTamMethodSelect')?.value || 'top1';
       const roundData = roundAnalysisMap[simRound];
 
       const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', targetUserId).eq('slot_type', 'susi');
       if (!cards || cards.length === 0 || !cards.some(c => c.university)) {
         cardsGrid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-8">등록된 수시 지망 대학이 없습니다. [입시지도 > 입시상담카드]에서 대학을 등록해보세요.</p>';
         return;
+      }
+
+      // 탐구 반영 방식에 맞는 합산 객체 선택
+      let chosenSums = roundData?.top1Sums;
+      let tamMethodLabel = '탐구 1과목';
+      if (tamMethod === 'floor') {
+        chosenSums = roundData?.floorSums;
+        tamMethodLabel = '탐구 2과목 버림';
+      } else if (tamMethod === 'round') {
+        chosenSums = roundData?.roundSums;
+        tamMethodLabel = '탐구 2과목 반올림';
       }
 
       cardsGrid.innerHTML = cards.map(c => {
@@ -2778,6 +2800,8 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
           if (match) {
             const reqCount = parseInt(match[1]);
             const targetSum = parseInt(match[2]);
+
+            const bestSumObj = reqCount === 2 ? chosenSums?.sum2 : (reqCount === 3 ? chosenSums?.sum3 : chosenSums?.sum4);
 
             const bestSumObj = reqCount === 2 ? roundData.top1Sums.sum2 : (reqCount === 3 ? roundData.top1Sums.sum3 : roundData.top1Sums.sum4);
 
@@ -2994,6 +3018,7 @@ async function saveStudent12Cards() {
         user_id: currentUser.id,
         student_no: currentProfile.student_no,
         student_name: currentProfile.name,
+        class_num: currentProfile.class_num || 2,
         target_date: date,
         target_period: period,
         topic: topic,
