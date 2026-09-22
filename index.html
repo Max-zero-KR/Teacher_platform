@@ -1974,18 +1974,36 @@ function updateSuneungDday() {
     // 💡 메인 홈 대시보드 데이터 로드
     // =================================================================
     async function loadHomeDashboardData() {
-updateSuneungDday();
+      updateSuneungDday();
       document.getElementById('homeWelcomeMessage').innerText = `반가워요, ${currentProfile.name} ${currentProfile.role === 'student' ? '학생' : '선생님'}!`;
 
-      // 1. 담임 알림장 불러오기 (클릭 시 팝업 띄우도록 개선)
+      // 1. 공통 조회 쿼리 준비 (아직 서버에 보내지 않고 준비만 함)
       let noticeQuery = supabaseClient.from('class_notices').select('*').order('created_at', { ascending: false }).limit(5);
       if (activeClassNum !== 'all') {
         noticeQuery = noticeQuery.eq('class_num', activeClassNum);
       }
-      const { data: notices } = await noticeQuery;
+
+      let calQ = supabaseClient.from('calendar_events').select('*').order('event_date', { ascending: true }).limit(3);
+      if (activeClassNum !== 'all') {
+        calQ = calQ.or(`class_num.eq.${activeClassNum},class_num.eq.0,class_num.is.null`);
+      }
+
+      let folderQ = supabaseClient.from('album_folders').select('id');
+      if (activeClassNum !== 'all') {
+        folderQ = folderQ.or(`class_num.eq.${activeClassNum},class_num.is.null`);
+      }
+
+      // 2. [최적화 핵심] 3개의 기본 요청을 동시에 한꺼번에 서버로 전송 (대기시간 1/3 단축)
+      const [noticeRes, calRes, folderRes] = await Promise.all([
+        noticeQuery,
+        calQ,
+        folderQ
+      ]);
+
+      // 알림장 렌더링
+      const notices = noticeRes.data;
       currentNoticeList = notices || [];
       const noticeListEl = document.getElementById('homeNoticeList');
-
       if (!notices || notices.length === 0) {
         noticeListEl.innerHTML = '<p class="text-center text-xs text-slate-400 py-6">등록된 담임 알림이 없습니다.</p>';
       } else {
@@ -2002,8 +2020,28 @@ updateSuneungDday();
         `).join('');
       }
 
+      // 학사 일정 렌더링
+      const recentEvents = calRes.data;
+      const calPreviewEl = document.getElementById('homeCalendarPreview');
+      if (recentEvents && recentEvents.length > 0) {
+        calPreviewEl.innerHTML = recentEvents.map(e => `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+            <span class="font-bold text-slate-700 truncate max-w-[170px]">${escapeHtml(e.title)}</span>
+            <span class="text-[11px] text-blue-600 font-semibold">${escapeHtml(e.event_date.substring(5))}</span>
+          </div>
+        `).join('');
+      } else {
+        calPreviewEl.innerHTML = '<p class="text-slate-400 py-3 text-center">등록된 일정이 없습니다.</p>';
+      }
+
+      // 3. 학생 / 교사별 맞춤 데이터 조회 병렬 처리
       if (currentProfile.role === 'student') {
-        const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', currentUser.id);
+        const [cardsRes, counselRes] = await Promise.all([
+          supabaseClient.from('applications_12').select('*').eq('user_id', currentUser.id),
+          supabaseClient.from('counsel_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(1)
+        ]);
+
+        const cards = cardsRes.data;
         const susiCount = cards ? cards.filter(c => c.slot_type === 'susi' && c.university).length : 0;
         const specCount = cards ? cards.filter(c => c.slot_type === 'special' && c.university).length : 0;
         const jeongsiCount = cards ? cards.filter(c => c.slot_type === 'jeongsi' && c.university).length : 0;
@@ -2013,7 +2051,7 @@ updateSuneungDday();
         const jCntEl = document.getElementById('homeJeongsiFilledCount');
         if (jCntEl) jCntEl.innerText = jeongsiCount;
 
-        const { data: counsel } = await supabaseClient.from('counsel_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(1);
+        const counsel = counselRes.data;
         const counselStatusEl = document.getElementById('homeMyCounselStatus');
         if (counsel && counsel.length > 0) {
           const c = counsel[0];
@@ -2033,12 +2071,14 @@ updateSuneungDday();
       if (currentProfile.role === 'admin' || currentProfile.role === 'teacher') {
         let studentQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('role', 'student').eq('is_approved', true);
         if (activeClassNum !== 'all') studentQ = studentQ.eq('class_num', activeClassNum);
-        const { count: studentCnt } = await studentQ;
-        document.getElementById('homeTeacherStatStudents').innerText = (studentCnt || 0) + '명';
 
         let counselQ = supabaseClient.from('counsel_requests').select('id', { count: 'exact' }).eq('status', 'pending');
-        const { count: counselCnt } = await counselQ;
-        const cCount = counselCnt || 0;
+        let pendingQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('is_approved', false);
+
+        const [stdCntRes, cCntRes, pCntRes] = await Promise.all([studentQ, counselQ, pendingQ]);
+
+        document.getElementById('homeTeacherStatStudents').innerText = (stdCntRes.count || 0) + '명';
+        const cCount = cCntRes.count || 0;
         document.getElementById('homeTeacherStatCounsel').innerText = cCount + '건';
 
         const navBadge = document.getElementById('counselNavBadge');
@@ -2053,36 +2093,11 @@ updateSuneungDday();
           dropBadge.classList.add('hidden');
         }
 
-        let pendingQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('is_approved', false);
-        const { count: pendingCnt } = await pendingQ;
-        document.getElementById('homeTeacherStatPending').innerText = (pendingCnt || 0) + '명';
+        document.getElementById('homeTeacherStatPending').innerText = (pCntRes.count || 0) + '명';
       }
 
-      // 2. 이번 달 주요 학사 일정 불러오기
-      let calQ = supabaseClient.from('calendar_events').select('*').order('event_date', { ascending: true }).limit(3);
-      if (activeClassNum !== 'all') {
-        calQ = calQ.or(`class_num.eq.${activeClassNum},class_num.eq.0,class_num.is.null`);
-      }
-      const { data: recentEvents } = await calQ;
-      const calPreviewEl = document.getElementById('homeCalendarPreview');
-      if (recentEvents && recentEvents.length > 0) {
-        calPreviewEl.innerHTML = recentEvents.map(e => `
-          <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
-            <span class="font-bold text-slate-700 truncate max-w-[170px]">${escapeHtml(e.title)}</span>
-            <span class="text-[11px] text-blue-600 font-semibold">${escapeHtml(e.event_date.substring(5))}</span>
-          </div>
-        `).join('');
-      } else {
-        calPreviewEl.innerHTML = '<p class="text-slate-400 py-3 text-center">등록된 일정이 없습니다.</p>';
-      }
-
-      // 3. [★핵심 해결] 학급 앨범 최근 사진: 현재 반의 폴더 사진만 정확히 필터링!
-      let folderQ = supabaseClient.from('album_folders').select('id');
-      if (activeClassNum !== 'all') {
-        folderQ = folderQ.or(`class_num.eq.${activeClassNum},class_num.is.null`);
-      }
-      const { data: classFolders } = await folderQ;
-
+      // 4. 학급 앨범 사진 불러오기
+      const classFolders = folderRes.data;
       let recentPhotos = [];
       if (classFolders && classFolders.length > 0) {
         const folderIds = classFolders.map(f => f.id);
@@ -2106,6 +2121,7 @@ updateSuneungDday();
         photoGrid.innerHTML = '<p class="col-span-3 text-slate-400 py-6 text-center text-xs">우리 반에 등록된 사진이 없습니다.</p>';
       }
     }
+
 
     let currentNoticeList = [];
     let selectedNoticeId = null;
