@@ -2447,15 +2447,23 @@ updateSuneungDday();
       const roundAnalysisMap = {};
 
       rounds.forEach(round => {
-        const rScores = (scores || []).filter(s => s.exam_round === round);
-        
-        const kor = rScores.find(s => s.subject_key === 'korean')?.grade ?? null;
-        const mat = rScores.find(s => s.subject_key === 'math')?.grade ?? null;
-        const eng = rScores.find(s => s.subject_key === 'english')?.grade ?? null;
-        const his = rScores.find(s => s.subject_key === 'history')?.grade ?? null;
-        const t1 = rScores.find(s => s.subject_key === 'tam1')?.grade ?? null;
-        const t2 = rScores.find(s => s.subject_key === 'tam2')?.grade ?? null;
+const rScores = (scores || []).filter(s => s.exam_round === round);
 
+        // 1~9등급 범위의 정수만 유효 등급으로 인정하는 안전 함수
+        const getValidGrade = (key) => {
+          const val = rScores.find(s => s.subject_key === key)?.grade;
+          if (val === null || val === undefined || val === '') return null;
+          const num = parseInt(val, 10);
+          return (!isNaN(num) && num >= 1 && num <= 9) ? num : null;
+        };
+        
+        const kor = getValidGrade('korean');
+        const mat = getValidGrade('math');
+        const eng = getValidGrade('english');
+        const his = getValidGrade('history');
+        const t1 = getValidGrade('tam1');
+        const t2 = getValidGrade('tam2');
+        
         if (kor === null && mat === null && eng === null && t1 === null && t2 === null) {
           return;
         }
@@ -2475,22 +2483,22 @@ updateSuneungDday();
         else if (t1 !== null) tamRound = t1;
         else if (t2 !== null) tamRound = t2;
 
-        function calcBestSums(tamGrade) {
+function calcBestSums(tamGrade) {
           const subjects = [];
-          if (kor !== null) subjects.push({ name: '국', grade: kor });
-          if (mat !== null) subjects.push({ name: '수', grade: mat });
-          if (eng !== null) subjects.push({ name: '영', grade: eng });
-          if (tamGrade !== null) subjects.push({ name: '탐', grade: tamGrade });
+          if (kor !== null) subjects.push({ name: '국', grade: Number(kor) });
+          if (mat !== null) subjects.push({ name: '수', grade: Number(mat) });
+          if (eng !== null) subjects.push({ name: '영', grade: Number(eng) });
+          if (tamGrade !== null) subjects.push({ name: '탐', grade: Number(tamGrade) });
 
           subjects.sort((a, b) => a.grade - b.grade);
 
-          const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade, desc: `${subjects[0].name}${subjects[0].grade}+${subjects[1].name}${subjects[1].grade}` } : null;
-          const sum3 = subjects.length >= 3 ? { val: subjects[0].grade + subjects[1].grade + subjects[2].grade, desc: `${subjects[0].name}${subjects[0].grade}+${subjects[1].name}${subjects[1].grade}+${subjects[2].name}${subjects[2].grade}` } : null;
-          const sum4 = subjects.length >= 4 ? { val: subjects.reduce((acc, cur) => acc + cur.grade, 0), desc: subjects.map(s => `${s.name}${s.grade}`).join('+') } : null;
+          const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade, desc: `\({subjects[0].name}\){subjects[0].grade}+\({subjects[1].name}\){subjects[1].grade}` } : null;
+          const sum3 = subjects.length >= 3 ? { val: subjects[0].grade + subjects[1].grade + subjects[2].grade, desc: `\({subjects[0].name}\){subjects[0].grade}+\({subjects[1].name}\){subjects[1].grade}+\({subjects[2].name}\){subjects[2].grade}` } : null;
+          const sum4 = subjects.length >= 4 ? { val: subjects.reduce((acc, cur) => acc + cur.grade, 0), desc: subjects.map(s => `\({s.name}\){s.grade}`).join('+') } : null;
 
           return { sum2, sum3, sum4 };
         }
-
+        
         const top1Sums = calcBestSums(tamTop1);
         const floorSums = calcBestSums(tamFloor);
         const roundSums = calcBestSums(tamRound);
