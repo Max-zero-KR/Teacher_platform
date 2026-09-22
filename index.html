@@ -3150,9 +3150,12 @@ if (mockErr) throw mockErr;
       `;
     }
 
-    // =================================================================
-    // 💡 [입시자료실] 드라이브 링크 & 유튜브 영상 연동 로직
-    // =================================================================
+// =================================================================
+// 💡 [입시자료실] 드라이브 링크 & 유튜브 영상 연동 로직 (안정화 완료)
+// 교체 방법: index.html 에서 "let currentMaterials = [];" 부터
+// "closeYoutubePlayerModal() { ... }" 까지를 찾아서 아래 내용으로 통째로 교체하세요.
+// =================================================================
+
     let currentMaterials = [];
     let activeMaterialFilter = 'all';
     let currentSearchKeyword = '';
@@ -3205,70 +3208,18 @@ if (mockErr) throw mockErr;
     }
 
     async function loadAdmissionMaterials() {
-      try {
-        const { data, error } = await supabaseClient
-          .from('admission_materials')
-          .select('*')
-          .order('created_at', { ascending: false });
+      const { data, error } = await supabaseClient
+        .from('admission_materials')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (!error && data && data.length > 0) {
-          currentMaterials = data;
-        } else {
-          fallbackLoadLocalMaterials();
-        }
-      } catch (err) {
-        fallbackLoadLocalMaterials();
+      if (error) {
+        console.error('자료 로드 실패:', error);
+        currentMaterials = [];
+      } else {
+        currentMaterials = data || [];
       }
       renderMaterialCards();
-    }
-
-    function fallbackLoadLocalMaterials() {
-      try {
-        const raw = localStorage.getItem('local_admission_materials');
-        if (raw) {
-          currentMaterials = JSON.parse(raw);
-        } else {
-          // 최초 시연용 기본 샘플 자료 3건 자동 장착
-          currentMaterials = [
-            {
-              id: 'mat_demo_1',
-              category: 'interview',
-              title: '2026 서울대 일반전형 제시문 면접 기출 및 복기록',
-              tags: '서울대, 인문, 경영, 경제, 구술면접',
-              description: '서울대 인문학·사회과학 제시문 기출 문제와 합격생 실제 답변 복기 모음입니다.',
-              drive_url: 'https://drive.google.com',
-              youtube_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-              author_name: '교무실 진학부',
-              created_at: new Date().toISOString()
-            },
-            {
-              id: 'mat_demo_2',
-              category: 'eval_case',
-              title: '주요 5개 대학 공동연구 학생부종합 평가사례집',
-              tags: '학종평가, 세특사례, 진로역량, 학업역량',
-              description: '건국대·경희대·연세대·중앙대·한국외대 공동 발간 학종 평가 가이드 및 서류 실제 평점 분석표.',
-              drive_url: 'https://drive.google.com',
-              youtube_url: '',
-              author_name: '담임교사',
-              created_at: new Date().toISOString()
-            },
-            {
-              id: 'mat_demo_3',
-              category: 'analysis',
-              title: '2025학년도 수도권 주요 대학 수시 합불 산포도 & 70% 컷',
-              tags: '수시결과, 입결분석, 70%컷, 충원율',
-              description: '내신 등급대별 실제 합격 및 불합격 분포표 엑셀 정리본입니다.',
-              drive_url: 'https://drive.google.com',
-              youtube_url: '',
-              author_name: '교무실 진학부',
-              created_at: new Date().toISOString()
-            }
-          ];
-          localStorage.setItem('local_admission_materials', JSON.stringify(currentMaterials));
-        }
-      } catch (e) {
-        currentMaterials = [];
-      }
     }
 
     async function submitNewMaterial() {
@@ -3282,43 +3233,46 @@ if (mockErr) throw mockErr;
       if (!title) return alert('자료 제목을 입력해주세요.');
       if (!driveUrl && !youtubeUrl) return alert('구글 드라이브 링크 또는 유튜브 링크 중 최소 하나는 입력해야 합니다.');
 
+      const submitBtn = document.getElementById('matSubmitBtn');
+      submitBtn.innerText = '등록 중...';
+      submitBtn.disabled = true;
+
       const newRecord = {
-        id: 'mat_' + Date.now(),
         category: category,
         title: title,
         tags: tags,
         description: desc,
         drive_url: driveUrl,
         youtube_url: youtubeUrl,
-        author_name: currentProfile ? currentProfile.name : '선생님',
-        created_at: new Date().toISOString()
+        author_name: currentProfile ? currentProfile.name : '선생님'
       };
 
-      try {
-        await supabaseClient.from('admission_materials').insert([newRecord]);
-      } catch (e) {
-        console.warn('Supabase 저장 패스 (로컬 반영):', e);
-      }
+      const { error } = await supabaseClient.from('admission_materials').insert([newRecord]);
 
-      currentMaterials.unshift(newRecord);
-      localStorage.setItem('local_admission_materials', JSON.stringify(currentMaterials));
+      submitBtn.innerText = '등록 완료';
+      submitBtn.disabled = false;
+
+      if (error) {
+        alert('자료 등록 실패: ' + error.message);
+        return;
+      }
 
       alert('입시자료가 성공적으로 등록되었습니다!');
       closeMaterialUploadModal();
-      renderMaterialCards();
+      loadAdmissionMaterials();
     }
 
     async function deleteMaterial(id) {
       if (!confirm('이 자료를 삭제할까요?')) return;
 
-      try {
-        await supabaseClient.from('admission_materials').delete().eq('id', id);
-      } catch (e) {}
+      const { error } = await supabaseClient.from('admission_materials').delete().eq('id', id);
+      if (error) {
+        alert('삭제 실패: ' + error.message);
+        return;
+      }
 
-      currentMaterials = currentMaterials.filter(m => m.id !== id);
-      localStorage.setItem('local_admission_materials', JSON.stringify(currentMaterials));
-
-      renderMaterialCards();
+      alert('자료가 삭제되었습니다.');
+      loadAdmissionMaterials();
     }
 
     function getMaterialBadge(cat) {
@@ -3364,7 +3318,7 @@ if (mockErr) throw mockErr;
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition flex flex-col justify-between overflow-hidden group">
             
             ${ytId ? `
-              <div class="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer" onclick="openYoutubePlayer('${ytId}', '${item.title.replace(/'/g, "\\'")}')">
+              <div class="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer" onclick="openYoutubePlayerById('${item.id}')">
                 <img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition">
                   <div class="w-12 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition">
@@ -3396,7 +3350,6 @@ if (mockErr) throw mockErr;
               ${tagBadges ? `<div class="flex flex-wrap gap-1 pt-1">${tagBadges}</div>` : ''}
             </div>
 
-            <!-- 하단 버튼 영역 (드라이브 & 유튜브) -->
             <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
               ${item.drive_url ? `
                 <a href="${item.drive_url}" target="_blank" rel="noopener noreferrer" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
@@ -3405,7 +3358,7 @@ if (mockErr) throw mockErr;
               ` : ''}
 
               ${ytId ? `
-                <button onclick="openYoutubePlayer('${ytId}', '${item.title.replace(/'/g, "\\'")}')" class="py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
+                <button onclick="openYoutubePlayerById('${item.id}')" class="py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
                   <i data-lucide="video" class="w-3.5 h-3.5"></i> 영상 보기
                 </button>
               ` : ''}
@@ -3418,13 +3371,23 @@ if (mockErr) throw mockErr;
       lucide.createIcons();
     }
 
-    function openYoutubePlayer(ytId, title) {
-      document.getElementById('ytModalTitle').innerText = title || '관련 입시 영상';
+    function openYoutubePlayerById(materialId) {
+      const item = currentMaterials.find(m => m.id === materialId);
+      if (!item) return;
+      const ytId = getYouTubeId(item.youtube_url);
+      if (!ytId) return alert('유효한 유튜브 영상 링크가 없습니다.');
+
+      document.getElementById('ytModalTitle').innerText = item.title || '관련 입시 영상';
       document.getElementById('ytIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
       document.getElementById('youtubePlayerModal').classList.remove('hidden');
       lucide.createIcons();
     }
 
+    function closeYoutubePlayerModal() {
+      document.getElementById('ytIframe').src = '';
+      document.getElementById('youtubePlayerModal').classList.add('hidden');
+    }
+    
     function closeYoutubePlayerModal() {
       document.getElementById('ytIframe').src = '';
       document.getElementById('youtubePlayerModal').classList.add('hidden');
