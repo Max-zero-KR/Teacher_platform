@@ -2780,12 +2780,12 @@ async function saveStudent12Cards() {
       }
 
       try {
-        const { error: delErr } = await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
-        if (delErr) throw delErr;
+  const { error: upsertErr } = await supabaseClient
+    .from('applications_12')
+    .upsert(records, { onConflict: 'user_id,slot_type,slot_num' });
 
-        const { error: insErr } = await supabaseClient.from('applications_12').insert(records);
-        if (insErr) throw insErr;
-
+  if (upsertErr) throw upsertErr;
+        
         alert('입시상담카드(수시·특목·정시) 내용이 안전하게 저장되었습니다!');
         loadHomeDashboardData();
         renderMinimumCheckAnalysis();
