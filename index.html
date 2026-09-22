@@ -2492,10 +2492,9 @@ rounds.forEach(round => {
 
           subjects.sort((a, b) => a.grade - b.grade);
 
-          const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade, desc: `\({subjects[0].name}\){subjects[0].grade}+\({subjects[1].name}\){subjects[1].grade}` } : null;
-          const sum3 = subjects.length >= 3 ? { val: subjects[0].grade + subjects[1].grade + subjects[2].grade, desc: `\({subjects[0].name}\){subjects[0].grade}+\({subjects[1].name}\){subjects[1].grade}+\({subjects[2].name}\){subjects[2].grade}` } : null;
-          const sum4 = subjects.length >= 4 ? { val: subjects.reduce((acc, cur) => acc + cur.grade, 0), desc: subjects.map(s => `\({s.name}\){s.grade}`).join('+') } : null;
-
+const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade, desc: subjects[0].name + subjects[0].grade + '+' + subjects[1].name + subjects[1].grade } : null;
+          const sum3 = subjects.length >= 3 ? { val: subjects[0].grade + subjects[1].grade + subjects[2].grade, desc: subjects[0].name + subjects[0].grade + '+' + subjects[1].name + subjects[1].grade + '+' + subjects[2].name + subjects[2].grade } : null;
+          const sum4 = subjects.length >= 4 ? { val: subjects.reduce((acc, cur) => acc + cur.grade, 0), desc: subjects.map(s => s.name + s.grade).join('+') } : null;
           return { sum2, sum3, sum4 };
         }
   
@@ -2743,6 +2742,8 @@ rounds.forEach(round => {
 
 async function saveStudent12Cards() {
       const records = [];
+
+      // 1) 수시 6장 및 특목 6장
       for (let i = 1; i <= 6; i++) {
         records.push({
           user_id: currentUser.id,
@@ -2750,30 +2751,32 @@ async function saveStudent12Cards() {
           student_name: currentProfile.name,
           slot_type: 'susi',
           slot_num: i,
-          university: document.getElementById(`susi_univ_${i}`).value.trim(),
-          department: document.getElementById(`susi_dept_${i}`).value.trim(),
-          admission_type: document.getElementById(`susi_type_${i}`).value.trim(),
-          min_criteria: document.getElementById(`susi_min_${i}`).value.trim()
+          university: document.getElementById('susi_univ_' + i).value.trim(),
+          department: document.getElementById('susi_dept_' + i).value.trim(),
+          admission_type: document.getElementById('susi_type_' + i).value.trim(),
+          min_criteria: document.getElementById('susi_min_' + i).value.trim()
         });
+
         records.push({
           user_id: currentUser.id,
           student_no: currentProfile.student_no,
           student_name: currentProfile.name,
           slot_type: 'special',
           slot_num: i,
-          university: document.getElementById(`spec_univ_${i}`).value.trim(),
-          department: document.getElementById(`spec_dept_${i}`).value.trim(),
-          admission_type: document.getElementById(`spec_type_${i}`).value.trim(),
-          memo: document.getElementById(`spec_memo_${i}`).value.trim()
+          university: document.getElementById('spec_univ_' + i).value.trim(),
+          department: document.getElementById('spec_dept_' + i).value.trim(),
+          admission_type: document.getElementById('spec_type_' + i).value.trim(),
+          memo: document.getElementById('spec_memo_' + i).value.trim()
         });
       }
 
-      // 정시 3장 (1: 가, 2: 나, 3: 다)
+      // 2) 정시 3장 (가 / 나 / 다)
       for (let i = 1; i <= 3; i++) {
-        const u = document.getElementById(`jeongsi_univ_${i}`);
-        const d = document.getElementById(`jeongsi_dept_${i}`);
-        const t = document.getElementById(`jeongsi_type_${i}`);
-        const m = document.getElementById(`jeongsi_memo_${i}`);
+        const u = document.getElementById('jeongsi_univ_' + i);
+        const d = document.getElementById('jeongsi_dept_' + i);
+        const t = document.getElementById('jeongsi_type_' + i);
+        const m = document.getElementById('jeongsi_memo_' + i);
+
         records.push({
           user_id: currentUser.id,
           student_no: currentProfile.student_no,
@@ -2788,17 +2791,17 @@ async function saveStudent12Cards() {
       }
 
       try {
-  const { error: upsertErr } = await supabaseClient
-    .from('applications_12')
-    .upsert(records, { onConflict: 'user_id,slot_type,slot_num' });
+        const { error: upsertErr } = await supabaseClient
+          .from('applications_12')
+          .upsert(records, { onConflict: 'user_id,slot_type,slot_num' });
 
-  if (upsertErr) throw upsertErr;
-        
+        if (upsertErr) throw upsertErr;
+
         alert('입시상담카드(수시·특목·정시) 내용이 안전하게 저장되었습니다!');
         loadHomeDashboardData();
         renderMinimumCheckAnalysis();
       } catch (err) {
-        alert('저장 도중 네트워크 오류가 발생했습니다. 화면을 새로고침하지 마시고 잠시 후 다시 시도해주세요!\n(원인: ' + err.message + ')');
+        alert('저장 도중 네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요!\n(원인: ' + err.message + ')');
       }
     }
     
