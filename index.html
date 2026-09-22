@@ -2797,7 +2797,7 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
         } else if (!roundData) {
           statusHtml = `<span class="px-2 py-1 bg-slate-100 text-slate-400 rounded text-xs">${simRound} 미응시</span>`;
         } else {
-          const match = criteria.match(/([2-4])\s*합\s*([0-9]{1,2})/);
+   const match = criteria.match(/([2-4])\s*(?:개\s*(?:영역\s*)?)?합\s*([0-9]{1,2})/);
           if (match) {
             const reqCount = parseInt(match[1]);
             const targetSum = parseInt(match[2]);
@@ -3685,48 +3685,35 @@ pendingTbody.innerHTML = pendingList.map(u => `
     }
 
         // [선생님 전용] 회원 강제 탈퇴 및 데이터 영구 정리 함수
-    async function deleteUserByTeacher(userId, userName, userIdent) {
-      // 로그인한 본인 계정을 실수로 삭제하는 것 방지
-      if (currentUser && currentUser.id === userId) {
-        alert('현재 로그인 중인 선생님 본인 계정은 여기서 탈퇴 처리할 수 없습니다.');
-        return;
-      }
+async function deleteUserByTeacher(userId, userName, userIdent) {
+  if (currentUser && currentUser.id === userId) {
+    alert('현재 로그인 중인 선생님 본인 계정은 삭제할 수 없습니다.');
+    return;
+  }
 
-      // 1차 확인창
-      const confirmMsg = `[${userName}] (${userIdent}) 회원을 정말로 탈퇴 처리하시겠습니까?\n\n탈퇴 시 해당 학생이 입력한 수시/정시 원서, 모의고사 성적, 기초조사서 등 모든 데이터가 함께 영구 삭제됩니다.`;
-      if (!confirm(confirmMsg)) return;
+  const confirmMsg = `[${userName}] (${userIdent}) 회원을 정말로 탈퇴 처리하시겠습니까?\n\n탈퇴 시 학생이 입력한 수시/정시 원서, 모의고사 성적 등 모든 데이터가 함께 영구 삭제됩니다.`;
+  if (!confirm(confirmMsg)) return;
 
-      // 2차 확인창 (실수 방지를 위해 회원 이름을 직접 타이핑하도록 요구)
-      const inputName = prompt(`실수로 클릭한 것을 방지하기 위해, 탈퇴시킬 회원의 이름 [${userName}]을 정확하게 입력해 주세요:`);
-      if (inputName !== userName) {
-        alert('입력하신 이름이 일치하지 않아 탈퇴 처리가 취소되었습니다.');
-        return;
-      }
+  const inputName = prompt(`실수 방지를 위해 탈퇴시킬 회원의 이름 [${userName}]을 정확히 입력해 주세요:`);
+  if (inputName !== userName) {
+    alert('입력하신 이름이 일치하지 않아 취소되었습니다.');
+    return;
+  }
 
-      try {
-        // 1. 해당 회원이 기록한 모든 데이터 정리
-        await supabaseClient.from('applications_12').delete().eq('user_id', userId);
-        await supabaseClient.from('mock_scores').delete().eq('user_id', userId);
-        await supabaseClient.from('student_surveys').delete().eq('user_id', userId);
-        await supabaseClient.from('counsel_requests').delete().eq('user_id', userId);
-        await supabaseClient.from('admission_schedules').delete().eq('user_id', userId);
+  try {
+    // 위에서 생성한 전용 함수(admin_delete_user)를 호출해 깔끔하게 원클릭 삭제
+    const { error } = await supabaseClient.rpc('admin_delete_user', { target_user_id: userId });
+    if (error) throw error;
 
-        // 2. 회원 프로필 영구 삭제 (프로필이 지워지면 다시는 로그인할 수 없습니다)
-        const { error: profileErr } = await supabaseClient.from('profiles').delete().eq('id', userId);
-        if (profileErr) throw profileErr;
-
-        alert(`[${userName}] 회원이 안전하게 탈퇴 처리되었습니다.`);
-
-        // 3. 화면 목록 자동 갱신
-        loadUsersData();
-        loadTeacherStudentSelects();
-        loadHomeDashboardData();
-
-      } catch (err) {
-        console.error('회원 탈퇴 실패:', err);
-        alert('회원 탈퇴 처리 중 오류가 발생했습니다: ' + err.message);
-      }
-    }
+    alert(`[${userName}] 회원이 완전히 탈퇴 처리되었습니다.`);
+    loadUsersData();
+    loadTeacherStudentSelects();
+    loadHomeDashboardData();
+  } catch (err) {
+    console.error('탈퇴 실패:', err);
+    alert('회원 탈퇴 처리 중 오류가 발생했습니다: ' + err.message);
+  }
+}
 
     
     function openEditUserModal(userId, currentRawId, name, classNum, role) {
@@ -4268,8 +4255,8 @@ function openPhotoLightbox(index) {
       }
 
       const records = [];
-      let cur = new Date(startDate);
-      const end = new Date(endDate);
+   let cur = new Date(startDate + 'T00:00:00');
+   const end = new Date(endDate + 'T23:59:59');
 
       while (cur <= end) {
         const y = cur.getFullYear();
