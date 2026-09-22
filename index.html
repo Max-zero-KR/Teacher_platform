@@ -2723,7 +2723,7 @@ updateSuneungDday();
       }
     }
 
-    async function saveStudent12Cards() {
+async function saveStudent12Cards() {
       const records = [];
       for (let i = 1; i <= 6; i++) {
         records.push({
@@ -2769,11 +2769,19 @@ updateSuneungDday();
         });
       }
 
-      await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
-      await supabaseClient.from('applications_12').insert(records);
-      alert('입시상담카드(수시·특목·정시) 내용이 성공적으로 저장되었습니다!');
-      loadHomeDashboardData();
-      renderMinimumCheckAnalysis();
+      try {
+        const { error: delErr } = await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
+        if (delErr) throw delErr;
+
+        const { error: insErr } = await supabaseClient.from('applications_12').insert(records);
+        if (insErr) throw insErr;
+
+        alert('입시상담카드(수시·특목·정시) 내용이 안전하게 저장되었습니다!');
+        loadHomeDashboardData();
+        renderMinimumCheckAnalysis();
+      } catch (err) {
+        alert('저장 도중 네트워크 오류가 발생했습니다. 화면을 새로고침하지 마시고 잠시 후 다시 시도해주세요!\n(원인: ' + err.message + ')');
+      }
     }
 
     async function submitCounselRequest(e) {
