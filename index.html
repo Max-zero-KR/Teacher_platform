@@ -2006,8 +2006,8 @@ updateSuneungDday();
       if (recentEvents && recentEvents.length > 0) {
         calPreviewEl.innerHTML = recentEvents.map(e => `
           <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
-            <span class="font-bold text-slate-700">${e.title}</span>
-            <span class="text-[11px] text-blue-600 font-semibold">${e.event_date.substring(5)}</span>
+            <span class="font-bold text-slate-700">${escapeHtml(e.title)}</span>
+            <span class="text-[11px] text-blue-600 font-semibold">${escapeHtml(e.event_date.substring(5))}</span>
           </div>
         `).join('');
       } else {
@@ -2100,9 +2100,13 @@ updateSuneungDday();
           actionButtons = `<span class="text-slate-400 text-xs whitespace-nowrap">처리 완료</span>`;
         }
 
-        let detailHtml = item.detail || '-';
+        // 1) 본문 내용을 먼저 안전하게 HTML 이스케이프 처리
+        const safeDetail = escapeHtml(item.detail || '-');
+        let detailHtml = safeDetail;
+
+        // 2) 거절 사유 안내 블록만 스타일 태그로 변환
         if (item.detail && item.detail.includes('[거절 사유:')) {
-          detailHtml = item.detail.replace(
+          detailHtml = safeDetail.replace(
             /\[거절 사유: (.*?)\]/g, 
             '<div class="mt-1.5 p-2 bg-rose-50 border border-rose-200 rounded text-rose-700 font-medium leading-relaxed">🚫 <b>거절 사유:</b> $1</div>'
           );
@@ -2645,12 +2649,12 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
         return `
           <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
             <div>
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-blue-600">${c.slot_num}지망</span>
-                <span class="text-[10px] text-slate-400">${c.admission_type || '-'}</span>
-              </div>
-              <h4 class="font-black text-slate-800 text-sm mt-0.5">${c.university} ${c.department || ''}</h4>
-              <p class="text-xs text-slate-500 mt-1">최저 기준: <b class="text-slate-800">${criteria || '없음'}</b></p>
+  <div class="flex items-center justify-between">
+    <span class="text-[11px] font-bold text-blue-600">${c.slot_num}지망</span>
+    <span class="text-[10px] text-slate-400">${escapeHtml(c.admission_type) || '-'}</span>
+  </div>
+  <h4 class="font-black text-slate-800 text-sm mt-0.5">${escapeHtml(c.university)} ${escapeHtml(c.department) || ''}</h4>
+  <p class="text-xs text-slate-500 mt-1">최저 기준: <b class="text-slate-800">${escapeHtml(criteria) || '없음'}</b></p>
             </div>
             <div class="pt-2 border-t flex justify-between items-center">
               <span class="text-[11px] text-slate-400 font-medium">${simRound} 결과:</span>
@@ -2723,28 +2727,28 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
             const d = document.getElementById(`susi_dept_${c.slot_num}`);
             const t = document.getElementById(`susi_type_${c.slot_num}`);
             const m = document.getElementById(`susi_min_${c.slot_num}`);
-            if (u) u.value = escapeHtml(c.university) || '';
-            if (d) d.value = escapeHtml(c.department) || '';
-            if (t) t.value = escapeHtml(c.admission_type) || '';
-            if (m) m.value = escapeHtml(c.min_criteria) || '';
+            if (u) u.value = c.university || '';
+            if (d) d.value = c.department || '';
+            if (t) t.value = c.admission_type || '';
+            if (m) m.value = c.min_criteria || '';
           } else if (c.slot_type === 'special') {
             const u = document.getElementById(`spec_univ_${c.slot_num}`);
             const d = document.getElementById(`spec_dept_${c.slot_num}`);
             const t = document.getElementById(`spec_type_${c.slot_num}`);
             const m = document.getElementById(`spec_memo_${c.slot_num}`);
-            if (u) u.value = escapeHtml(c.university) || '';
-            if (d) d.value = escapeHtml(c.department) || '';
-            if (t) t.value = escapeHtml(c.admission_type) || '';
-            if (m) m.value = escapeHtml(c.memo) || '';
+            if (u) u.value = c.university || '';
+            if (d) d.value = c.department || '';
+            if (t) t.value = c.admission_type || '';
+            if (m) m.value = c.memo || '';
           } else if (c.slot_type === 'jeongsi') {
             const u = document.getElementById(`jeongsi_univ_${c.slot_num}`);
             const d = document.getElementById(`jeongsi_dept_${c.slot_num}`);
             const t = document.getElementById(`jeongsi_type_${c.slot_num}`);
             const m = document.getElementById(`jeongsi_memo_${c.slot_num}`);
-            if (u) u.value = escapeHtml(c.university) || '';
-            if (d) d.value = escapeHtml(c.department) || '';
-            if (t) t.value = escapeHtml(c.admission_type) || '';
-            if (m) m.value = escapeHtml(c.memo) || '';
+            if (u) u.value = c.university || '';
+            if (d) d.value = c.department || '';
+            if (t) t.value = c.admission_type || '';
+            if (m) m.value = c.memo || '';
           }
         });
       }
@@ -2861,10 +2865,10 @@ async function saveStudent12Cards() {
               const c = susiList.find(x => x.slot_num === num) || {};
               return `
                 <div class="p-3 bg-slate-50 rounded-lg border text-xs">
-                  <div class="font-bold text-blue-600 mb-1">${num}지망: ${c.university || '<span class="text-slate-400">미입력</span>'}</div>
-                  <div class="text-slate-700">학과: ${c.department || '-'}</div>
-                  <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
-                  <div class="text-emerald-700 font-semibold">최저: ${c.min_criteria || '-'}</div>
+  <div class="font-bold text-blue-600 mb-1">${num}지망: ${c.university ? escapeHtml(c.university) : '<span class="text-slate-400">미입력</span>'}</div>
+  <div class="text-slate-700">학과: ${escapeHtml(c.department) || '-'}</div>
+  <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+  <div class="text-emerald-700 font-semibold">최저: ${escapeHtml(c.min_criteria) || '-'}</div>
                 </div>
               `;
             }).join('')}
@@ -3122,12 +3126,12 @@ if (mockErr) throw mockErr;
       card.innerHTML = `
         <div class="space-y-4 text-xs">
           <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
-            <div>부모님 연락처: <b>${data.father_name || '-'}</b>(${data.father_phone || '-'}), <b>${data.mother_name || '-'}</b>(${data.mother_phone || '-'})</div>
-            <div>학생 연락처: <b class="text-blue-600">${data.student_phone || '-'}</b></div>
-            <div class="col-span-2">주소: <b>${data.address || '-'}</b></div>
+            <div>부모님 연락처: <b>${escapeHtml(data.father_name) || '-'}</b>(${escapeHtml(data.father_phone) || '-'}), <b>${escapeHtml(data.mother_name) || '-'}</b>(${escapeHtml(data.mother_phone) || '-'})</div>
+            <div>학생 연락처: <b class="text-blue-600">${escapeHtml(data.student_phone) || '-'}</b></div>
+            <div class="col-span-2">주소: <b>${escapeHtml(data.address) || '-'}</b></div>
           </div>
-          <div>진로희망: <b class="text-slate-800">${data.career_hope || '-'}</b></div>
-          <div>특이사항: <p class="text-slate-700 bg-amber-50 p-3 rounded-lg border border-amber-200">${data.special_notes || '없음'}</p></div>
+          <div>진로희망: <b class="text-slate-800">${escapeHtml(data.career_hope) || '-'}</b></div>
+          <div>특이사항: <p class="text-slate-700 bg-amber-50 p-3 rounded-lg border border-amber-200">${escapeHtml(data.special_notes) || '없음'}</p></div>
         </div>
       `;
     }
@@ -3339,7 +3343,7 @@ if (mockErr) throw mockErr;
       container.innerHTML = list.map(item => {
         const ytId = getYouTubeId(item.youtube_url);
         const tagBadges = item.tags 
-          ? item.tags.split(',').map(t => `<span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-medium">#${t.trim()}</span>`).join(' ')
+          ? item.tags.split(',').map(t => `<span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-medium">#${escapeHtml(t.trim())}</span>`).join(' ')
           : '';
 
         return `
@@ -4084,12 +4088,12 @@ async function handleMultiPhotoUpload(e) {
       loadHomeDashboardData();
     }
 
-    async function deleteCalendarEvent(id, title) {
-      if (!confirm(`'${title}' 일정을 달력에서 삭제할까요?`)) return;
-      await supabaseClient.from('calendar_events').delete().eq('id', id);
-      renderCalendar();
-      loadHomeDashboardData();
-    }
+async function deleteCalendarEvent(id) {
+  if (!confirm('이 일정을 달력에서 삭제할까요?')) return;
+  await supabaseClient.from('calendar_events').delete().eq('id', id);
+  renderCalendar();
+  loadHomeDashboardData();
+}
 
     let calViewDate = new Date(2026, 8, 1);
 
@@ -4143,7 +4147,7 @@ async function handleMultiPhotoUpload(e) {
               : (e.category === 'exam' ? 'bg-rose-50 text-rose-800 border-rose-200 font-bold' : 'bg-blue-50 text-blue-800 border-blue-100');
             const delBtn = isCurrentTeacher() ? '<span class="text-[10px] opacity-0 group-hover:opacity-100 text-rose-500 font-bold ml-1">×</span>' : '';
             
-            return '<div onclick="event.stopPropagation(); deleteCalendarEvent(\'' + e.id + '\', \'' + e.title + '\')" class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 cursor-pointer border ' + bgClass + '" title="클릭하여 삭제: ' + e.title + '">' +
+            return '<div onclick="event.stopPropagation(); deleteCalendarEvent(\'' + e.id + '\')" class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 cursor-pointer border ' + bgClass + '" title="클릭하여 삭제: ' + e.title + '">' +
                      '<div class="flex items-center gap-1 min-w-0">' +
                        '<span class="w-1.5 h-1.5 rounded-full shrink-0 ' + dotColor + '"></span>' +
                        '<span class="truncate">' + escapeHtml(e.title) + '</span>' +
