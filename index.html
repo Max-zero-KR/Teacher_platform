@@ -3712,16 +3712,18 @@ if (mockErr) throw mockErr;
         activeFolderId = folders[0].id;
       }
 
-      tabContainer.innerHTML = folders.map(f => `
-        <div class="inline-flex items-center rounded-xl border transition ${f.id === activeFolderId ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}">
-          <button onclick="selectAlbumFolder('${f.id}')" class="px-3.5 py-2 font-bold whitespace-nowrap flex items-center gap-1.5 text-xs">
-            <i data-lucide="folder" class="w-3.5 h-3.5"></i> ${f.name}
-          </button>
-          <button onclick="deleteAlbumFolder('${f.id}', '${f.name}')" title="폴더 삭제" class="pr-2.5 pl-1 py-2 opacity-60 hover:opacity-100 hover:text-rose-300 transition">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
-      `).join('');
+tabContainer.innerHTML = folders.map(f => `
+  <div class="inline-flex items-center rounded-xl border transition ${f.id === activeFolderId ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}">
+    <button onclick="selectAlbumFolder('${f.id}')" class="px-3.5 py-2 font-bold whitespace-nowrap flex items-center gap-1.5 text-xs">
+      <i data-lucide="folder" class="w-3.5 h-3.5"></i> ${escapeHtml(f.name)}
+    </button>
+    ${isCurrentTeacher() ? `
+      <button onclick="deleteAlbumFolder('${f.id}', '${f.name}')" title="폴더 삭제" class="pr-2.5 pl-1 py-2 opacity-60 hover:opacity-100 hover:text-rose-300 transition">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    ` : ''}
+  </div>
+`).join('');
       lucide.createIcons();
       loadAlbumPhotos();
     }
@@ -3742,17 +3744,19 @@ if (mockErr) throw mockErr;
         return;
       }
 
-      grid.innerHTML = photos.map((p, idx) => `
-        <div class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition">
-          <img src="${p.photo_url}" onclick="openPhotoLightbox(${idx})" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300 cursor-pointer">
-          <button onclick="event.stopPropagation(); deleteAlbumPhoto('${p.id}', '${p.photo_url}')" title="사진 삭제" class="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-rose-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-          </button>
-          <div onclick="openPhotoLightbox(${idx})" class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-2 cursor-pointer">
-            <span class="text-[11px] text-white font-medium truncate">${new Date(p.created_at).toLocaleDateString()}</span>
-          </div>
-        </div>
-      `).join('');
+grid.innerHTML = photos.map((p, idx) => `
+  <div class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition">
+    <img src="${p.photo_url}" onclick="openPhotoLightbox(${idx})" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300 cursor-pointer">
+    ${isCurrentTeacher() ? `
+      <button onclick="event.stopPropagation(); deleteAlbumPhoto('${p.id}', '${p.photo_url}')" title="사진 삭제" class="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-rose-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    ` : ''}
+    <div onclick="openPhotoLightbox(${idx})" class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-2 cursor-pointer">
+      <span class="text-[11px] text-white font-medium truncate">${new Date(p.created_at).toLocaleDateString()}</span>
+    </div>
+  </div>
+`).join('');
       lucide.createIcons();
     }
 
@@ -3984,12 +3988,22 @@ async function handleMultiPhotoUpload(e) {
   }
 }   
     
-    function openPhotoLightbox(index) {
-      currentLightboxIdx = index;
-      updateLightboxContent();
-      document.getElementById('photoLightboxModal').classList.remove('hidden');
-      lucide.createIcons();
+function openPhotoLightbox(index) {
+  currentLightboxIdx = index;
+  updateLightboxContent();
+
+  const lbDeleteBtn = document.querySelector('#photoLightboxModal button[onclick="deleteCurrentLightboxPhoto()"]');
+  if (lbDeleteBtn) {
+    if (isCurrentTeacher()) {
+      lbDeleteBtn.classList.remove('hidden');
+    } else {
+      lbDeleteBtn.classList.add('hidden');
     }
+  }
+
+  document.getElementById('photoLightboxModal').classList.remove('hidden');
+  lucide.createIcons();
+}
     function closePhotoLightbox() {
       document.getElementById('photoLightboxModal').classList.add('hidden');
     }
@@ -4140,21 +4154,25 @@ async function deleteCalendarEvent(id) {
 
         let eventsHtml = '';
         if (dayEvents.length > 0) {
-          eventsHtml = dayEvents.map(e => {
-            const dotColor = e.category === 'counsel' ? 'bg-emerald-500' : (e.category === 'exam' ? 'bg-rose-500' : 'bg-blue-500');
-            const bgClass = e.category === 'counsel' 
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-              : (e.category === 'exam' ? 'bg-rose-50 text-rose-800 border-rose-200 font-bold' : 'bg-blue-50 text-blue-800 border-blue-100');
-            const delBtn = isCurrentTeacher() ? '<span class="text-[10px] opacity-0 group-hover:opacity-100 text-rose-500 font-bold ml-1">×</span>' : '';
-            
-            return '<div onclick="event.stopPropagation(); deleteCalendarEvent(\'' + e.id + '\')" class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 cursor-pointer border ' + bgClass + '" title="클릭하여 삭제: ' + e.title + '">' +
-                     '<div class="flex items-center gap-1 min-w-0">' +
-                       '<span class="w-1.5 h-1.5 rounded-full shrink-0 ' + dotColor + '"></span>' +
-                       '<span class="truncate">' + escapeHtml(e.title) + '</span>' +
-                     '</div>' +
-                     delBtn +
-                   '</div>';
-          }).join('');
+eventsHtml = dayEvents.map(e => {
+  const dotColor = e.category === 'counsel' ? 'bg-emerald-500' : (e.category === 'exam' ? 'bg-rose-500' : 'bg-blue-500');
+  const bgClass = e.category === 'counsel' 
+    ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+    : (e.category === 'exam' ? 'bg-rose-50 text-rose-800 border-rose-200 font-bold' : 'bg-blue-50 text-blue-800 border-blue-100');
+  
+  // 교사(담임/관리자)에게만 삭제 버튼(×) 렌더링 및 삭제 이벤트 부여
+  const delBtn = isCurrentTeacher() 
+    ? '<button type="button" onclick="event.stopPropagation(); deleteCalendarEvent(\'' + e.id + '\')" class="text-xs opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-700 font-bold px-1 transition" title="일정 삭제">×</button>' 
+    : '';
+  
+  return '<div class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 border ' + bgClass + '" title="' + escapeHtml(e.title) + '">' +
+           '<div class="flex items-center gap-1 min-w-0">' +
+             '<span class="w-1.5 h-1.5 rounded-full shrink-0 ' + dotColor + '"></span>' +
+             '<span class="truncate">' + escapeHtml(e.title) + '</span>' +
+           '</div>' +
+           delBtn +
+         '</div>';
+}).join('');
         }
 
         const countBadge = dayEvents.length > 0 ? '<span class="text-[9px] px-1 bg-slate-100 text-slate-500 rounded font-semibold">' + dayEvents.length + '</span>' : '';
