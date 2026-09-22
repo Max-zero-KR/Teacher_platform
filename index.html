@@ -911,17 +911,20 @@
             </div>
           </div>
 
-          <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200 p-4 rounded-xl text-xs text-slate-700 space-y-1 leading-relaxed">
-            <p class="font-bold text-emerald-900 flex items-center gap-1.5">
-              <i data-lucide="info" class="w-4 h-4 text-emerald-600"></i> 탐구 영역 산출 기준 안내
+          <div class="bg-amber-50 border-2 border-amber-300 p-4 rounded-xl text-xs text-amber-900 space-y-2 leading-relaxed">
+            <div class="font-black text-rose-600 flex items-center gap-1.5 text-sm">
+              <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600"></i> 수능 최저 판정기 이용 시 필수 주의사항
+            </div>
+            <p class="font-bold text-slate-800">
+              본 판정기는 모의고사 단순 등급합 산출을 돕는 참고용입니다. 아래 대학별 세부 기준은 반영되지 않으므로 <strong>반드시 대학별 수시 모집요강을 직접 확인</strong>해야 합니다!
             </p>
-            <ul class="list-disc pl-5 space-y-0.5 text-slate-600">
-              <li><strong>탐구 상위 1과목</strong>: 탐구1과 탐구2 중 더 우수한(숫자가 작은) 1과목 등급만 반영</li>
-              <li><strong>탐구 2과목 [버림(절사)]</strong>: 두 과목 평균 산출 시 소수점을 절사 (예: 2등급+3등급 = 2.5 → <strong>2등급</strong>)</li>
-              <li><strong>탐구 2과목 [반올림]</strong>: 두 과목 평균 산출 시 소수점 첫째 자리에서 반올림 (예: 2등급+3등급 = 2.5 → <strong>3등급</strong>)</li>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700">
+              <li><strong>수학 선택과목 필수 지정</strong> (예: 자연계열 미적분/기하 필수 반영 여부)</li>
+              <li><strong>탐구 반영 과목 수</strong> (상위 1과목인지, 2과목 평균 절사/반올림인지 여부)</li>
+              <li><strong>영어·한국사 필수 등급 요건</strong> (예: 3합 7 이내 외에 영어 2등급 이내 별도 충족 필수 여부)</li>
             </ul>
           </div>
-
+          
           <div class="space-y-3">
             <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
               <i data-lucide="table" class="w-4 h-4 text-blue-600"></i> [전체 모의고사 회차별] 2합 · 3합 · 4합 종합 분석표
@@ -2730,7 +2733,7 @@ updateSuneungDday();
       }
     }
 
-async function saveStudent12Cards() {
+    async function saveStudent12Cards() {
       const records = [];
       for (let i = 1; i <= 6; i++) {
         records.push({
@@ -2756,6 +2759,40 @@ async function saveStudent12Cards() {
           memo: document.getElementById(`spec_memo_${i}`).value.trim()
         });
       }
+
+      // 정시 3장 (1: 가, 2: 나, 3: 다)
+      for (let i = 1; i <= 3; i++) {
+        const u = document.getElementById(`jeongsi_univ_${i}`);
+        const d = document.getElementById(`jeongsi_dept_${i}`);
+        const t = document.getElementById(`jeongsi_type_${i}`);
+        const m = document.getElementById(`jeongsi_memo_${i}`);
+        records.push({
+          user_id: currentUser.id,
+          student_no: currentProfile.student_no,
+          student_name: currentProfile.name,
+          slot_type: 'jeongsi',
+          slot_num: i,
+          university: u ? u.value.trim() : '',
+          department: d ? d.value.trim() : '',
+          admission_type: t ? t.value.trim() : '',
+          memo: m ? m.value.trim() : ''
+        });
+      }
+
+      try {
+        const { error: delErr } = await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
+        if (delErr) throw delErr;
+
+        const { error: insErr } = await supabaseClient.from('applications_12').insert(records);
+        if (insErr) throw insErr;
+
+        alert('입시상담카드(수시·특목·정시) 내용이 안전하게 저장되었습니다!');
+        loadHomeDashboardData();
+        renderMinimumCheckAnalysis();
+      } catch (err) {
+        alert('저장 도중 네트워크 오류가 발생했습니다. 화면을 새로고침하지 마시고 잠시 후 다시 시도해주세요!\n(원인: ' + err.message + ')');
+      }
+    }
 
       // 정시 3장 (1: 가, 2: 나, 3: 다)
       for (let i = 1; i <= 3; i++) {
@@ -4065,57 +4102,83 @@ async function handleMultiPhotoUpload(e) {
     }
 
     async function renderCalendar() {
+    let calViewDate = new Date(2026, 8, 1);
+
+    function changeCalMonth(delta) {
+      calViewDate.setMonth(calViewDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    async function renderCalendar() {
       const grid = document.getElementById('calendarGrid');
+      if (!grid) return;
+
+      const year = calViewDate.getFullYear();
+      const month = calViewDate.getMonth();
+
+      const labelEl = document.getElementById('calendarCurrentMonthLabel');
+      if (labelEl) {
+        labelEl.innerText = year + '. ' + String(month + 1).padStart(2, '0');
+      }
+
       let calQuery = supabaseClient.from('calendar_events').select('*');
       if (activeClassNum !== 'all') {
-        calQuery = calQuery.or(`class_num.eq.${activeClassNum},class_num.eq.0,class_num.is.null`);
+        calQuery = calQuery.or('class_num.eq.' + activeClassNum + ',class_num.eq.0,class_num.is.null');
       }
       const { data: events } = await calQuery;
 
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+
       let cells = '';
 
-      for (let b = 0; b < 2; b++) {
+      for (let b = 0; b < firstDayIndex; b++) {
         cells += '<div class="bg-slate-50/50 min-h-[115px] p-2 rounded border border-slate-100"></div>';
       }
 
-      for (let day = 1; day <= 30; day++) {
-        const dateStr = `2026-09-${String(day).padStart(2, '0')}`;
+      for (let day = 1; day <= lastDate; day++) {
+        const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
         const dayEvents = events ? events.filter(e => e.event_date === dateStr) : [];
         
-        const dayOfWeek = (day + 1) % 7; 
+        const dayOfWeek = new Date(year, month, day).getDay(); 
         let dayColor = 'text-slate-700';
         if (dayOfWeek === 0) dayColor = 'text-rose-500 font-bold';
         else if (dayOfWeek === 6) dayColor = 'text-blue-500 font-bold';
 
-        cells += `
-          <div class="bg-white min-h-[115px] p-2 border border-slate-100 rounded-lg flex flex-col justify-start gap-1.5 shadow-sm hover:border-blue-300 transition">
-            <div class="flex items-center justify-between">
-              <span class="text-xs ${dayColor}">${day}</span>
-              ${dayEvents.length > 0 ? `<span class="text-[9px] px-1 bg-slate-100 text-slate-500 rounded font-semibold">${dayEvents.length}</span>` : ''}
-            </div>
-            <div class="space-y-1 overflow-y-auto max-h-[85px] pr-0.5">
-              ${dayEvents.map(e => `
-                <div onclick="event.stopPropagation(); deleteCalendarEvent('${e.id}', '${e.title}')" class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 cursor-pointer transition ${
-                  e.category === 'counsel'
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                    : (e.category === 'exam'
-                        ? 'bg-rose-50 text-rose-800 border border-rose-200 font-bold'
-                        : 'bg-blue-50 text-blue-800 border border-blue-100')
-                }" title="클릭하여 삭제: ${e.title}">
-                  <div class="flex items-center gap-1 min-w-0">
-                    <span class="w-1.5 h-1.5 rounded-full shrink-0 ${
-                      e.category === 'counsel' ? 'bg-emerald-500' : (e.category === 'exam' ? 'bg-rose-500' : 'bg-blue-500')
-                    }"></span>
-                    <span class="truncate">${e.title}</span>
-                  </div>
-                  <span class="text-[10px] opacity-0 group-hover:opacity-100 text-rose-500 font-bold ml-1">×</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
+        let eventsHtml = '';
+        if (dayEvents.length > 0) {
+          eventsHtml = dayEvents.map(e => {
+            const dotColor = e.category === 'counsel' ? 'bg-emerald-500' : (e.category === 'exam' ? 'bg-rose-500' : 'bg-blue-500');
+            const bgClass = e.category === 'counsel' 
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+              : (e.category === 'exam' ? 'bg-rose-50 text-rose-800 border-rose-200 font-bold' : 'bg-blue-50 text-blue-800 border-blue-100');
+            const delBtn = isCurrentTeacher() ? '<span class="text-[10px] opacity-0 group-hover:opacity-100 text-rose-500 font-bold ml-1">×</span>' : '';
+            
+            return '<div onclick="event.stopPropagation(); deleteCalendarEvent(\'' + e.id + '\', \'' + e.title + '\')" class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 cursor-pointer border ' + bgClass + '" title="클릭하여 삭제: ' + e.title + '">' +
+                     '<div class="flex items-center gap-1 min-w-0">' +
+                       '<span class="w-1.5 h-1.5 rounded-full shrink-0 ' + dotColor + '"></span>' +
+                       '<span class="truncate">' + e.title + '</span>' +
+                     '</div>' +
+                     delBtn +
+                   '</div>';
+          }).join('');
+        }
+
+        const countBadge = dayEvents.length > 0 ? '<span class="text-[9px] px-1 bg-slate-100 text-slate-500 rounded font-semibold">' + dayEvents.length + '</span>' : '';
+
+        cells += '<div class="bg-white min-h-[115px] p-2 border border-slate-100 rounded-lg flex flex-col justify-start gap-1.5 shadow-sm hover:border-blue-300 transition">' +
+                   '<div class="flex items-center justify-between">' +
+                     '<span class="text-xs ' + dayColor + '">' + day + '</span>' +
+                     countBadge +
+                   '</div>' +
+                   '<div class="space-y-1 overflow-y-auto max-h-[85px] pr-0.5">' +
+                     eventsHtml +
+                   '</div>' +
+                 '</div>';
       }
+
       grid.innerHTML = cells;
+      lucide.createIcons();
     }
 
     // =================================================================
