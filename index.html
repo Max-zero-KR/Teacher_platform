@@ -3816,44 +3816,116 @@ updateSuneungDday();
       loadHomeDashboardData();
     }
 
-    async function handleMultiPhotoUpload(e) {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      if (!activeFolderId) return alert('사진을 올릴 폴더를 먼저 선택해주세요.');
-
-      const uploadLabel = e.target.parentElement;
-      const originHtml = uploadLabel.innerHTML;
-      uploadLabel.innerText = `업로드 중 (0/${files.length})...`;
-
-      let successCount = 0;
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const ext = file.name.split('.').pop() || 'jpg';
-        const safeFilePath = `${activeFolderId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
-
-        const { error: upErr } = await supabaseClient.storage
-          .from('class-album')
-          .upload(safeFilePath, file, { cacheControl: '3600', upsert: true });
-
-        if (upErr) continue;
-
-        const { data: { publicUrl } } = supabaseClient.storage.from('class-album').getPublicUrl(safeFilePath);
-        await supabaseClient.from('album_photos').insert([{
-          folder_id: activeFolderId,
-          photo_url: publicUrl,
-          caption: file.name
-        }]);
-        successCount++;
-        uploadLabel.innerText = `업로드 중 (${i+1}/${files.length})...`;
-      }
-
-      uploadLabel.innerHTML = originHtml;
-      e.target.value = '';
-      alert(`${successCount}장의 사진이 성공적으로 업로드되었습니다!`);
-      loadAlbumPhotos();
-      loadHomeDashboardData();
+// [신규] 브라우저 Canvas 기반 자동 리사이징 및 압축 함수
+function compressImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
+  return new Promise((resolve) => {
+    // 이미지 파일이 아니면 원본 그대로 반환
+    if (!file.type.startsWith('image/')) {
+      return resolve(file);
     }
 
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let width = img.width;
+      let height = img.height;
+
+      // 비율 유지하며 최대 해상도 이내로 축소
+      if (width > maxWidth || height > maxHeight) {
+        if (width > height) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        } else {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      // 이미지 부드럽게 렌더링
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // JPEG 80% 품질 Blob으로 변환
+      canvas.toBlob(
+        (blob) => {
+          // 압축본이 원본보다 작은 경우에만 압축본 채택
+          if (blob && blob.size < file.size) {
+            resolve(blob);
+          } else {
+            resolve(file);
+          }
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file); // 파싱 실패 시 원본 그대로 진행
+    };
+
+    img.src = objectUrl;
+  });
+}
+    
+async function handleMultiPhotoUpload(e) {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+  if (!activeFolderId) return alert('사진을 올릴 폴더를 먼저 선택해주세요.');
+
+  const uploadLabel = e.target.parentElement;
+  const originHtml = uploadLabel.innerHTML;
+  uploadLabel.innerText = `업로드 중 (0/${files.length})...`;
+
+  let successCount = 0;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+
+    // 업로드 전 브라우저에서 FHD 규격으로 자동 압축 실행 (8~10MB -> 200~300KB)
+    uploadLabel.innerText = `압축 및 업로드 중 (\({i + 1}/\){files.length})...`;
+    const uploadBlob = await compressImage(file, 1920, 1920, 0.8);
+
+    const safeFilePath = `\({activeFolderId}/\){Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
+
+    const { error: upErr } = await supabaseClient.storage
+      .from('class-album')
+      .upload(safeFilePath, uploadBlob, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (upErr) {
+      console.error('업로드 실패:', upErr);
+      continue;
+    }
+
+    const { data: { publicUrl } } = supabaseClient.storage.from('class-album').getPublicUrl(safeFilePath);
+    await supabaseClient.from('album_photos').insert([{
+      folder_id: activeFolderId,
+      photo_url: publicUrl,
+      caption: file.name
+    }]);
+
+    successCount++;
+  }
+
+  uploadLabel.innerHTML = originHtml;
+  e.target.value = '';
+  alert(`${successCount}장의 사진이 최적화 압축되어 안전하게 업로드되었습니다!`);
+  loadAlbumPhotos();
+  loadHomeDashboardData();
+}
+    
     function openPhotoLightbox(index) {
       currentLightboxIdx = index;
       updateLightboxContent();
