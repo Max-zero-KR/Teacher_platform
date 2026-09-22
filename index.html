@@ -1504,6 +1504,16 @@
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZta2Ztd2J6c2RsaWV0cHJndHl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQxMjIsImV4cCI6MjEwNTUwMDEyMn0.eqkdTi2LzOkVA715lyy2VMfiNio4umT-LwImPv7LaWQ';
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+    
     let currentUser = null;
     let currentProfile = null;
     let activeClassNum = 2;
@@ -1922,11 +1932,11 @@ updateSuneungDday();
           <div class="p-3 bg-slate-50 hover:bg-blue-50/40 rounded-xl border border-slate-100 transition">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> ${n.title}
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> ${escapeHtml(n.title)}
               </span>
               <span class="text-[10px] text-slate-400">${new Date(n.created_at).toLocaleDateString()}</span>
             </div>
-            <p class="text-xs text-slate-600 whitespace-pre-line pl-3">${n.content}</p>
+              <p class="text-xs text-slate-600 whitespace-pre-line pl-3">${escapeHtml(n.content)}</p>
           </div>
         `).join('');
       }
@@ -2098,22 +2108,22 @@ updateSuneungDday();
           );
         }
 
-        return `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${item.target_date || '-'}</td>
-            <td class="p-3 font-semibold text-blue-600 whitespace-nowrap">
-              <div class="flex items-center gap-1.5">
-                <span>${item.target_period || '-'}</span>
-                ${conflictCount > 1 && item.status !== 'rejected' ? `<span class="inline-flex items-center text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200 px-1.5 py-0.5 rounded" title="동일 시간대에 ${conflictCount}건의 신청이 있습니다">⚠️ 시간겹침(${conflictCount})</span>` : ''}
-              </div>
-            </td>
-            <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${item.student_name || '-'} <span class="text-slate-400 text-[11px] font-normal">(${item.student_no || '-'})</span></td>
-            <td class="p-3 font-semibold text-slate-700 whitespace-nowrap">${item.topic || '-'}</td>
-            <td class="p-3 text-slate-600 leading-relaxed min-w-[220px]">${detailHtml}</td>
-            <td class="p-3 text-center whitespace-nowrap">${statusBadge}</td>
-            <td class="p-3 text-center whitespace-nowrap">${actionButtons}</td>
-          </tr>
-        `;
+return `
+  <tr class="hover:bg-slate-50 transition">
+    <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${escapeHtml(item.target_date) || '-'}</td>
+    <td class="p-3 font-semibold text-blue-600 whitespace-nowrap">
+      <div class="flex items-center gap-1.5">
+        <span>${escapeHtml(item.target_period) || '-'}</span>
+        ${conflictCount > 1 && item.status !== 'rejected' ? `<span class="inline-flex items-center text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200 px-1.5 py-0.5 rounded">⚠️ 시간겹침(${conflictCount})</span>` : ''}
+      </div>
+    </td>
+    <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${escapeHtml(item.student_name) || '-'} <span class="text-slate-400 text-[11px] font-normal">(${escapeHtml(item.student_no) || '-'})</span></td>
+    <td class="p-3 font-semibold text-slate-700 whitespace-nowrap">${escapeHtml(item.topic) || '-'}</td>
+    <td class="p-3 text-slate-600 leading-relaxed min-w-[220px]">${detailHtml}</td>
+    <td class="p-3 text-center whitespace-nowrap">${statusBadge}</td>
+    <td class="p-3 text-center whitespace-nowrap">${actionButtons}</td>
+  </tr>
+`;
       }).join('');
       lucide.createIcons();
     }
@@ -2393,8 +2403,8 @@ updateSuneungDday();
           </div>
 
           <div>
-            <h4 class="font-black text-slate-800 text-base leading-tight">${item.university} ${item.department || ''}</h4>
-            <p class="text-xs text-blue-600 font-bold mt-0.5">${item.admission_type || '-'}</p>
+            <h4 class="font-black text-slate-800 text-base leading-tight">${escapeHtml(item.university)} ${escapeHtml(item.department) || ''}</h4>
+            <p class="text-xs text-blue-600 font-bold mt-0.5">${escapeHtml(item.admission_type) || '-'}</p>
           </div>
 
           <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-1 text-xs text-slate-600">
@@ -2403,14 +2413,14 @@ updateSuneungDday();
             </div>
             ${item.location ? `
               <div class="flex items-center gap-1.5 text-slate-600 text-[11px]">
-                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500"></i> ${item.location}
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500"></i> ${escapeHtml(item.location)}
               </div>
             ` : ''}
           </div>
 
-          ${item.memo ? `
+          ${escapeHtml(item.memo) ? `
             <div class="text-[11px] text-slate-500 bg-amber-50/50 p-2 rounded-lg border border-amber-100 leading-relaxed">
-              💡 ${item.memo}
+              💡 ${escapeHtml(item.memo)}
             </div>
           ` : ''}
         </div>
@@ -2713,28 +2723,28 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
             const d = document.getElementById(`susi_dept_${c.slot_num}`);
             const t = document.getElementById(`susi_type_${c.slot_num}`);
             const m = document.getElementById(`susi_min_${c.slot_num}`);
-            if (u) u.value = c.university || '';
-            if (d) d.value = c.department || '';
-            if (t) t.value = c.admission_type || '';
-            if (m) m.value = c.min_criteria || '';
+            if (u) u.value = escapeHtml(c.university) || '';
+            if (d) d.value = escapeHtml(c.department) || '';
+            if (t) t.value = escapeHtml(c.admission_type) || '';
+            if (m) m.value = escapeHtml(c.min_criteria) || '';
           } else if (c.slot_type === 'special') {
             const u = document.getElementById(`spec_univ_${c.slot_num}`);
             const d = document.getElementById(`spec_dept_${c.slot_num}`);
             const t = document.getElementById(`spec_type_${c.slot_num}`);
             const m = document.getElementById(`spec_memo_${c.slot_num}`);
-            if (u) u.value = c.university || '';
-            if (d) d.value = c.department || '';
-            if (t) t.value = c.admission_type || '';
-            if (m) m.value = c.memo || '';
+            if (u) u.value = escapeHtml(c.university) || '';
+            if (d) d.value = escapeHtml(c.department) || '';
+            if (t) t.value = escapeHtml(c.admission_type) || '';
+            if (m) m.value = escapeHtml(c.memo) || '';
           } else if (c.slot_type === 'jeongsi') {
             const u = document.getElementById(`jeongsi_univ_${c.slot_num}`);
             const d = document.getElementById(`jeongsi_dept_${c.slot_num}`);
             const t = document.getElementById(`jeongsi_type_${c.slot_num}`);
             const m = document.getElementById(`jeongsi_memo_${c.slot_num}`);
-            if (u) u.value = c.university || '';
-            if (d) d.value = c.department || '';
-            if (t) t.value = c.admission_type || '';
-            if (m) m.value = c.memo || '';
+            if (u) u.value = escapeHtml(c.university) || '';
+            if (d) d.value = escapeHtml(c.department) || '';
+            if (t) t.value = escapeHtml(c.admission_type) || '';
+            if (m) m.value = escapeHtml(c.memo) || '';
           }
         });
       }
@@ -3361,8 +3371,8 @@ if (mockErr) throw mockErr;
               </div>
 
               <div>
-                <h4 class="font-bold text-slate-800 text-sm leading-snug group-hover:text-blue-600 transition">${item.title}</h4>
-                ${item.description ? `<p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">${item.description}</p>` : ''}
+                <h4 class="font-bold text-slate-800 text-sm leading-snug group-hover:text-blue-600 transition">${escapeHtml(item.title)}</h4>
+                ${escapeHtml(item.description) ? `<p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">${escapeHtml(item.description)}</p>` : ''}
               </div>
 
               ${tagBadges ? `<div class="flex flex-wrap gap-1 pt-1">${tagBadges}</div>` : ''}
@@ -4136,7 +4146,7 @@ async function handleMultiPhotoUpload(e) {
             return '<div onclick="event.stopPropagation(); deleteCalendarEvent(\'' + e.id + '\', \'' + e.title + '\')" class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 cursor-pointer border ' + bgClass + '" title="클릭하여 삭제: ' + e.title + '">' +
                      '<div class="flex items-center gap-1 min-w-0">' +
                        '<span class="w-1.5 h-1.5 rounded-full shrink-0 ' + dotColor + '"></span>' +
-                       '<span class="truncate">' + e.title + '</span>' +
+                       '<span class="truncate">' + escapeHtml(e.title) + '</span>' +
                      '</div>' +
                      delBtn +
                    '</div>';
