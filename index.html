@@ -3688,9 +3688,12 @@ pendingTbody.innerHTML = pendingList.map(u => `
             </td>
 <td class="p-3 font-bold text-slate-800">${escapeHtml(u.student_no || u.email)}</td>
 <td class="p-3 font-semibold text-slate-700">${escapeHtml(u.name)}</td>
-            <td class="p-3 text-right">
+            <td class="p-3 text-right space-x-1">
               <button onclick="openEditUserModal('${u.id}', '${u.student_no || u.email}', '${u.name}', ${u.class_num !== null && u.class_num !== undefined ? u.class_num : 2}, '${u.role || 'student'}')" class="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded text-xs font-bold transition inline-flex items-center gap-1">
                 <i data-lucide="key" class="w-3 h-3"></i> 수정
+              </button>
+              <button onclick="deleteUserByTeacher('${u.id}', '${escapeHtml(u.name)}', '${escapeHtml(u.student_no || u.email)}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded text-xs font-bold transition inline-flex items-center gap-1" title="회원 탈퇴 처리">
+                <i data-lucide="user-x" class="w-3 h-3"></i> 탈퇴
               </button>
             </td>
           </tr>
@@ -3713,6 +3716,51 @@ pendingTbody.innerHTML = pendingList.map(u => `
       }
     }
 
+        // [선생님 전용] 회원 강제 탈퇴 및 데이터 영구 정리 함수
+    async function deleteUserByTeacher(userId, userName, userIdent) {
+      // 로그인한 본인 계정을 실수로 삭제하는 것 방지
+      if (currentUser && currentUser.id === userId) {
+        alert('현재 로그인 중인 선생님 본인 계정은 여기서 탈퇴 처리할 수 없습니다.');
+        return;
+      }
+
+      // 1차 확인창
+      const confirmMsg = `[${userName}] (${userIdent}) 회원을 정말로 탈퇴 처리하시겠습니까?\n\n탈퇴 시 해당 학생이 입력한 수시/정시 원서, 모의고사 성적, 기초조사서 등 모든 데이터가 함께 영구 삭제됩니다.`;
+      if (!confirm(confirmMsg)) return;
+
+      // 2차 확인창 (실수 방지를 위해 회원 이름을 직접 타이핑하도록 요구)
+      const inputName = prompt(`실수로 클릭한 것을 방지하기 위해, 탈퇴시킬 회원의 이름 [${userName}]을 정확하게 입력해 주세요:`);
+      if (inputName !== userName) {
+        alert('입력하신 이름이 일치하지 않아 탈퇴 처리가 취소되었습니다.');
+        return;
+      }
+
+      try {
+        // 1. 해당 회원이 기록한 모든 데이터 정리
+        await supabaseClient.from('applications_12').delete().eq('user_id', userId);
+        await supabaseClient.from('mock_scores').delete().eq('user_id', userId);
+        await supabaseClient.from('student_surveys').delete().eq('user_id', userId);
+        await supabaseClient.from('counsel_requests').delete().eq('user_id', userId);
+        await supabaseClient.from('admission_schedules').delete().eq('user_id', userId);
+
+        // 2. 회원 프로필 영구 삭제 (프로필이 지워지면 다시는 로그인할 수 없습니다)
+        const { error: profileErr } = await supabaseClient.from('profiles').delete().eq('id', userId);
+        if (profileErr) throw profileErr;
+
+        alert(`[${userName}] 회원이 안전하게 탈퇴 처리되었습니다.`);
+
+        // 3. 화면 목록 자동 갱신
+        loadUsersData();
+        loadTeacherStudentSelects();
+        loadHomeDashboardData();
+
+      } catch (err) {
+        console.error('회원 탈퇴 실패:', err);
+        alert('회원 탈퇴 처리 중 오류가 발생했습니다: ' + err.message);
+      }
+    }
+
+    
     function openEditUserModal(userId, currentRawId, name, classNum, role) {
       document.getElementById('modalUserId').value = userId;
       document.getElementById('modalUserRawId').value = currentRawId;
