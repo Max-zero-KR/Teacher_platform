@@ -1102,9 +1102,16 @@
       <section id="view-calendar" class="view-panel hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200">
           <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2" id="calendarHeaderTitle">
-              <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> 학사 & 상담 달력 (2026년 9월)
-            </h2>
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2" id="calendarHeaderTitle">
+                <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> 학사 & 상담 달력
+              </h2>
+              <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+                <button onclick="changeCalMonth(-1)" class="p-1 hover:bg-white rounded text-slate-600 hover:text-blue-600 transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                <span id="calendarCurrentMonthLabel" class="px-2 text-xs font-black text-blue-600 min-w-[70px] text-center">2026. 09</span>
+                <button onclick="changeCalMonth(1)" class="p-1 hover:bg-white rounded text-slate-600 hover:text-blue-600 transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+              </div>
+            </div>
             <div class="flex items-center gap-3 text-xs">
               <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-rose-500 rounded-full"></span> 시험/모평</span>
               <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span> 학생상담</span>
