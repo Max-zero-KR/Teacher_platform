@@ -2449,7 +2449,6 @@ updateSuneungDday();
       rounds.forEach(round => {
 const rScores = (scores || []).filter(s => s.exam_round === round);
 
-        // 1~9등급 범위의 정수만 유효 등급으로 인정하는 안전 함수
         const getValidGrade = (key) => {
           const val = rScores.find(s => s.subject_key === key)?.grade;
           if (val === null || val === undefined || val === '') return null;
@@ -2497,7 +2496,7 @@ function calcBestSums(tamGrade) {
           const sum4 = subjects.length >= 4 ? { val: subjects.reduce((acc, cur) => acc + cur.grade, 0), desc: subjects.map(s => `\({s.name}\){s.grade}`).join('+') } : null;
 
           return { sum2, sum3, sum4 };
-        }
+        }      
         
         const top1Sums = calcBestSums(tamTop1);
         const floorSums = calcBestSums(tamFloor);
