@@ -2733,7 +2733,7 @@ updateSuneungDday();
       }
     }
 
-    async function saveStudent12Cards() {
+async function saveStudent12Cards() {
       const records = [];
       for (let i = 1; i <= 6; i++) {
         records.push({
@@ -2793,7 +2793,7 @@ updateSuneungDday();
         alert('저장 도중 네트워크 오류가 발생했습니다. 화면을 새로고침하지 마시고 잠시 후 다시 시도해주세요!\n(원인: ' + err.message + ')');
       }
     }
-
+    
     async function submitCounselRequest(e) {
       e.preventDefault();
       const date = document.getElementById('counselDate').value;
