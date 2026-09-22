@@ -3884,17 +3884,19 @@ async function handleMultiPhotoUpload(e) {
 
   const uploadLabel = e.target.parentElement;
   const originHtml = uploadLabel.innerHTML;
-  uploadLabel.innerText = `업로드 중 (0/${files.length})...`;
+  uploadLabel.innerText = '업로드 중 (0/' + files.length + ')...';
 
   let successCount = 0;
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
 
     // 업로드 전 브라우저에서 FHD 규격으로 자동 압축 실행 (8~10MB -> 200~300KB)
-    uploadLabel.innerText = `압축 및 업로드 중 (\({i + 1}/\){files.length})...`;
+    uploadLabel.innerText = '압축 및 업로드 중 (' + (i + 1) + '/' + files.length + ')...';
     const uploadBlob = await compressImage(file, 1920, 1920, 0.8);
 
-    const safeFilePath = `\({activeFolderId}/\){Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
+    // 달러($) 기호 없이 + 연산자로 안전하게 경로 생성
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const safeFilePath = activeFolderId + '/' + Date.now() + '_' + randomStr + '.jpg';
 
     const { error: upErr } = await supabaseClient.storage
       .from('class-album')
@@ -3921,11 +3923,11 @@ async function handleMultiPhotoUpload(e) {
 
   uploadLabel.innerHTML = originHtml;
   e.target.value = '';
-  alert(`${successCount}장의 사진이 최적화 압축되어 안전하게 업로드되었습니다!`);
+  alert(successCount + '장의 사진이 최적화 압축되어 안전하게 업로드되었습니다!');
   loadAlbumPhotos();
   loadHomeDashboardData();
-}
-    
+}    
+
     function openPhotoLightbox(index) {
       currentLightboxIdx = index;
       updateLightboxContent();
