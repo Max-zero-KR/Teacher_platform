@@ -987,6 +987,7 @@
                   </select>
                 </div>
               </div>
+            </div>
 
             <div id="minCheckSusiCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               <p class="col-span-full text-center text-slate-400 py-8">작성된 수시 지원 카드가 없습니다. [입시지도 > 입시상담카드]에서 수시 원서와 최저기준을 먼저 입력해주세요.</p>
@@ -2802,8 +2803,6 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
             const targetSum = parseInt(match[2]);
 
             const bestSumObj = reqCount === 2 ? chosenSums?.sum2 : (reqCount === 3 ? chosenSums?.sum3 : chosenSums?.sum4);
-
-            const bestSumObj = reqCount === 2 ? roundData.top1Sums.sum2 : (reqCount === 3 ? roundData.top1Sums.sum3 : roundData.top1Sums.sum4);
 
             if (bestSumObj && bestSumObj.val !== null) {
               const diff = targetSum - bestSumObj.val;
