@@ -2882,10 +2882,10 @@ async function saveStudent12Cards() {
               const c = specList.find(x => x.slot_num === num) || {};
               return `
                 <div class="p-3 bg-slate-50 rounded-lg border text-xs">
-                  <div class="font-bold text-purple-600 mb-1">${num}지망: ${c.university || '<span class="text-slate-400">미입력</span>'}</div>
-                  <div class="text-slate-700">학과: ${c.department || '-'}</div>
-                  <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
-                  <div class="text-slate-400">비고: ${c.memo || '-'}</div>
+                  <div class="font-bold text-purple-600 mb-1">${num}지망: ${c.university ? escapeHtml(c.university) : '<span class="text-slate-400">미입력</span>'}</div>
+                  <div class="text-slate-700">학과: ${escapeHtml(c.department) || '-'}</div>
+                  <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                  <div class="text-slate-400">비고: ${escapeHtml(c.memo) || '-'}</div>
                 </div>
               `;
             }).join('')}
@@ -2901,16 +2901,16 @@ async function saveStudent12Cards() {
               const c = jeongsiList.find(x => x.slot_num === num) || {};
               return `
                 <div class="p-3 bg-amber-50/40 rounded-lg border border-amber-200 text-xs">
-                  <div class="font-bold text-amber-700 mb-1">${jeongsiNames[num]}: ${c.university || '<span class="text-slate-400 font-normal">미입력</span>'}</div>
-                  <div class="text-slate-700">학과: ${c.department || '-'}</div>
-                  <div class="text-slate-500">전형: ${c.admission_type || '-'}</div>
-                  <div class="text-slate-600">환산점수/비고: ${c.memo || '-'}</div>
+                  <div class="font-bold text-amber-700 mb-1">${jeongsiNames[num]}: ${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                  <div class="text-slate-700">학과: ${escapeHtml(c.department) || '-'}</div>
+                  <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                  <div class="text-slate-600">환산점수/비고: ${escapeHtml(c.memo) || '-'}</div>
                 </div>
               `;
             }).join('')}
           </div>
         </div>
-      `;
+        `;
     }
 
     const SUBJECT_ROWS = [
