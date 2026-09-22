@@ -2794,40 +2794,6 @@ updateSuneungDday();
       }
     }
 
-      // 정시 3장 (1: 가, 2: 나, 3: 다)
-      for (let i = 1; i <= 3; i++) {
-        const u = document.getElementById(`jeongsi_univ_${i}`);
-        const d = document.getElementById(`jeongsi_dept_${i}`);
-        const t = document.getElementById(`jeongsi_type_${i}`);
-        const m = document.getElementById(`jeongsi_memo_${i}`);
-        records.push({
-          user_id: currentUser.id,
-          student_no: currentProfile.student_no,
-          student_name: currentProfile.name,
-          slot_type: 'jeongsi',
-          slot_num: i,
-          university: u ? u.value.trim() : '',
-          department: d ? d.value.trim() : '',
-          admission_type: t ? t.value.trim() : '',
-          memo: m ? m.value.trim() : ''
-        });
-      }
-
-      try {
-        const { error: delErr } = await supabaseClient.from('applications_12').delete().eq('user_id', currentUser.id);
-        if (delErr) throw delErr;
-
-        const { error: insErr } = await supabaseClient.from('applications_12').insert(records);
-        if (insErr) throw insErr;
-
-        alert('입시상담카드(수시·특목·정시) 내용이 안전하게 저장되었습니다!');
-        loadHomeDashboardData();
-        renderMinimumCheckAnalysis();
-      } catch (err) {
-        alert('저장 도중 네트워크 오류가 발생했습니다. 화면을 새로고침하지 마시고 잠시 후 다시 시도해주세요!\n(원인: ' + err.message + ')');
-      }
-    }
-
     async function submitCounselRequest(e) {
       e.preventDefault();
       const date = document.getElementById('counselDate').value;
@@ -4101,7 +4067,6 @@ async function handleMultiPhotoUpload(e) {
       loadHomeDashboardData();
     }
 
-    async function renderCalendar() {
     let calViewDate = new Date(2026, 8, 1);
 
     function changeCalMonth(delta) {
