@@ -1905,7 +1905,7 @@ if (isTeacher) {
       }
 
       document.getElementById('albumHeaderTitle').innerHTML = `<i data-lucide="camera" class="w-5 h-5 text-blue-600"></i> ${activeClassNum === 'all' ? '3학년 전체' : activeClassNum + '반'} 학급 앨범`;
-      document.getElementById('calendarHeaderTitle').innerHTML = `<i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> ${activeClassNum === 'all' ? '3학년 학사' : activeClassNum + '반 학사'} & 상담 달력 (2026년 9월)`;
+   document.getElementById('calendarHeaderTitle').innerHTML = `<i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> ${activeClassNum === 'all' ? '3학년 학사' : activeClassNum + '반 학사'} & 상담 달력`;
     }
 
     function switchAdminViewClass(val) {
@@ -2226,10 +2226,16 @@ async function loadTeacherCounselRequests() {
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">내역을 불러오는 중...</td></tr>';
 
-  const { data: list, error } = await supabaseClient
-    .from('counsel_requests')
-    .select('*')
-    .order('created_at', { ascending: false });
+     let counselQuery = supabaseClient
+       .from('counsel_requests')
+       .select('*')
+       .order('created_at', { ascending: false });
+
+     // 담임선생님은 자기 반 학생 상담만 보이도록 안전 필터 적용
+     if (activeClassNum !== 'all') {
+       counselQuery = counselQuery.eq('class_num', activeClassNum);
+     }
+     const { data: list, error } = await counselQuery;
 
   if (error || !list || list.length === 0) {
     currentCounselList = [];
@@ -3186,12 +3192,15 @@ async function saveStudent12Cards() {
 
       if (records.length === 0) return alert('입력된 점수가 없습니다.');
 
-const { error: mockErr } = await supabaseClient
-  .from('mock_scores')
-  .upsert(records, { onConflict: 'user_id,exam_round,subject_key' });
+   const { error: mockErr } = await supabaseClient
+     .from('mock_scores')
+     .upsert(records, { onConflict: 'user_id,exam_round,subject_key' });
 
-if (mockErr) throw mockErr;
-      alert(`${round} 모의고사 성적이 성공적으로 저장되었습니다!`);
+   if (mockErr) {
+     alert('모의고사 성적 저장 실패: ' + mockErr.message);
+     return;
+   }
+   alert(`${round} 모의고사 성적이 성공적으로 저장되었습니다!`);
       renderMockChart(currentUser.id, 'studentMockChart');
       renderMinimumCheckAnalysis();
     }
@@ -4294,7 +4303,8 @@ async function deleteCalendarEvent(id) {
   loadHomeDashboardData();
 }
 
-    let calViewDate = new Date(2026, 8, 1);
+   let calViewDate = new Date();
+   calViewDate.setDate(1);
 
     function changeCalMonth(delta) {
       calViewDate.setMonth(calViewDate.getMonth() + delta);
