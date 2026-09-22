@@ -2973,8 +2973,11 @@ async function saveStudent12Cards() {
 
       if (records.length === 0) return alert('입력된 점수가 없습니다.');
 
-      await supabaseClient.from('mock_scores').delete().eq('user_id', currentUser.id).eq('exam_round', round);
-      await supabaseClient.from('mock_scores').insert(records);
+const { error: mockErr } = await supabaseClient
+  .from('mock_scores')
+  .upsert(records, { onConflict: 'user_id,exam_round,subject_key' });
+
+if (mockErr) throw mockErr;
       alert(`${round} 모의고사 성적이 성공적으로 저장되었습니다!`);
       renderMockChart(currentUser.id, 'studentMockChart');
       renderMinimumCheckAnalysis();
