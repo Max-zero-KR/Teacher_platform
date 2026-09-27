@@ -4398,8 +4398,6 @@ tabContainer.innerHTML = folders.map(f => `
         return;
       }
 
-      let list = [...currentAlbumPhotos];
-
 // ★ 앨범 사진 정렬 (화면 표시와 확대 팝업 순서 100% 일치)
       if (activeAlbumSort === 'newest') {
         currentAlbumPhotos.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
