@@ -4400,17 +4400,17 @@ tabContainer.innerHTML = folders.map(f => `
 
       let list = [...currentAlbumPhotos];
 
-      // ★ 앨범 사진 정렬
+// ★ 앨범 사진 정렬 (화면 표시와 확대 팝업 순서 100% 일치)
       if (activeAlbumSort === 'newest') {
-        list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        currentAlbumPhotos.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       } else if (activeAlbumSort === 'oldest') {
-        list.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+        currentAlbumPhotos.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
       } else if (activeAlbumSort === 'name') {
-        list.sort((a, b) => (a.caption || '').localeCompare(b.caption || '', 'ko'));
+        currentAlbumPhotos.sort((a, b) => (a.caption || '').localeCompare(b.caption || '', 'ko'));
       }
 
-      grid.innerHTML = list.map((p, idx) => `
-        <div class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition">
+      grid.innerHTML = currentAlbumPhotos.map((p, idx) => `
+      <div class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition">
           <img src="${p.photo_url}" onclick="openPhotoLightbox(${idx})" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300 cursor-pointer">
           ${isCurrentTeacher() ? `
             <button onclick="event.stopPropagation(); deleteAlbumPhoto('${p.id}', '${p.photo_url}')" title="사진 삭제" class="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-rose-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow">
