@@ -593,6 +593,7 @@
             </tbody>
           </table>
         </div>
+      </div>
       </section>
 
       <!-- ======================================================= -->
@@ -2103,6 +2104,8 @@ if (isTeacher) {
         loadExamSchedules();
       } else if (viewId === 'minimumCheck') {
         renderMinimumCheckAnalysis();
+      } else if (viewId === 'studyMaterials') {
+        loadStudyMaterials();
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
