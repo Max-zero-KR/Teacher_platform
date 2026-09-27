@@ -238,6 +238,10 @@
                 <button onclick="changeViewWithStudyFilter('studyMaterials', 'inquiry')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
                   <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 탐구영역
                 </button>
+                              <button onclick="changeViewWithStudyFilter('studyMaterials', 'etc')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-slate-500"></span> 기타 자료
+                </button>
+
               </div>
             </div>
           </div>
@@ -1271,6 +1275,10 @@
               <button onclick="filterStudyMaterials('inquiry')" id="studyFilter_inquiry" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 탐구영역
               </button>
+                            <button onclick="filterStudyMaterials('etc')" id="studyFilter_etc" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-slate-500"></span> 기타
+              </button>
+
             </div>
 
             <!-- 실시간 검색창 -->
@@ -1435,6 +1443,7 @@
             <option value="math">📐 수학 (공통수학, 미적, 확통, 기하)</option>
             <option value="english">🔤 영어 (독해, 구문, 수능특강)</option>
             <option value="inquiry">🔬 탐구영역 (사회탐구 / 과학탐구)</option>
+                        <option value="etc">📁 기타 (학습법, 플래너, 비교과 등)</option>
           </select>
         </div>
 
@@ -3764,7 +3773,7 @@ async function saveStudent12Cards() {
 
     function filterStudyMaterials(cat) {
       activeStudyFilter = cat;
-      ['all', 'korean', 'math', 'english', 'inquiry'].forEach(c => {
+   ['all', 'korean', 'math', 'english', 'inquiry', 'etc'].forEach(c => {
         const btn = document.getElementById(`studyFilter_${c}`);
         if (btn) {
           if (c === cat) {
@@ -3868,6 +3877,8 @@ async function saveStudent12Cards() {
         case 'math': return '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-bold text-[10px]">📐 수학</span>';
         case 'english': return '<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-bold text-[10px]">🔤 영어</span>';
         case 'inquiry': return '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[10px]">🔬 탐구영역</span>';
+                  case 'etc': return '<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">📁 기타</span>';
+
         default: return '<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px]">학습자료</span>';
       }
     }
