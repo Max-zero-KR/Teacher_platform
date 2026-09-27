@@ -3287,6 +3287,8 @@ const studentId = directStudentId || document.getElementById('teacherStudentSele
       const jeongsiNames = { 1: '정시 (가)', 2: '정시 (나)', 3: '정시 (다)' };
 
       container.innerHTML = `
+        <div class="bg-white p-5 rounded-xl border border-slate-200">
+          <h3 class="font-bold text-blue-700 text-sm mb-3">일반 수시 6장 지망 현황</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             ${[1,2,3,4,5,6].map(num => {
               const c = susiList.find(x => x.slot_num === num) || {};
