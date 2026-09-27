@@ -909,17 +909,19 @@
             </div>
             
             <div class="flex items-center gap-2">
-              <div id="scheduleStudentSelectWrapper" class="hidden items-center gap-1.5">
-                <label class="text-xs font-bold text-slate-600">조회 학생:</label>
-                <select id="scheduleStudentSelect" onchange="loadExamSchedules()" class="px-3 py-1.5 border rounded-lg text-xs font-bold text-blue-600 bg-slate-50 outline-none">
-                  <option value="all">🌐 학급 전체 모아보기</option>
-                </select>
-              </div>
+              <!-- 내부 호환용 숨김 select -->
+              <select id="scheduleStudentSelect" onchange="loadExamSchedules()" class="hidden">
+                <option value="all">all</option>
+              </select>
               <button onclick="openExamScheduleModal()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
                 <i data-lucide="plus" class="w-4 h-4"></i> 새 입시 일정 등록
               </button>
             </div>
           </div>
+
+          <!-- [신규] 교사용 학급 폴더 및 학생 명찰 선택기 (교사 로그인 시에만 노출) -->
+          <div id="teacherSchedulePickerWrapper" class="hidden border-b pb-3">
+            <div id="pickerContainer_schedules" class="space-y-3"></div>
 
           <div class="flex flex-wrap gap-2 text-xs border-b pb-3">
             <button onclick="filterExamSchedules('all')" id="schedFilter_all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition">전체 보기</button>
@@ -959,12 +961,13 @@
               <p class="text-xs text-slate-500 mt-0.5">회차별 모의고사 성적을 바탕으로 2합, 3합, 4합 합산 및 탐구 반영 방식(상위 1과목, 2과목 버림, 2과목 반올림)을 정밀 계산합니다.</p>
             </div>
 
-            <div id="minCheckStudentSelectWrapper" class="hidden items-center gap-2">
-              <label class="text-xs font-bold text-slate-600">학생 선택:</label>
-              <select id="minCheckStudentSelect" onchange="renderMinimumCheckAnalysis()" class="px-3 py-1.5 border rounded-lg text-sm bg-slate-50 font-bold text-blue-600 outline-none">
-                <option value="">학생을 선택하세요</option>
-              </select>
-            </div>
+            <!-- 내부 호환용 숨김 select -->
+            <select id="minCheckStudentSelect" onchange="renderMinimumCheckAnalysis()" class="hidden"></select>
+          </div>
+
+          <!-- [신규] 교사용 학급 폴더 및 학생 명찰 선택기 (교사 로그인 시에만 노출) -->
+          <div id="teacherMinCheckPickerWrapper" class="hidden border-b pb-3">
+            <div id="pickerContainer_minCheck" class="space-y-3"></div>
           </div>
 
           <div class="bg-amber-50 border-2 border-amber-300 p-4 rounded-xl text-xs text-amber-900 space-y-2 leading-relaxed">
@@ -2028,10 +2031,8 @@ if (isTeacher) {
   document.getElementById('postNoticeBtn').classList.remove('hidden');
   document.getElementById('teacherHomeSummary').classList.remove('hidden');
   document.getElementById('studentHomeSummary').classList.add('hidden');
-  document.getElementById('scheduleStudentSelectWrapper').classList.remove('hidden');
-  document.getElementById('scheduleStudentSelectWrapper').classList.add('flex');
-  document.getElementById('minCheckStudentSelectWrapper').classList.remove('hidden');
-  document.getElementById('minCheckStudentSelectWrapper').classList.add('flex');
+  document.getElementById('teacherSchedulePickerWrapper')?.classList.remove('hidden');
+  document.getElementById('teacherMinCheckPickerWrapper')?.classList.remove('hidden');
 
   // [교사 전용 등록 버튼 활성화]
   document.getElementById('addCalendarEventBtn')?.classList.remove('hidden');
@@ -2049,8 +2050,8 @@ if (isTeacher) {
   document.getElementById('postNoticeBtn').classList.add('hidden');
   document.getElementById('teacherHomeSummary').classList.add('hidden');
   document.getElementById('studentHomeSummary').classList.remove('hidden');
-  document.getElementById('scheduleStudentSelectWrapper').classList.add('hidden');
-  document.getElementById('minCheckStudentSelectWrapper').classList.add('hidden');
+  document.getElementById('teacherSchedulePickerWrapper')?.classList.add('hidden');
+  document.getElementById('teacherMinCheckPickerWrapper')?.classList.add('hidden');
 
   // [학생 화면에서 등록 버튼 비활성화/숨김]
   document.getElementById('addCalendarEventBtn')?.classList.add('hidden');
@@ -4096,15 +4097,15 @@ const studentId = directStudentId || document.getElementById('mockStudentSelect'
       lucide.createIcons();
     }
 
-        // =================================================================
-    // 💡 [신규] 학급 폴더형 학생 선택 컴포넌트 시스템
+    // =================================================================
+    // 💡 [신규] 학급 폴더형 학생 선택 컴포넌트 시스템 (5개 화면 확장 완료)
     // =================================================================
     let allGrade3Students = []; // 전체 3학년 학생 목록 캐시
-    let pickerCurrentClass = { survey: 2, counsel: 2, mock: 2 };
-    let pickerSelectedStudentId = { survey: null, counsel: null, mock: null };
+    let pickerCurrentClass = { survey: 2, counsel: 2, mock: 2, schedules: 2, minCheck: 2 };
+    let pickerSelectedStudentId = { survey: null, counsel: null, mock: null, schedules: 'all', minCheck: null };
 
     // 학급 폴더 렌더링 및 학생 아이콘 출력 함수
-    function renderFolderStudentPicker(pickerType, callbackFn) {
+    function renderFolderStudentPicker(pickerType) {
       const container = document.getElementById(`pickerContainer_${pickerType}`);
       if (!container) return;
 
@@ -4151,8 +4152,38 @@ const studentId = directStudentId || document.getElementById('mockStudentSelect'
       // 3. 해당 학급 학생 명단 필터링
       const classStudents = allGrade3Students.filter(s => (s.class_num || 2) === targetClass);
 
+      // 입시일정 전용: 맨 앞에 '전체 일정 모아보기' 명찰 카드 추가
+      let allScheduleCardHtml = '';
+      if (pickerType === 'schedules') {
+        const isAllSelected = (pickerSelectedStudentId['schedules'] === 'all' || !pickerSelectedStudentId['schedules']);
+        allScheduleCardHtml = `
+          <button type="button" onclick="selectPickerStudent('schedules', 'all')"
+            class="p-2.5 rounded-xl border text-left transition flex items-center gap-2.5 group ${
+              isAllSelected
+                ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-400/40 shadow-sm'
+                : 'bg-white border-slate-200 hover:border-amber-400 hover:shadow-xs'
+            }">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shrink-0 transition ${
+              isAllSelected
+                ? 'bg-amber-500 text-white'
+                : 'bg-amber-100 text-amber-700 group-hover:bg-amber-200'
+            }">
+              🌐
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-bold text-xs truncate ${isAllSelected ? 'text-amber-900 font-black' : 'text-slate-800'}">
+                전체 일정
+              </div>
+              <div class="text-[10px] text-amber-600 font-semibold leading-none mt-0.5 truncate">
+                학급 전체 모아보기
+              </div>
+            </div>
+          </button>
+        `;
+      }
+
       let studentsHtml = '';
-      if (classStudents.length === 0) {
+      if (classStudents.length === 0 && pickerType !== 'schedules') {
         studentsHtml = `
           <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
             3학년 ${targetClass}반에 등록 및 승인된 학생이 없습니다.
@@ -4161,6 +4192,7 @@ const studentId = directStudentId || document.getElementById('mockStudentSelect'
       } else {
         studentsHtml = `
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            ${allScheduleCardHtml}
             ${classStudents.map(s => {
               const isSelected = (pickerSelectedStudentId[pickerType] === s.id);
               const numOnly = s.student_no ? s.student_no.slice(-2) : '•';
@@ -4202,7 +4234,7 @@ const studentId = directStudentId || document.getElementById('mockStudentSelect'
                 <i data-lucide="users" class="w-3.5 h-3.5 text-blue-600"></i>
                 <span>3학년 ${targetClass}반 학생 명찰 (${classStudents.length}명)</span>
               </span>
-              <span class="text-[10px] text-slate-400">※ 학생 아이콘을 누르면 세부 내용이 로드됩니다.</span>
+              <span class="text-[10px] text-slate-400">※ 학생 아이콘을 누르면 데이터가 실시간 로드됩니다.</span>
             </div>
             ${studentsHtml}
           </div>
@@ -4215,7 +4247,14 @@ const studentId = directStudentId || document.getElementById('mockStudentSelect'
     // 학급 폴더 클릭 시
     function selectPickerClass(pickerType, classNum) {
       pickerCurrentClass[pickerType] = classNum;
-      pickerSelectedStudentId[pickerType] = null; // 반 변경 시 선택 초기화
+      if (pickerType === 'schedules') {
+        pickerSelectedStudentId['schedules'] = 'all';
+        const scSelect = document.getElementById('scheduleStudentSelect');
+        if (scSelect) scSelect.value = 'all';
+        loadExamSchedules();
+      } else {
+        pickerSelectedStudentId[pickerType] = null; // 반 변경 시 선택 초기화
+      }
       renderAllFolderPickers();
     }
 
@@ -4237,14 +4276,24 @@ const studentId = directStudentId || document.getElementById('mockStudentSelect'
         const mSelect = document.getElementById('mockStudentSelect');
         if (mSelect) mSelect.value = studentId;
         loadStudentMockForTeacher(studentId);
+      } else if (pickerType === 'schedules') {
+        const scSelect = document.getElementById('scheduleStudentSelect');
+        if (scSelect) scSelect.value = studentId;
+        loadExamSchedules();
+      } else if (pickerType === 'minCheck') {
+        const mcSelect = document.getElementById('minCheckStudentSelect');
+        if (mcSelect) mcSelect.value = studentId;
+        renderMinimumCheckAnalysis();
       }
     }
 
-    // 3개 선택기 일괄 갱신
+    // 5개 선택기 일괄 갱신
     function renderAllFolderPickers() {
       renderFolderStudentPicker('survey');
       renderFolderStudentPicker('counsel');
       renderFolderStudentPicker('mock');
+      renderFolderStudentPicker('schedules');
+      renderFolderStudentPicker('minCheck');
     }
 
     
