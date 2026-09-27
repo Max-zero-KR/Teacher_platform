@@ -3093,11 +3093,20 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
       // 1) 수시 6장
       sGrid.innerHTML = [1,2,3,4,5,6].map(i => `
         <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-xs space-y-2">
-          <div class="font-bold text-blue-600">수시 지원 ${i}지망</div>
+          <div class="font-bold text-blue-600 flex items-center justify-between">
+            <span>수시 지원 ${i}지망</span>
+          </div>
           <input type="text" id="susi_univ_${i}" placeholder="대학교 (예: 고려대)" class="w-full px-2 py-1.5 border rounded">
           <input type="text" id="susi_dept_${i}" placeholder="모집단위 (예: 국어교육과)" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="susi_type_${i}" placeholder="전형 (예: 학종 일반)" class="w-full px-2 py-1.5 border rounded">
+          <input type="text" id="susi_type_${i}" placeholder="전형 (예: 학생부교과(학교장추천))" class="w-full px-2 py-1.5 border rounded">
           <input type="text" id="susi_min_${i}" placeholder="수능최저 (예: 3합 7)" class="w-full px-2 py-1.5 border rounded font-semibold text-emerald-700 bg-emerald-50/30">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">학교장 추천서 필요 여부</label>
+            <select id="susi_rec_${i}" class="w-full px-2 py-1.5 border rounded-lg bg-slate-50 font-bold text-slate-700 outline-none">
+              <option value="X">추천서 불필요 (X)</option>
+              <option value="O">추천서 필요 (O - 고교별 추천인원 제한 전형)</option>
+            </select>
+          </div>
         </div>
       `).join('');
 
@@ -3143,10 +3152,12 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
             const d = document.getElementById(`susi_dept_${c.slot_num}`);
             const t = document.getElementById(`susi_type_${c.slot_num}`);
             const m = document.getElementById(`susi_min_${c.slot_num}`);
+            const r = document.getElementById(`susi_rec_${c.slot_num}`);
             if (u) u.value = c.university || '';
             if (d) d.value = c.department || '';
             if (t) t.value = c.admission_type || '';
             if (m) m.value = c.min_criteria || '';
+            if (r) r.value = c.recommendation || 'X';
           } else if (c.slot_type === 'special') {
             const u = document.getElementById(`spec_univ_${c.slot_num}`);
             const d = document.getElementById(`spec_dept_${c.slot_num}`);
@@ -3184,7 +3195,8 @@ async function saveStudent12Cards() {
           university: document.getElementById('susi_univ_' + i).value.trim(),
           department: document.getElementById('susi_dept_' + i).value.trim(),
           admission_type: document.getElementById('susi_type_' + i).value.trim(),
-          min_criteria: document.getElementById('susi_min_' + i).value.trim()
+          min_criteria: document.getElementById('susi_min_' + i).value.trim(),
+          recommendation: document.getElementById('susi_rec_' + i)?.value || 'X'
         });
 
         records.push({
@@ -3275,17 +3287,27 @@ const studentId = directStudentId || document.getElementById('teacherStudentSele
       const jeongsiNames = { 1: '정시 (가)', 2: '정시 (나)', 3: '정시 (다)' };
 
       container.innerHTML = `
-        <div class="bg-white p-5 rounded-xl border border-slate-200">
-          <h3 class="font-bold text-blue-700 text-sm mb-3">일반 수시 6장 지망 현황</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             ${[1,2,3,4,5,6].map(num => {
               const c = susiList.find(x => x.slot_num === num) || {};
+              const isRecRequired = (c.recommendation === 'O');
               return `
-                <div class="p-3 bg-slate-50 rounded-lg border text-xs">
-  <div class="font-bold text-blue-600 mb-1">${num}지망: ${c.university ? escapeHtml(c.university) : '<span class="text-slate-400">미입력</span>'}</div>
-  <div class="text-slate-700">학과: ${escapeHtml(c.department) || '-'}</div>
-  <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
-  <div class="text-emerald-700 font-semibold">최저: ${escapeHtml(c.min_criteria) || '-'}</div>
+                <div class="p-3 rounded-lg border text-xs flex flex-col justify-between space-y-2 transition ${isRecRequired ? 'bg-rose-50/50 border-rose-200' : 'bg-slate-50 border-slate-200'}">
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="font-bold text-blue-600">${num}지망</span>
+                      ${isRecRequired 
+                        ? '<span class="px-2 py-0.5 bg-rose-600 text-white rounded font-black text-[10px] shadow-xs">추천서 O</span>' 
+                        : '<span class="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">추천서 X</span>'}
+                    </div>
+                    <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                    <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
+                    <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                    <div class="text-emerald-700 font-semibold mt-1">최저: ${escapeHtml(c.min_criteria) || '-'}</div>
+                  </div>
+                  <div class="pt-2 border-t text-[11px] font-bold ${isRecRequired ? 'text-rose-700' : 'text-slate-500'}">
+                    학교장 추천: ${isRecRequired ? '⚠️ 추천 인원 배정 필수' : '해당 없음'}
+                  </div>
                 </div>
               `;
             }).join('')}
