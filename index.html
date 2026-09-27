@@ -821,13 +821,13 @@
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold text-slate-600">시험 회차:</span>
               <select id="mockRoundSelect" onchange="loadStudentMockScoresForRound()" class="px-3 py-1.5 border rounded-lg text-sm font-bold text-blue-600 bg-slate-50">
-                <option value="3월학평">2026 고3 3월 학평</option>
-                <option value="5월학평">2026 고3 5월 학평</option>
-                <option value="6월모평">2026 평가원 6월 모평</option>
-                <option value="7월학평">2026 고3 7월 학평</option>
-                <option value="9월모평" selected>2026 평가원 9월 모평</option>
-                <option value="10월학평">2026 고3 10월 학평</option>
-                <option value="수능">2026 대입 수능</option>
+                <option value="3월학평">고3 3월 전국연합학평</option>
+                <option value="5월학평">고3 5월 전국연합학평</option>
+                <option value="6월모평">평가원 6월 모의평가</option>
+                <option value="7월학평">고3 7월 전국연합학평</option>
+                <option value="9월모평" selected>평가원 9월 모의평가</option>
+                <option value="10월학평">고3 10월 전국연합학평</option>
+                <option value="수능">대학수학능력시험(수능)</option>
               </select>
             </div>
           </div>
@@ -1031,11 +1031,11 @@
                 <div class="flex items-center gap-1.5">
                   <label class="font-bold text-slate-600">판정 모평:</label>
                   <select id="minCheckSimRoundSelect" onchange="renderMinimumCheckAnalysis()" class="px-2.5 py-1 border rounded-lg font-bold text-blue-600 bg-white outline-none">
-                    <option value="9월모평" selected>2026 9월 모평</option>
-                    <option value="6월모평">2026 6월 모평</option>
-                    <option value="7월학평">2026 7월 학평</option>
-                    <option value="5월학평">2026 5월 학평</option>
-                    <option value="3월학평">2026 3월 학평</option>
+                    <option value="9월모평" selected>9월 모의평가</option>
+                    <option value="6월모평">6월 모의평가</option>
+                    <option value="7월학평">7월 학력평가</option>
+                    <option value="5월학평">5월 학력평가</option>
+                    <option value="3월학평">3월 학력평가</option>
                   </select>
                 </div>
                 <div class="flex items-center gap-1.5">
@@ -2157,10 +2157,33 @@ if (isTeacher) {
     }
 
     // 수능 D-Day 자동 계산 (2027 수능일: 2026-11-19)
+function getSuneungDate(year) {
+  // 11월 1일의 요일을 구해서 셋째 주 목요일 계산
+  const novFirst = new Date(year, 10, 1);
+  const dayOfWeek = novFirst.getDay(); // 0(일) ~ 4(목) ~ 6(토)
+  const firstThursday = 1 + ((4 - dayOfWeek + 7) % 7);
+  const thirdThursday = firstThursday + 14;
+  return new Date(year, 10, thirdThursday, 0, 0, 0);
+}
+
 function updateSuneungDday() {
-  const suneungDate = new Date('2026-11-19T00:00:00');
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  
+  let targetYear = today.getFullYear();
+  let suneungDate = getSuneungDate(targetYear);
+
+  // 올해 수능이 이미 지났다면 자동으로 내년 수능일을 타겟으로 설정
+  if (today > suneungDate) {
+    targetYear += 1;
+    suneungDate = getSuneungDate(targetYear);
+  }
+
+  // 상단 라벨 문구도 대입 학년도에 맞춰 자동 갱신 (예: 2026년 치르는 시험 = 2027 수능)
+  const ddayLabel = document.querySelector('#homeDdayCount')?.previousElementSibling;
+  if (ddayLabel) {
+    ddayLabel.innerText = `${targetYear + 1} 수능 D-Day`;
+  }
 
   const diffDays = Math.ceil((suneungDate - today) / (1000 * 60 * 60 * 24));
   const ddayEl = document.getElementById('homeDdayCount');
@@ -2631,17 +2654,18 @@ async function rejectCounselRequest(requestId) {
     // =================================================================
     // 💡 [입시지도: 입시일정정리] 면접 · 논술 · 실기 로직
     // =================================================================
-    function openExamScheduleModal() {
-      document.getElementById('schedUnivInput').value = '';
-      document.getElementById('schedDeptInput').value = '';
-      document.getElementById('schedTypeDetailInput').value = '';
-      document.getElementById('schedDateInput').value = '2026-11-21';
-      document.getElementById('schedTimeInput').value = '';
-      document.getElementById('schedLocationInput').value = '';
-      document.getElementById('schedMemoInput').value = '';
-      document.getElementById('examScheduleModal').classList.remove('hidden');
-      lucide.createIcons();
-    }
+function openExamScheduleModal() {
+  const todayStr = new Date().toISOString().split('T')[0]; // 오늘 날짜(YYYY-MM-DD)
+  document.getElementById('schedUnivInput').value = '';
+  document.getElementById('schedDeptInput').value = '';
+  document.getElementById('schedTypeDetailInput').value = '';
+  document.getElementById('schedDateInput').value = todayStr;
+  document.getElementById('schedTimeInput').value = '';
+  document.getElementById('schedLocationInput').value = '';
+  document.getElementById('schedMemoInput').value = '';
+  document.getElementById('examScheduleModal').classList.remove('hidden');
+  lucide.createIcons();
+}
 
     function closeExamScheduleModal() {
       document.getElementById('examScheduleModal').classList.add('hidden');
@@ -5056,14 +5080,14 @@ function openPhotoLightbox(index) {
     // =================================================================
     // 💡 학사 & 상담 달력 로직
     // =================================================================
-    function openNewEventModal() {
-      const defaultDate = '2026-09-01';
-      document.getElementById('eventTitleInput').value = '';
-      document.getElementById('eventStartDateInput').value = defaultDate;
-      document.getElementById('eventEndDateInput').value = defaultDate;
-      document.getElementById('newEventModal').classList.remove('hidden');
-      lucide.createIcons();
-    }
+function openNewEventModal() {
+  const todayStr = new Date().toISOString().split('T')[0]; // 오늘 날짜(YYYY-MM-DD)
+  document.getElementById('eventTitleInput').value = '';
+  document.getElementById('eventStartDateInput').value = todayStr;
+  document.getElementById('eventEndDateInput').value = todayStr;
+  document.getElementById('newEventModal').classList.remove('hidden');
+  lucide.createIcons();
+}
     function closeNewEventModal() {
       document.getElementById('newEventModal').classList.add('hidden');
     }
