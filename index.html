@@ -3153,9 +3153,9 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
               </select>
             </div>
           </div>
-        `).join('');
-      }
-
+`).join('');
+  }
+}
     async function loadStudentExisting12Cards() {
       const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', currentUser.id);
       if (cards) {
