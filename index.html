@@ -922,6 +922,7 @@
           <!-- [신규] 교사용 학급 폴더 및 학생 명찰 선택기 (교사 로그인 시에만 노출) -->
           <div id="teacherSchedulePickerWrapper" class="hidden border-b pb-3">
             <div id="pickerContainer_schedules" class="space-y-3"></div>
+          </div>
 
           <div class="flex flex-wrap gap-2 text-xs border-b pb-3">
             <button onclick="filterExamSchedules('all')" id="schedFilter_all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition">전체 보기</button>
@@ -2030,7 +2031,7 @@ if (isTeacher) {
   document.getElementById('teacherApprovalMenuWrapper').classList.remove('hidden');
   document.getElementById('postNoticeBtn').classList.remove('hidden');
   document.getElementById('teacherHomeSummary').classList.remove('hidden');
-  document.getElementById('studentHomeSummary').classList.add('hidden');
+  document.getElementById('studentHomeSummary').classList.add('hidden');`teacherSchedulePickerWrapper`)를 열어놓고 닫는 뚜껑
   document.getElementById('teacherSchedulePickerWrapper')?.classList.remove('hidden');
   document.getElementById('teacherMinCheckPickerWrapper')?.classList.remove('hidden');
 
