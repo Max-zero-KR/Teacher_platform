@@ -1380,7 +1380,7 @@
               <p class="text-xs text-slate-500 mt-0.5">대학을 선택하여 샘플 생기부를 정성평가해보고 실제 입학사정관의 채점표 및 총평과 대조합니다.</p>
             </div>
             
-            <button onclick="openNewMockEvalModal()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+<button id="addMockEvalBtn" onclick="openNewMockEvalModal()" class="hidden px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
               <i data-lucide="plus" class="w-4 h-4"></i> 새 모의평가 자료 등록
             </button>
           </div>
@@ -1426,7 +1426,7 @@
               <p class="text-xs text-slate-500 mt-0.5">대학별 책임입학사정관과의 간담회에서 나온 질문과 공식 답변을 대학별로 열람하고 검색합니다.</p>
             </div>
             
-            <button onclick="openNewTeacherForumModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+<button id="addTeacherForumBtn" onclick="openNewTeacherForumModal()" class="hidden px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
               <i data-lucide="plus" class="w-4 h-4"></i> 새 간담회 Q&A 등록
             </button>
           </div>
@@ -1470,7 +1470,7 @@
               <p class="text-xs text-slate-500 mt-0.5">대학별 최신 입학설명회 변동사항을 요약하고 설명회 자료 PDF 및 녹화 영상을 바로 시청합니다.</p>
             </div>
             
-            <button onclick="openNewBriefingModal()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+<button id="addBriefingBtn" onclick="openNewBriefingModal()" class="hidden px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
               <i data-lucide="plus" class="w-4 h-4"></i> 새 입학설명회 자료 등록
             </button>
           </div>
@@ -2504,6 +2504,10 @@ if (isTeacher) {
   document.getElementById('addAlbumFolderBtn')?.classList.add('hidden');
   document.getElementById('addMaterialBtn')?.classList.add('hidden');
      document.getElementById('addStudyMaterialBtn')?.classList.add('hidden');
+            document.getElementById('addMockEvalBtn')?.classList.add('hidden');
+          document.getElementById('addTeacherForumBtn')?.classList.add('hidden');
+          document.getElementById('addBriefingBtn')?.classList.add('hidden');
+
 
   document.getElementById('albumUploadLabel')?.classList.add('hidden'); // ★ 추가
 
