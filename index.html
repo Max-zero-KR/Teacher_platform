@@ -2654,8 +2654,17 @@ async function rejectCounselRequest(requestId) {
     // =================================================================
     // 💡 [입시지도: 입시일정정리] 면접 · 논술 · 실기 로직
     // =================================================================
+// 한국 시간 기준 YYYY-MM-DD 생성 만능 도우미
+function getTodayString() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function openExamScheduleModal() {
-  const todayStr = new Date().toISOString().split('T')[0]; // 오늘 날짜(YYYY-MM-DD)
+  const todayStr = getTodayString(); // 아침 9시 이전에도 항상 정확한 오늘 날짜 반영!
   document.getElementById('schedUnivInput').value = '';
   document.getElementById('schedDeptInput').value = '';
   document.getElementById('schedTypeDetailInput').value = '';
@@ -2713,12 +2722,6 @@ async function loadExamSchedules() {
 
   renderExamScheduleCards();
 }
-
-// 기존 fallbackLoadLocalSchedules 함수는 삭제하거나 빈 함수로 두어도 됩니다.
-function fallbackLoadLocalSchedules() {
-  currentSchedules = [];
-}
-
 
 async function submitExamSchedule() {
   const type = document.getElementById('schedTypeInput').value;
@@ -4481,6 +4484,7 @@ pendingTbody.innerHTML = pendingList.map(u => `
         approvedQuery = approvedQuery.eq('class_num', activeClassNum);
       }
       const { data: approvedList } = await approvedQuery;
+      currentApprovedUserList = approvedList || []; // 안전 보관함에 저장
       const approvedTbody = document.getElementById('approvedUserTableBody');
 
       if (!approvedList || approvedList.length === 0) {
@@ -4500,14 +4504,14 @@ pendingTbody.innerHTML = pendingList.map(u => `
                 ${u.role === 'admin' ? '부장/관리자' : (u.role === 'student' ? '학생' : (u.role === 'teacher' ? '담임교사' : '학부모'))}
               </span>
             </td>
-<td class="p-3 font-bold text-slate-800">${escapeHtml(u.student_no || u.email)}</td>
-<td class="p-3 font-semibold text-slate-700">${escapeHtml(u.name)}</td>
+            <td class="p-3 font-bold text-slate-800">${escapeHtml(u.student_no || u.email)}</td>
+            <td class="p-3 font-semibold text-slate-700">${escapeHtml(u.name)}</td>
             <td class="p-3 text-right space-x-1">
-              <button onclick="openEditUserModal('${u.id}', '${u.student_no || u.email}', '${u.name}', ${u.class_num !== null && u.class_num !== undefined ? u.class_num : 2}, '${u.role || 'student'}')" class="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded text-xs font-bold transition inline-flex items-center gap-1">
+              <button onclick="openEditUserModal('${u.id}')" class="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded text-xs font-bold transition inline-flex items-center gap-1">
                 <i data-lucide="key" class="w-3 h-3"></i> 수정
               </button>
-              <button onclick="deleteUserByTeacher('${u.id}', '${escapeHtml(u.name)}', '${escapeHtml(u.student_no || u.email)}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded text-xs font-bold transition inline-flex items-center gap-1" title="회원 탈퇴 처리">
-                <i data-lucide="user-x" class="w-3 h-3"></i> 탈퇴
+              <button onclick="deleteUserByTeacher('${u.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded text-xs font-bold transition inline-flex items-center gap-1" title="회원 탈퇴 처리">
+                <i data-lucide="user-x" class="w-3.5 h-3.5"></i> 탈퇴
               </button>
             </td>
           </tr>
@@ -4530,12 +4534,18 @@ pendingTbody.innerHTML = pendingList.map(u => `
       }
     }
 
-        // [선생님 전용] 회원 강제 탈퇴 및 데이터 영구 정리 함수
-async function deleteUserByTeacher(userId, userName, userIdent) {
+let currentApprovedUserList = []; // 승인 회원 보관용 전역 변수
+
+// [선생님 전용] 회원 강제 탈퇴 및 데이터 영구 정리 함수 (보관함 ID 기반 안전 처리)
+async function deleteUserByTeacher(userId) {
   if (currentUser && currentUser.id === userId) {
     alert('현재 로그인 중인 선생님 본인 계정은 삭제할 수 없습니다.');
     return;
   }
+
+  const targetUser = currentApprovedUserList.find(u => u.id === userId);
+  const userName = targetUser ? targetUser.name : '해당 회원';
+  const userIdent = targetUser ? (targetUser.student_no || targetUser.email) : '';
 
   const confirmMsg = `[${userName}] (${userIdent}) 회원을 정말로 탈퇴 처리하시겠습니까?\n\n탈퇴 시 학생이 입력한 수시/정시 원서, 모의고사 성적 등 모든 데이터가 함께 영구 삭제됩니다.`;
   if (!confirm(confirmMsg)) return;
@@ -4547,7 +4557,6 @@ async function deleteUserByTeacher(userId, userName, userIdent) {
   }
 
   try {
-    // 위에서 생성한 전용 함수(admin_delete_user)를 호출해 깔끔하게 원클릭 삭제
     const { error } = await supabaseClient.rpc('admin_delete_user', { target_user_id: userId });
     if (error) throw error;
 
@@ -4561,17 +4570,20 @@ async function deleteUserByTeacher(userId, userName, userIdent) {
   }
 }
 
-    
-    function openEditUserModal(userId, currentRawId, name, classNum, role) {
-      document.getElementById('modalUserId').value = userId;
-      document.getElementById('modalUserRawId').value = currentRawId;
-      document.getElementById('modalUserClassNum').value = (classNum !== null && classNum !== undefined) ? classNum : 2;
-      document.getElementById('modalUserRole').value = role || 'student';
-      document.getElementById('modalUserPw').value = '';
-      document.getElementById('modalUserName').innerText = `[${name}] 계정 수정`;
-      document.getElementById('editUserModal').classList.remove('hidden');
-      lucide.createIcons();
-    }
+// 회원 수정 모달 열기 (보관함에서 깔끔하게 정보 추출)
+function openEditUserModal(userId) {
+  const u = currentApprovedUserList.find(item => item.id === userId);
+  if (!u) return alert('회원 정보를 찾을 수 없습니다.');
+
+  document.getElementById('modalUserId').value = u.id;
+  document.getElementById('modalUserRawId').value = u.student_no || u.email || '';
+  document.getElementById('modalUserClassNum').value = (u.class_num !== null && u.class_num !== undefined) ? u.class_num : 2;
+  document.getElementById('modalUserRole').value = u.role || 'student';
+  document.getElementById('modalUserPw').value = '';
+  document.getElementById('modalUserName').innerText = `[${u.name}] 계정 수정`;
+  document.getElementById('editUserModal').classList.remove('hidden');
+  lucide.createIcons();
+}
 
     function closeEditUserModal() {
       document.getElementById('editUserModal').classList.add('hidden');
@@ -4739,13 +4751,15 @@ async function deleteUserByTeacher(userId, userName, userIdent) {
         activeFolderId = folders[0].id;
       }
 
+currentFolderList = folders || []; // 폴더 보관함에 보관
+
 tabContainer.innerHTML = folders.map(f => `
   <div class="inline-flex items-center rounded-xl border transition ${f.id === activeFolderId ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}">
     <button onclick="selectAlbumFolder('${f.id}')" class="px-3.5 py-2 font-bold whitespace-nowrap flex items-center gap-1.5 text-xs">
       <i data-lucide="folder" class="w-3.5 h-3.5"></i> ${escapeHtml(f.name)}
     </button>
     ${isCurrentTeacher() ? `
-      <button onclick="deleteAlbumFolder('${f.id}', '${f.name}')" title="폴더 삭제" class="pr-2.5 pl-1 py-2 opacity-60 hover:opacity-100 hover:text-rose-300 transition">
+      <button onclick="deleteAlbumFolder('${f.id}')" title="폴더 삭제" class="pr-2.5 pl-1 py-2 opacity-60 hover:opacity-100 hover:text-rose-300 transition">
         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
       </button>
     ` : ''}
@@ -4828,8 +4842,12 @@ tabContainer.innerHTML = folders.map(f => `
       }
     }
 
-    async function deleteAlbumFolder(folderId, folderName) {
-      if (!confirm(`'${folderName}' 폴더와 폴더에 담긴 모든 사진을 완전히 삭제할까요?`)) return;
+let currentFolderList = []; // 전역 폴더 목록 보관함
+
+async function deleteAlbumFolder(folderId) {
+  const f = currentFolderList.find(x => x.id === folderId);
+  const folderName = f ? f.name : '해당';
+  if (!confirm(`'${folderName}' 폴더와 폴더에 담긴 모든 사진을 완전히 삭제할까요?`)) return;
 
       const { data: photos } = await supabaseClient.from('album_photos').select('*').eq('folder_id', folderId);
       if (photos && photos.length > 0) {
@@ -5081,7 +5099,7 @@ function openPhotoLightbox(index) {
     // 💡 학사 & 상담 달력 로직
     // =================================================================
 function openNewEventModal() {
-  const todayStr = new Date().toISOString().split('T')[0]; // 오늘 날짜(YYYY-MM-DD)
+  const todayStr = getTodayString(); // 아침 9시 이전에도 정확한 오늘 날짜 반영!
   document.getElementById('eventTitleInput').value = '';
   document.getElementById('eventStartDateInput').value = todayStr;
   document.getElementById('eventEndDateInput').value = todayStr;
