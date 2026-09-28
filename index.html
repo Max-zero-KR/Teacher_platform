@@ -1715,6 +1715,69 @@
     </div>
   </div>
 
+<!-- [모달: 입시카드 심층 분석 팝업 (선 그래프 & 판정)] -->
+<div id="cardDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-start border-b pb-3">
+      <div>
+        <div class="flex items-center gap-2">
+          <span id="modalCardSlotBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-700">수시 1지망</span>
+          <span id="modalCardDiagBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-slate-100 text-slate-700">-</span>
+        </div>
+        <h3 id="modalCardUnivTitle" class="font-black text-slate-800 text-lg mt-1">대학명 모집단위</h3>
+        <p id="modalCardTypeSub" class="text-xs text-slate-500">전형명 | 최저기준</p>
+      </div>
+      <button onclick="closeCardDetailModal()" class="text-slate-400 hover:text-slate-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- 모집인원 및 내신 비교 요약 카드 -->
+    <div class="grid grid-cols-2 gap-3 text-xs">
+      <div class="p-3 bg-blue-50/70 border border-blue-100 rounded-xl space-y-1">
+        <span class="text-slate-500 font-semibold block">모집인원 변동</span>
+        <div class="flex items-baseline gap-2">
+          <span id="modalCardRecruitSummary" class="text-sm font-black text-blue-700">작년 -명 → 올해 -명</span>
+          <span id="modalCardRecruitDiff" class="text-[11px] font-bold text-slate-500"></span>
+        </div>
+      </div>
+      <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-1">
+        <span class="text-slate-500 font-semibold block">학교별 산출 내신 vs 최근 합격선</span>
+        <div class="flex items-baseline gap-2">
+          <span id="modalCardScoreSummary" class="text-sm font-black text-indigo-700">내 점수: -등급</span>
+          <span id="modalCardCutoffDiff" class="text-[11px] font-bold text-slate-500"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 그래프 2개 영역 (경쟁률 추이 & 70%컷 추이) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+      <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+        <h4 class="font-bold text-xs text-slate-700 mb-2 flex items-center gap-1.5">
+          <i data-lucide="trending-up" class="w-4 h-4 text-blue-600"></i> 3개년 경쟁률 추이 (:1)
+        </h4>
+        <div class="h-44 w-full">
+          <canvas id="cardCompChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+        <h4 class="font-bold text-xs text-slate-700 mb-2 flex items-center gap-1.5">
+          <i data-lucide="line-chart" class="w-4 h-4 text-emerald-600"></i> 3개년 70% 합격컷 추이 (등급)
+        </h4>
+        <div class="h-44 w-full">
+          <canvas id="cardCutChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-2 border-t flex justify-end">
+      <button onclick="closeCardDetailModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">닫기</button>
+    </div>
+  </div>
+</div>
+
+  
   <!-- [학생 초기 비밀번호 변경 모달] -->
   <div id="firstLoginPwModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-blue-100">
@@ -1779,6 +1842,49 @@ function escapeHtml(str) {
     let currentSchedules = [];
     let activeScheduleFilter = 'all';
 
+// [5단계 진단 알고리즘] 격차 = 내 산출내신 - 70%합격선 (등급은 낮을수록 우수)
+function calculateAdmissionDiag(myScore, cutValue) {
+  if (!myScore || !cutValue || isNaN(myScore) || isNaN(cutValue)) {
+    return { text: '미진단', color: 'slate' };
+  }
+  const diff = parseFloat((parseFloat(myScore) - parseFloat(cutValue)).toFixed(2));
+
+  // 1) 우주상향: 합격선보다 0.5등급 초과 부족 (내 점수가 +0.5 초과로 큼)
+  if (diff > 0.5) {
+    return { text: '우주상향', color: 'purple', diff: `+${diff}등급` };
+  }
+  // 2) 상향: 0.2 초과 ~ 0.5 이하 부족
+  if (diff > 0.2) {
+    return { text: '상향', color: 'amber', diff: `+${diff}등급` };
+  }
+  // 3) 소신: -0.2 ~ +0.2 이내 (적정 접전)
+  if (diff >= -0.2) {
+    return { text: '소신', color: 'blue', diff: `${diff > 0 ? '+' : ''}${diff}등급` };
+  }
+  // 4) 안정: -0.5 ~ -0.2 초과 우수 (내 점수가 더 낮음)
+  if (diff >= -0.5) {
+    return { text: '안정', color: 'emerald', diff: `${diff}등급` };
+  }
+  // 5) 과도하향: 합격선보다 0.5등급 초과 우수 (수시납치 주의)
+  return { text: '과도하향', color: 'rose', diff: `${diff}등급` };
+}
+
+function getDiagBadgeHtml(diag) {
+  if (!diag || diag.text === '미진단') {
+    return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500">진단대기</span>';
+  }
+  const colorMap = {
+    purple: 'bg-purple-100 text-purple-700 border-purple-200',
+    amber: 'bg-amber-100 text-amber-700 border-amber-200',
+    blue: 'bg-blue-100 text-blue-700 border-blue-200',
+    emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    rose: 'bg-rose-100 text-rose-700 border-rose-200'
+  };
+  const cls = colorMap[diag.color] || 'bg-slate-100 text-slate-700 border-slate-200';
+  return `<span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${cls}">${diag.text}</span>`;
+}
+
+    
     function isCurrentTeacher() {
       return currentProfile && (currentProfile.role === 'teacher' || currentProfile.role === 'admin');
     }
@@ -3112,188 +3218,280 @@ const sum2 = subjects.length >= 2 ? { val: subjects[0].grade + subjects[1].grade
     // =================================================================
     // 💡 원서 15장 (수시 6 + 특목 6 + 정시 3) 및 모의고사, 기초조사서 기능들
     // =================================================================
-    function renderStudent12CardInputs() {
-      const sGrid = document.getElementById('studentSusiGrid');
-      const spGrid = document.getElementById('studentSpecialGrid');
-      const jGrid = document.getElementById('studentJeongsiGrid');
+function renderStudent12CardInputs() {
+  const sGrid = document.getElementById('studentSusiGrid');
+  const spGrid = document.getElementById('studentSpecialGrid');
+  const jGrid = document.getElementById('studentJeongsiGrid');
 
-      // 1) 수시 6장
-      sGrid.innerHTML = [1,2,3,4,5,6].map(i => `
-        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-xs space-y-2">
-          <div class="font-bold text-blue-600 flex items-center justify-between">
-            <span>수시 지원 ${i}지망</span>
-          </div>
-          <input type="text" id="susi_univ_${i}" placeholder="대학교 (예: 고려대)" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="susi_dept_${i}" placeholder="모집단위 (예: 국어교육과)" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="susi_type_${i}" placeholder="전형 (예: 학생부교과(학교장추천))" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="susi_min_${i}" placeholder="수능최저 (예: 3합 7)" class="w-full px-2 py-1.5 border rounded font-semibold text-emerald-700 bg-emerald-50/30">
+  // 수시 6장 (상세 분석 토글 포함)
+  sGrid.innerHTML = [1,2,3,4,5,6].map(i => `
+    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm text-xs space-y-2.5">
+      <div class="flex items-center justify-between">
+        <span class="font-bold text-blue-600">수시 지원 ${i}지망</span>
+        <span id="susi_diag_badge_${i}">
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-400">진단대기</span>
+        </span>
+      </div>
+      <input type="text" id="susi_univ_${i}" placeholder="대학교 (예: 고려대)" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="susi_dept_${i}" placeholder="모집단위 (예: 국어교육과)" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="susi_type_${i}" placeholder="전형 (예: 학생부교과(학교장추천))" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="susi_min_${i}" placeholder="수능최저 (예: 3합 7)" class="w-full px-2 py-1.5 border rounded font-semibold text-emerald-700 bg-emerald-50/30">
+      
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">학교장 추천서 필요 여부</label>
+        <select id="susi_rec_${i}" class="w-full px-2 py-1.5 border rounded-lg bg-slate-50 font-bold text-slate-700 outline-none">
+          <option value="X">추천서 불필요 (X)</option>
+          <option value="O">추천서 필요 (O - 고교별 추천인원 제한 전형)</option>
+        </select>
+      </div>
+
+      <!-- [상세 분석 토글 아코디언] -->
+      <div class="pt-1 border-t">
+        <button type="button" onclick="toggleCardDetailInputs('susi', ${i})" class="w-full py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1">
+          <i data-lucide="search" class="w-3.5 h-3.5"></i> 🔍 3개년 입결 및 산출내신 입력
+        </button>
+
+        <div id="susi_detail_box_${i}" class="hidden mt-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+          <!-- 3개년 경쟁률 -->
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">학교장 추천서 필요 여부</label>
-            <select id="susi_rec_${i}" class="w-full px-2 py-1.5 border rounded-lg bg-slate-50 font-bold text-slate-700 outline-none">
-              <option value="X">추천서 불필요 (X)</option>
-              <option value="O">추천서 필요 (O - 고교별 추천인원 제한 전형)</option>
-            </select>
-          </div>
-        </div>
-      `).join('');
-
-      // 2) 특목/전문대 6장
-      spGrid.innerHTML = [1,2,3,4,5,6].map(i => `
-        <div class="bg-white p-3 rounded-xl border border-purple-200 shadow-sm text-xs space-y-2">
-          <div class="font-bold text-purple-600">특목/전문대 ${i}지망</div>
-          <input type="text" id="spec_univ_${i}" placeholder="학교 (예: KAIST/육사)" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="spec_dept_${i}" placeholder="학과/계열" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="spec_type_${i}" placeholder="전형구분" class="w-full px-2 py-1.5 border rounded">
-          <input type="text" id="spec_memo_${i}" placeholder="비고/특이사항" class="w-full px-2 py-1.5 border rounded">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">학교장 추천서 필요 여부</label>
-            <select id="spec_rec_${i}" class="w-full px-2 py-1.5 border rounded-lg bg-slate-50 font-bold text-slate-700 outline-none">
-              <option value="X">추천서 불필요 (X)</option>
-              <option value="O">추천서 필요 (O - 고교별 추천 전형)</option>
-            </select>
-          </div>
-        </div>
-      `).join('');
-
-      // 3) 정시 3장 (가/나/다)
-      const jeongsiLabels = [
-        { num: 1, name: '정시 (가)' },
-        { num: 2, name: '정시 (나)' },
-        { num: 3, name: '정시 (다)' }
-      ];
-
-      if (jGrid) {
-        jGrid.innerHTML = jeongsiLabels.map(j => `
-          <div class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm text-xs space-y-2">
-            <div class="font-bold text-amber-600 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${j.name}
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">📊 3개년 경쟁률 (:1)</label>
+            <div class="grid grid-cols-3 gap-1">
+              <input type="number" step="0.01" id="susi_comp1_${i}" placeholder="2년전" class="p-1 border rounded bg-white text-center">
+              <input type="number" step="0.01" id="susi_comp2_${i}" placeholder="작년" class="p-1 border rounded bg-white text-center">
+              <input type="number" step="0.01" id="susi_comp3_${i}" placeholder="올해" class="p-1 border rounded bg-white text-center font-bold text-blue-600">
             </div>
-            <input type="text" id="jeongsi_univ_${j.num}" placeholder="대학교 (예: 연세대)" class="w-full px-2 py-1.5 border rounded">
-            <input type="text" id="jeongsi_dept_${j.num}" placeholder="모집단위 (예: 경영학과)" class="w-full px-2 py-1.5 border rounded">
-            <input type="text" id="jeongsi_type_${j.num}" placeholder="전형 (예: 수능 지균/일반)" class="w-full px-2 py-1.5 border rounded">
-            <input type="text" id="jeongsi_memo_${j.num}" placeholder="대학환산점수 / 비고 (예: 712.5점)" class="w-full px-2 py-1.5 border rounded bg-amber-50/30">
+          </div>
+
+          <!-- 3개년 70%컷 -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">🎯 3개년 70%컷 (등급)</label>
+            <div class="grid grid-cols-3 gap-1">
+              <input type="number" step="0.01" id="susi_cut1_${i}" oninput="updateLiveCardDiag('susi', ${i})" placeholder="2년전" class="p-1 border rounded bg-white text-center">
+              <input type="number" step="0.01" id="susi_cut2_${i}" oninput="updateLiveCardDiag('susi', ${i})" placeholder="작년" class="p-1 border rounded bg-white text-center">
+              <input type="number" step="0.01" id="susi_cut3_${i}" oninput="updateLiveCardDiag('susi', ${i})" placeholder="최근" class="p-1 border rounded bg-white text-center font-bold text-emerald-600">
+            </div>
+          </div>
+
+          <!-- 모집인원 & 산출내신 -->
+          <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1">학교장 추천서 필요 여부</label>
-              <select id="jeongsi_rec_${j.num}" class="w-full px-2 py-1.5 border rounded-lg bg-slate-50 font-bold text-slate-700 outline-none">
-                <option value="X">추천서 불필요 (X)</option>
-                <option value="O">추천서 필요 (O - 정시 지균 등)</option>
-              </select>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">작년/올해 모집인원</label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="susi_rec_last_${i}" placeholder="작년" class="w-1/2 p-1 border rounded bg-white text-center">
+                <input type="number" id="susi_rec_curr_${i}" placeholder="올해" class="w-1/2 p-1 border rounded bg-white text-center font-bold text-blue-700">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">학교별 산출 내신</label>
+              <input type="number" step="0.01" id="susi_myscore_${i}" oninput="updateLiveCardDiag('susi', ${i})" placeholder="예: 2.35" class="w-full p-1 border rounded bg-white text-center font-black text-indigo-600">
             </div>
           </div>
-`).join('');
-  }
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // 특목 6장 및 정시 3장은 기존 코드 유지
+  spGrid.innerHTML = [1,2,3,4,5,6].map(i => `
+    <div class="bg-white p-3 rounded-xl border border-purple-200 shadow-sm text-xs space-y-2">
+      <div class="font-bold text-purple-600">특목/전문대 ${i}지망</div>
+      <input type="text" id="spec_univ_${i}" placeholder="학교 (예: KAIST/육사)" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="spec_dept_${i}" placeholder="학과/계열" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="spec_type_${i}" placeholder="전형구분" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="spec_memo_${i}" placeholder="비고/특이사항" class="w-full px-2 py-1.5 border rounded">
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">학교장 추천서 필요 여부</label>
+        <select id="spec_rec_${i}" class="w-full px-2 py-1.5 border rounded-lg bg-slate-50 font-bold text-slate-700 outline-none">
+          <option value="X">추천서 불필요 (X)</option>
+          <option value="O">추천서 필요 (O - 고교별 추천 전형)</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
+
+  const jeongsiLabels = [{ num: 1, name: '정시 (가)' }, { num: 2, name: '정시 (나)' }, { num: 3, name: '정시 (다)' }];
+  jGrid.innerHTML = jeongsiLabels.map(j => `
+    <div class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm text-xs space-y-2">
+      <div class="font-bold text-amber-600 flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${j.name}
+      </div>
+      <input type="text" id="jeongsi_univ_${j.num}" placeholder="대학교 (예: 연세대)" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="jeongsi_dept_${j.num}" placeholder="모집단위 (예: 경영학과)" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="jeongsi_type_${j.num}" placeholder="전형 (예: 수능 지균/일반)" class="w-full px-2 py-1.5 border rounded">
+      <input type="text" id="jeongsi_memo_${j.num}" placeholder="대학환산점수 / 비고 (예: 712.5점)" class="w-full px-2 py-1.5 border rounded bg-amber-50/30">
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">학교장 추천서 필요 여부</label>
+        <select id="jeongsi_rec_${j.num}" class="w-full px-2 py-1.5 border rounded-lg bg-slate-50 font-bold text-slate-700 outline-none">
+          <option value="X">추천서 불필요 (X)</option>
+          <option value="O">추천서 필요 (O - 정시 지균 등)</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
+  lucide.createIcons();
+}
+
+function toggleCardDetailInputs(type, num) {
+  const box = document.getElementById(`${type}_detail_box_${num}`);
+  if (box) box.classList.toggle('hidden');
+}
+
+function updateLiveCardDiag(type, num) {
+  const cutVal = document.getElementById(`${type}_cut3_${num}`)?.value || document.getElementById(`${type}_cut2_${num}`)?.value;
+  const myScore = document.getElementById(`${type}_myscore_${num}`)?.value;
+  const badgeEl = document.getElementById(`${type}_diag_badge_${num}`);
+  if (!badgeEl) return;
+
+  const diag = calculateAdmissionDiag(myScore, cutVal);
+  badgeEl.innerHTML = getDiagBadgeHtml(diag);
 }
     
-    async function loadStudentExisting12Cards() {
-      const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', currentUser.id);
-      if (cards) {
-        cards.forEach(c => {
-          if (c.slot_type === 'susi') {
-            const u = document.getElementById(`susi_univ_${c.slot_num}`);
-            const d = document.getElementById(`susi_dept_${c.slot_num}`);
-            const t = document.getElementById(`susi_type_${c.slot_num}`);
-            const m = document.getElementById(`susi_min_${c.slot_num}`);
-            const r = document.getElementById(`susi_rec_${c.slot_num}`);
-            if (u) u.value = c.university || '';
-            if (d) d.value = c.department || '';
-            if (t) t.value = c.admission_type || '';
-            if (m) m.value = c.min_criteria || '';
-            if (r) r.value = c.recommendation || 'X';
-          } else if (c.slot_type === 'special') {
-            const u = document.getElementById(`spec_univ_${c.slot_num}`);
-            const d = document.getElementById(`spec_dept_${c.slot_num}`);
-            const t = document.getElementById(`spec_type_${c.slot_num}`);
-            const m = document.getElementById(`spec_memo_${c.slot_num}`);
-            const r = document.getElementById(`spec_rec_${c.slot_num}`);
-            if (u) u.value = c.university || '';
-            if (d) d.value = c.department || '';
-            if (t) t.value = c.admission_type || '';
-            if (m) m.value = c.memo || '';
-            if (r) r.value = c.recommendation || 'X';
-          } else if (c.slot_type === 'jeongsi') {
-            const u = document.getElementById(`jeongsi_univ_${c.slot_num}`);
-            const d = document.getElementById(`jeongsi_dept_${c.slot_num}`);
-            const t = document.getElementById(`jeongsi_type_${c.slot_num}`);
-            const m = document.getElementById(`jeongsi_memo_${c.slot_num}`);
-            const r = document.getElementById(`jeongsi_rec_${c.slot_num}`);
-            if (u) u.value = c.university || '';
-            if (d) d.value = c.department || '';
-            if (t) t.value = c.admission_type || '';
-            if (m) m.value = c.memo || '';
-            if (r) r.value = c.recommendation || 'X';
-          }
-        });
+async function loadStudentExisting12Cards() {
+  const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', currentUser.id);
+  if (cards) {
+    cards.forEach(c => {
+      if (c.slot_type === 'susi') {
+        const u = document.getElementById(`susi_univ_${c.slot_num}`);
+        const d = document.getElementById(`susi_dept_${c.slot_num}`);
+        const t = document.getElementById(`susi_type_${c.slot_num}`);
+        const m = document.getElementById(`susi_min_${c.slot_num}`);
+        const r = document.getElementById(`susi_rec_${c.slot_num}`);
+        if (u) u.value = c.university || '';
+        if (d) d.value = c.department || '';
+        if (t) t.value = c.admission_type || '';
+        if (m) m.value = c.min_criteria || '';
+        if (r) r.value = c.recommendation || 'X';
+
+        // 3개년 경쟁률 복원
+        if (c.comp_rates && Array.isArray(c.comp_rates)) {
+          if (c.comp_rates[0]) document.getElementById(`susi_comp1_${c.slot_num}`).value = c.comp_rates[0];
+          if (c.comp_rates[1]) document.getElementById(`susi_comp2_${c.slot_num}`).value = c.comp_rates[1];
+          if (c.comp_rates[2]) document.getElementById(`susi_comp3_${c.slot_num}`).value = c.comp_rates[2];
+        }
+        // 3개년 70%컷 복원
+        if (c.cutoffs && Array.isArray(c.cutoffs)) {
+          if (c.cutoffs[0]) document.getElementById(`susi_cut1_${c.slot_num}`).value = c.cutoffs[0];
+          if (c.cutoffs[1]) document.getElementById(`susi_cut2_${c.slot_num}`).value = c.cutoffs[1];
+          if (c.cutoffs[2]) document.getElementById(`susi_cut3_${c.slot_num}`).value = c.cutoffs[2];
+        }
+        // 모집인원 및 내신 복원
+        if (c.recruit_last) document.getElementById(`susi_rec_last_${c.slot_num}`).value = c.recruit_last;
+        if (c.recruit_curr) document.getElementById(`susi_rec_curr_${c.slot_num}`).value = c.recruit_curr;
+        if (c.my_score) document.getElementById(`susi_myscore_${c.slot_num}`).value = c.my_score;
+
+        // 진단 배지 즉시 계산 반영
+        updateLiveCardDiag('susi', c.slot_num);
+
+      } else if (c.slot_type === 'special') {
+        const u = document.getElementById(`spec_univ_${c.slot_num}`);
+        const d = document.getElementById(`spec_dept_${c.slot_num}`);
+        const t = document.getElementById(`spec_type_${c.slot_num}`);
+        const m = document.getElementById(`spec_memo_${c.slot_num}`);
+        const r = document.getElementById(`spec_rec_${c.slot_num}`);
+        if (u) u.value = c.university || '';
+        if (d) d.value = c.department || '';
+        if (t) t.value = c.admission_type || '';
+        if (m) m.value = c.memo || '';
+        if (r) r.value = c.recommendation || 'X';
+      } else if (c.slot_type === 'jeongsi') {
+        const u = document.getElementById(`jeongsi_univ_${c.slot_num}`);
+        const d = document.getElementById(`jeongsi_dept_${c.slot_num}`);
+        const t = document.getElementById(`jeongsi_type_${c.slot_num}`);
+        const m = document.getElementById(`jeongsi_memo_${c.slot_num}`);
+        const r = document.getElementById(`jeongsi_rec_${c.slot_num}`);
+        if (u) u.value = c.university || '';
+        if (d) d.value = c.department || '';
+        if (t) t.value = c.admission_type || '';
+        if (m) m.value = c.memo || '';
+        if (r) r.value = c.recommendation || 'X';
       }
-    }
+    });
+  }
+}
 
 async function saveStudent12Cards() {
-      const records = [];
+  const records = [];
 
-      // 1) 수시 6장 및 특목 6장
-      for (let i = 1; i <= 6; i++) {
-        records.push({
-          user_id: currentUser.id,
-          student_no: currentProfile.student_no,
-          student_name: currentProfile.name,
-          slot_type: 'susi',
-          slot_num: i,
-          university: document.getElementById('susi_univ_' + i).value.trim(),
-          department: document.getElementById('susi_dept_' + i).value.trim(),
-          admission_type: document.getElementById('susi_type_' + i).value.trim(),
-          min_criteria: document.getElementById('susi_min_' + i).value.trim(),
-          recommendation: document.getElementById('susi_rec_' + i)?.value || 'X'
-        });
+  // 수시 6장 저장
+  for (let i = 1; i <= 6; i++) {
+    const comp1 = parseFloat(document.getElementById(`susi_comp1_${i}`)?.value) || null;
+    const comp2 = parseFloat(document.getElementById(`susi_comp2_${i}`)?.value) || null;
+    const comp3 = parseFloat(document.getElementById(`susi_comp3_${i}`)?.value) || null;
 
-        records.push({
-          user_id: currentUser.id,
-          student_no: currentProfile.student_no,
-          student_name: currentProfile.name,
-          slot_type: 'special',
-          slot_num: i,
-          university: document.getElementById('spec_univ_' + i).value.trim(),
-          department: document.getElementById('spec_dept_' + i).value.trim(),
-          admission_type: document.getElementById('spec_type_' + i).value.trim(),
-          memo: document.getElementById('spec_memo_' + i).value.trim(),
-          recommendation: document.getElementById('spec_rec_' + i)?.value || 'X'
-        });
-      }
+    const cut1 = parseFloat(document.getElementById(`susi_cut1_${i}`)?.value) || null;
+    const cut2 = parseFloat(document.getElementById(`susi_cut2_${i}`)?.value) || null;
+    const cut3 = parseFloat(document.getElementById(`susi_cut3_${i}`)?.value) || null;
 
-      // 2) 정시 3장 (가 / 나 / 다)
-      for (let i = 1; i <= 3; i++) {
-        const u = document.getElementById('jeongsi_univ_' + i);
-        const d = document.getElementById('jeongsi_dept_' + i);
-        const t = document.getElementById('jeongsi_type_' + i);
-        const m = document.getElementById('jeongsi_memo_' + i);
-        const r = document.getElementById('jeongsi_rec_' + i);
+    const recLast = parseInt(document.getElementById(`susi_rec_last_${i}`)?.value) || null;
+    const recCurr = parseInt(document.getElementById(`susi_rec_curr_${i}`)?.value) || null;
+    const myScore = parseFloat(document.getElementById(`susi_myscore_${i}`)?.value) || null;
 
-        records.push({
-          user_id: currentUser.id,
-          student_no: currentProfile.student_no,
-          student_name: currentProfile.name,
-          slot_type: 'jeongsi',
-          slot_num: i,
-          university: u ? u.value.trim() : '',
-          department: d ? d.value.trim() : '',
-          admission_type: t ? t.value.trim() : '',
-          memo: m ? m.value.trim() : '',
-          recommendation: r ? r.value : 'X'
-        });
-      }
+    const diag = calculateAdmissionDiag(myScore, cut3 || cut2);
 
-      try {
-        const { error: upsertErr } = await supabaseClient
-          .from('applications_12')
-          .upsert(records, { onConflict: 'user_id,slot_type,slot_num' });
+    records.push({
+      user_id: currentUser.id,
+      student_no: currentProfile.student_no,
+      student_name: currentProfile.name,
+      slot_type: 'susi',
+      slot_num: i,
+      university: document.getElementById('susi_univ_' + i).value.trim(),
+      department: document.getElementById('susi_dept_' + i).value.trim(),
+      admission_type: document.getElementById('susi_type_' + i).value.trim(),
+      min_criteria: document.getElementById('susi_min_' + i).value.trim(),
+      recommendation: document.getElementById('susi_rec_' + i)?.value || 'X',
+      comp_rates: [comp1, comp2, comp3],
+      cutoffs: [cut1, cut2, cut3],
+      recruit_last: recLast,
+      recruit_curr: recCurr,
+      my_score: myScore,
+      diag_result: diag.text
+    });
 
-        if (upsertErr) throw upsertErr;
+    // 특목 6장
+    records.push({
+      user_id: currentUser.id,
+      student_no: currentProfile.student_no,
+      student_name: currentProfile.name,
+      slot_type: 'special',
+      slot_num: i,
+      university: document.getElementById('spec_univ_' + i).value.trim(),
+      department: document.getElementById('spec_dept_' + i).value.trim(),
+      admission_type: document.getElementById('spec_type_' + i).value.trim(),
+      memo: document.getElementById('spec_memo_' + i).value.trim(),
+      recommendation: document.getElementById('spec_rec_' + i)?.value || 'X'
+    });
+  }
 
-        alert('입시상담카드(수시·특목·정시) 내용이 안전하게 저장되었습니다!');
-        loadHomeDashboardData();
-        renderMinimumCheckAnalysis();
-      } catch (err) {
-        alert('저장 도중 네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요!\n(원인: ' + err.message + ')');
-      }
-    }
+  // 정시 3장
+  for (let i = 1; i <= 3; i++) {
+    records.push({
+      user_id: currentUser.id,
+      student_no: currentProfile.student_no,
+      student_name: currentProfile.name,
+      slot_type: 'jeongsi',
+      slot_num: i,
+      university: document.getElementById('jeongsi_univ_' + i)?.value.trim() || '',
+      department: document.getElementById('jeongsi_dept_' + i)?.value.trim() || '',
+      admission_type: document.getElementById('jeongsi_type_' + i)?.value.trim() || '',
+      memo: document.getElementById('jeongsi_memo_' + i)?.value.trim() || '',
+      recommendation: document.getElementById('jeongsi_rec_' + i)?.value || 'X'
+    });
+  }
+
+  try {
+    const { error: upsertErr } = await supabaseClient
+      .from('applications_12')
+      .upsert(records, { onConflict: 'user_id,slot_type,slot_num' });
+
+    if (upsertErr) throw upsertErr;
+
+    alert('입시상담카드와 상세 입결·내신 정보가 안전하게 저장되었습니다!');
+    loadHomeDashboardData();
+    renderMinimumCheckAnalysis();
+  } catch (err) {
+    alert('저장 도중 오류가 발생했습니다: ' + err.message);
+  }
+}
     
     async function submitCounselRequest(e) {
       e.preventDefault();
@@ -3319,115 +3517,241 @@ async function saveStudent12Cards() {
       loadHomeDashboardData();
     }
 
-    async function loadStudent12CardsForTeacher(directStudentId) {
-      const studentId = directStudentId || document.getElementById('teacherStudentSelect')?.value;
-      const container = document.getElementById('teacherCardsContainer');
-      if (!studentId) {
-        container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
-        return;
-      }
+let currentTeacherCardsCache = [];
+let modalCompChartInstance = null;
+let modalCutChartInstance = null;
 
-      const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', studentId);
-      const susiList = cards ? cards.filter(c => c.slot_type === 'susi') : [];
-      const specList = cards ? cards.filter(c => c.slot_type === 'special') : [];
-      const jeongsiList = cards ? cards.filter(c => c.slot_type === 'jeongsi') : [];
+async function loadStudent12CardsForTeacher(directStudentId) {
+  const studentId = directStudentId || document.getElementById('teacherStudentSelect')?.value;
+  const container = document.getElementById('teacherCardsContainer');
+  if (!studentId) {
+    container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
+    return;
+  }
 
-      const jeongsiNames = { 1: '정시 (가)', 2: '정시 (나)', 3: '정시 (다)' };
+  const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', studentId);
+  currentTeacherCardsCache = cards || [];
 
-      container.innerHTML = `
-        <!-- 1. 수시 6장 (제목 상자 복구 완료) -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200">
-          <h3 class="font-bold text-blue-700 text-sm mb-3">일반 수시 6장 지망 현황</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            ${[1,2,3,4,5,6].map(num => {
-              const c = susiList.find(x => x.slot_num === num) || {};
-              const isRecRequired = (c.recommendation === 'O');
-              return `
-                <div class="p-3 rounded-lg border text-xs flex flex-col justify-between space-y-2 transition ${isRecRequired ? 'bg-rose-50/50 border-rose-200' : 'bg-slate-50 border-slate-200'}">
-                  <div>
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="font-bold text-blue-600">${num}지망</span>
-                      ${isRecRequired 
-                        ? '<span class="px-2 py-0.5 bg-rose-600 text-white rounded font-black text-[10px] shadow-xs">추천서 O</span>' 
-                        : '<span class="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">추천서 X</span>'}
-                    </div>
-                    <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
-                    <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
-                    <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
-                    <div class="text-emerald-700 font-semibold mt-1">최저: ${escapeHtml(c.min_criteria) || '-'}</div>
-                  </div>
-                  <div class="pt-2 border-t text-[11px] font-bold ${isRecRequired ? 'text-rose-700' : 'text-slate-500'}">
-                    학교장 추천: ${isRecRequired ? '⚠️ 추천 인원 배정 필수' : '해당 없음'}
+  const susiList = cards ? cards.filter(c => c.slot_type === 'susi') : [];
+  const specList = cards ? cards.filter(c => c.slot_type === 'special') : [];
+  const jeongsiList = cards ? cards.filter(c => c.slot_type === 'jeongsi') : [];
+  const jeongsiNames = { 1: '정시 (가)', 2: '정시 (나)', 3: '정시 (다)' };
+
+  container.innerHTML = `
+    <!-- 1. 수시 6장 (클릭 시 팝업 열림 안내 뱃지 추가) -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 space-y-2">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-blue-700 text-sm">일반 수시 6장 지망 현황</h3>
+        <span class="text-[11px] text-slate-400">💡 카드를 클릭하면 3개년 경쟁률/입결컷 선 그래프가 열립니다.</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        ${[1,2,3,4,5,6].map(num => {
+          const c = susiList.find(x => x.slot_num === num) || {};
+          const isRecRequired = (c.recommendation === 'O');
+          const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
+          const diag = calculateAdmissionDiag(c.my_score, cutVal);
+          
+          return `
+            <div onclick="openCardDetailModal('susi', ${num})" 
+              class="p-3.5 rounded-xl border text-xs flex flex-col justify-between space-y-2 transition cursor-pointer hover:shadow-md hover:border-blue-400 ${isRecRequired ? 'bg-rose-50/40 border-rose-200' : 'bg-slate-50 border-slate-200'}">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold text-blue-600">${num}지망</span>
+                  <div class="flex items-center gap-1">
+                    ${getDiagBadgeHtml(diag)}
+                    ${isRecRequired ? '<span class="px-1.5 py-0.5 bg-rose-600 text-white rounded font-black text-[9px]">추천 O</span>' : ''}
                   </div>
                 </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
+                <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
+                <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                <div class="text-emerald-700 font-semibold mt-1">최저: ${escapeHtml(c.min_criteria) || '-'}</div>
+              </div>
 
-        <!-- 2. 특수목적대 / 전문대 6장 (추천서 O/X 배지 적용) -->
-        <div class="bg-white p-5 rounded-xl border border-purple-200">
-          <h3 class="font-bold text-purple-700 text-sm mb-3">특수목적대 / 전문대 6장 현황</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            ${[1,2,3,4,5,6].map(num => {
-              const c = specList.find(x => x.slot_num === num) || {};
-              const isRecRequired = (c.recommendation === 'O');
-              return `
-                <div class="p-3 rounded-lg border text-xs flex flex-col justify-between space-y-2 transition ${isRecRequired ? 'bg-purple-50/60 border-purple-300' : 'bg-slate-50 border-slate-200'}">
-                  <div>
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="font-bold text-purple-600">${num}지망</span>
-                      ${isRecRequired 
-                        ? '<span class="px-2 py-0.5 bg-purple-600 text-white rounded font-black text-[10px] shadow-xs">추천서 O</span>' 
-                        : '<span class="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">추천서 X</span>'}
-                    </div>
-                    <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
-                    <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
-                    <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
-                    <div class="text-slate-500">비고: ${escapeHtml(c.memo) || '-'}</div>
-                  </div>
-                  <div class="pt-2 border-t text-[11px] font-bold ${isRecRequired ? 'text-purple-700' : 'text-slate-500'}">
-                    학교장 추천: ${isRecRequired ? '⚠️ 학교장 추천 전형' : '해당 없음'}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
+              <!-- 요약 내신 지표 -->
+              <div class="pt-2 border-t flex items-center justify-between text-[11px]">
+                <span class="text-slate-500">산출내신: <b class="text-indigo-600">${c.my_score ? c.my_score + '등급' : '-'}</b></span>
+                <span class="text-blue-600 font-bold hover:underline flex items-center gap-0.5">상세보기 →</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
 
-        <!-- 3. 정시 3장 (추천서 O/X 배지 적용) -->
-        <div class="bg-white p-5 rounded-xl border border-amber-200">
-          <h3 class="font-bold text-amber-700 text-sm mb-3 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span> 정시 3장 (가 · 나 · 다 군) 지망 현황
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            ${[1, 2, 3].map(num => {
-              const c = jeongsiList.find(x => x.slot_num === num) || {};
-              const isRecRequired = (c.recommendation === 'O');
-              return `
-                <div class="p-3 rounded-lg border text-xs flex flex-col justify-between space-y-2 transition ${isRecRequired ? 'bg-amber-50 border-amber-300' : 'bg-amber-50/40 border-amber-200'}">
-                  <div>
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="font-bold text-amber-700">${jeongsiNames[num]}</span>
-                      ${isRecRequired 
-                        ? '<span class="px-2 py-0.5 bg-amber-600 text-white rounded font-black text-[10px] shadow-xs">추천서 O</span>' 
-                        : '<span class="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">추천서 X</span>'}
-                    </div>
-                    <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
-                    <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
-                    <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
-                    <div class="text-slate-600">환산점수/비고: ${escapeHtml(c.memo) || '-'}</div>
-                  </div>
-                  <div class="pt-2 border-t text-[11px] font-bold ${isRecRequired ? 'text-amber-800' : 'text-slate-500'}">
-                    학교장 추천: ${isRecRequired ? '⚠️ 정시 추천 전형 (서울대 지균 등)' : '해당 없음'}
-                  </div>
+    <!-- 2. 특수목적대 / 전문대 6장 -->
+    <div class="bg-white p-5 rounded-xl border border-purple-200">
+      <h3 class="font-bold text-purple-700 text-sm mb-3">특수목적대 / 전문대 6장 현황</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        ${[1,2,3,4,5,6].map(num => {
+          const c = specList.find(x => x.slot_num === num) || {};
+          const isRecRequired = (c.recommendation === 'O');
+          return `
+            <div class="p-3 rounded-lg border text-xs flex flex-col justify-between space-y-2 transition ${isRecRequired ? 'bg-purple-50/60 border-purple-300' : 'bg-slate-50 border-slate-200'}">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold text-purple-600">${num}지망</span>
+                  ${isRecRequired ? '<span class="px-2 py-0.5 bg-purple-600 text-white rounded font-black text-[10px]">추천서 O</span>' : '<span class="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[10px]">추천서 X</span>'}
                 </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
+                <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
+                <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                <div class="text-slate-500">비고: ${escapeHtml(c.memo) || '-'}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- 3. 정시 3장 -->
+    <div class="bg-white p-5 rounded-xl border border-amber-200">
+      <h3 class="font-bold text-amber-700 text-sm mb-3 flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-amber-500"></span> 정시 3장 (가 · 나 · 다 군) 지망 현황
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        ${[1, 2, 3].map(num => {
+          const c = jeongsiList.find(x => x.slot_num === num) || {};
+          const isRecRequired = (c.recommendation === 'O');
+          return `
+            <div class="p-3 rounded-lg border text-xs flex flex-col justify-between space-y-2 transition ${isRecRequired ? 'bg-amber-50 border-amber-300' : 'bg-amber-50/40 border-amber-200'}">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold text-amber-700">${jeongsiNames[num]}</span>
+                  ${isRecRequired ? '<span class="px-2 py-0.5 bg-amber-600 text-white rounded font-black text-[10px]">추천서 O</span>' : '<span class="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[10px]">추천서 X</span>'}
+                </div>
+                <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
+                <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                <div class="text-slate-600">환산점수: ${escapeHtml(c.memo) || '-'}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  lucide.createIcons();
+}
+
+// 팝업 열기 및 차트 그리기
+function openCardDetailModal(slotType, slotNum) {
+  const card = currentTeacherCardsCache.find(c => c.slot_type === slotType && c.slot_num === slotNum);
+  if (!card || !card.university) return alert('학생이 아직 대학 정보를 입력하지 않았습니다.');
+
+  document.getElementById('modalCardSlotBadge').innerText = `수시 ${slotNum}지망`;
+  document.getElementById('modalCardUnivTitle').innerText = `${card.university} ${card.department || ''}`;
+  document.getElementById('modalCardTypeSub').innerText = `${card.admission_type || '전형 미입력'} | 최저: ${card.min_criteria || '없음'}`;
+
+  // 모집인원 요약
+  const rLast = card.recruit_last || null;
+  const rCurr = card.recruit_curr || null;
+  const rSummaryEl = document.getElementById('modalCardRecruitSummary');
+  const rDiffEl = document.getElementById('modalCardRecruitDiff');
+  if (rLast || rCurr) {
+    rSummaryEl.innerText = `작년 ${rLast ?? '?'}명 → 올해 ${rCurr ?? '?'}명`;
+    if (rLast && rCurr) {
+      const diff = rCurr - rLast;
+      rDiffEl.innerText = diff > 0 ? `(${diff}명 증원)` : (diff < 0 ? `(${Math.abs(diff)}명 감원)` : '(변동 없음)');
+      rDiffEl.className = diff > 0 ? 'text-[11px] font-bold text-emerald-600' : (diff < 0 ? 'text-[11px] font-bold text-rose-600' : 'text-[11px] font-bold text-slate-400');
     }
+  } else {
+    rSummaryEl.innerText = '모집인원 미입력';
+    rDiffEl.innerText = '';
+  }
+
+  // 70%컷 및 산출내신 요약
+  const cutVal = (card.cutoffs && card.cutoffs[2]) || (card.cutoffs && card.cutoffs[1]);
+  const diag = calculateAdmissionDiag(card.my_score, cutVal);
+  document.getElementById('modalCardDiagBadge').innerHTML = getDiagBadgeHtml(diag);
+  
+  const scoreSummaryEl = document.getElementById('modalCardScoreSummary');
+  const scoreDiffEl = document.getElementById('modalCardCutoffDiff');
+  scoreSummaryEl.innerText = `내 점수: ${card.my_score ? card.my_score + '등급' : '미입력'}`;
+  scoreDiffEl.innerText = (diag.diff) ? `(합격선 대비 ${diag.diff})` : '';
+
+  document.getElementById('cardDetailModal').classList.remove('hidden');
+  renderModalCharts(card.comp_rates || [], card.cutoffs || [], card.my_score);
+  lucide.createIcons();
+}
+
+function closeCardDetailModal() {
+  document.getElementById('cardDetailModal').classList.add('hidden');
+}
+
+function renderModalCharts(compRates, cutoffs, myScore) {
+  const years = ['2025', '2026', '2027']; // 3개년 라벨
+
+  // 1) 경쟁률 차트
+  const compCanvas = document.getElementById('cardCompChart');
+  if (modalCompChartInstance) modalCompChartInstance.destroy();
+  if (compCanvas) {
+    modalCompChartInstance = new Chart(compCanvas, {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [{
+          label: '경쟁률 (:1)',
+          data: compRates,
+          borderColor: '#2563eb',
+          backgroundColor: '#2563eb',
+          borderWidth: 2,
+          pointRadius: 4,
+          tension: 0.2,
+          spanGaps: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: false } }
+      }
+    });
+  }
+
+  // 2) 70%컷 차트 (내신 등급은 1등급이 상단에 오도록 y축 reverse)
+  const cutCanvas = document.getElementById('cardCutChart');
+  if (modalCutChartInstance) modalCutChartInstance.destroy();
+  if (cutCanvas) {
+    const datasets = [{
+      label: '70% 입결컷',
+      data: cutoffs,
+      borderColor: '#059669',
+      backgroundColor: '#059669',
+      borderWidth: 2,
+      pointRadius: 4,
+      tension: 0.2,
+      spanGaps: true
+    }];
+
+    if (myScore && !isNaN(myScore)) {
+      datasets.push({
+        label: '내 산출내신',
+        data: [myScore, myScore, myScore],
+        borderColor: '#7c3aed',
+        borderDash: [4, 4],
+        pointRadius: 0,
+        borderWidth: 2
+      });
+    }
+
+    modalCutChartInstance = new Chart(cutCanvas, {
+      type: 'line',
+      data: { labels: years, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            reverse: true, // 1등급이 위로 가도록 역정렬
+            suggestedMin: 1.0,
+            suggestedMax: 6.0
+          }
+        }
+      }
+    });
+  }
+}
       
     const SUBJECT_ROWS = [
       { key: 'korean', name: '국어', options: ['화법과 작문', '언어와 매체'] },
