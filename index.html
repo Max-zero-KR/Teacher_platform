@@ -1381,10 +1381,10 @@
             </div>
             
             <div class="flex items-center gap-2">
-              <button id="addMockFolderBtn" onclick="openNewMockFolderModal()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+              <button id="addMockFolderBtn" onclick="openNewMockFolderModal()" class="hidden px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                 <i data-lucide="folder-plus" class="w-4 h-4 text-blue-600"></i> 새 대학 폴더 생성
               </button>
-              <button id="addMockSampleBtn" onclick="openNewMockSampleModal()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+              <button id="addMockSampleBtn" onclick="openNewMockSampleModal()" class="hidden px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
                 <i data-lucide="plus" class="w-4 h-4"></i> 이 대학에 샘플 추가
               </button>
             </div>
@@ -1429,10 +1429,10 @@
             </div>
             
             <div class="flex items-center gap-2">
-              <button id="addForumFolderBtn" onclick="openNewTeacherForumFolderModal()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+              <button id="addForumFolderBtn" onclick="openNewTeacherForumFolderModal()" class="hidden px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                 <i data-lucide="folder-plus" class="w-4 h-4 text-emerald-600"></i> 새 간담회 행사 등록
               </button>
-              <button id="addTeacherForumBtn" onclick="openNewTeacherForumModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+              <button id="addTeacherForumBtn" onclick="openNewTeacherForumModal()" class="hidden px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
                 <i data-lucide="plus" class="w-4 h-4"></i> 이 간담회에 Q&A 추가
               </button>
             </div>
@@ -1476,7 +1476,7 @@
               <p class="text-xs text-slate-500 mt-0.5">대학별 입학설명회 요약, 발표 PDF, 그리고 구글 드라이브/유튜브 녹화 영상을 즉시 시청합니다.</p>
             </div>
             
-            <button id="addBriefingBtn" onclick="openNewBriefingModal()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+            <button id="addBriefingBtn" onclick="openNewBriefingModal()" class="hidden px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
               <i data-lucide="plus" class="w-4 h-4"></i> 새 입학설명회 자료 등록
             </button>
           </div>
@@ -2569,13 +2569,13 @@ if (isTeacher) {
   document.getElementById('addCalendarEventBtn')?.classList.remove('hidden');
   document.getElementById('addAlbumFolderBtn')?.classList.remove('hidden');
   document.getElementById('addMaterialBtn')?.classList.remove('hidden');
-     document.getElementById('addStudyMaterialBtn')?.classList.remove('hidden');
-        document.getElementById('addMockEvalBtn')?.classList.remove('hidden');
-      document.getElementById('addTeacherForumBtn')?.classList.remove('hidden');
-      document.getElementById('addBriefingBtn')?.classList.remove('hidden');
-
-
-  document.getElementById('albumUploadLabel')?.classList.remove('hidden'); // ★ 추가
+  document.getElementById('addStudyMaterialBtn')?.classList.remove('hidden');
+  document.getElementById('addMockFolderBtn')?.classList.remove('hidden');
+  document.getElementById('addMockSampleBtn')?.classList.remove('hidden');
+  document.getElementById('addForumFolderBtn')?.classList.remove('hidden');
+  document.getElementById('addTeacherForumBtn')?.classList.remove('hidden');
+  document.getElementById('addBriefingBtn')?.classList.remove('hidden');
+  document.getElementById('albumUploadLabel')?.classList.remove('hidden');
 
   loadUsersData();
   loadTeacherStudentSelects();
@@ -2592,13 +2592,13 @@ if (isTeacher) {
   document.getElementById('addCalendarEventBtn')?.classList.add('hidden');
   document.getElementById('addAlbumFolderBtn')?.classList.add('hidden');
   document.getElementById('addMaterialBtn')?.classList.add('hidden');
-     document.getElementById('addStudyMaterialBtn')?.classList.add('hidden');
-            document.getElementById('addMockEvalBtn')?.classList.add('hidden');
-          document.getElementById('addTeacherForumBtn')?.classList.add('hidden');
-          document.getElementById('addBriefingBtn')?.classList.add('hidden');
-
-
-  document.getElementById('albumUploadLabel')?.classList.add('hidden'); // ★ 추가
+  document.getElementById('addStudyMaterialBtn')?.classList.add('hidden');
+  document.getElementById('addMockFolderBtn')?.classList.add('hidden');
+  document.getElementById('addMockSampleBtn')?.classList.add('hidden');
+  document.getElementById('addForumFolderBtn')?.classList.add('hidden');
+  document.getElementById('addTeacherForumBtn')?.classList.add('hidden');
+  document.getElementById('addBriefingBtn')?.classList.add('hidden');
+  document.getElementById('albumUploadLabel')?.classList.add('hidden');
 
   renderStudent12CardInputs();
         loadStudentExisting12Cards();
@@ -6324,13 +6324,13 @@ eventsHtml = dayEvents.map(e => {
         videoBtnsEl.innerHTML = vHtml;
       }
 
-      // 대학 폴더 삭제 버튼
+      // 대학 폴더 삭제 버튼 (선생님만 표시)
       if (delBtnWrapper) {
-        delBtnWrapper.innerHTML = `
+        delBtnWrapper.innerHTML = isCurrentTeacher() ? `
           <button type="button" onclick="deleteMockEvalUniv('${targetUniv.id}')" class="px-2.5 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded text-[11px] font-semibold transition flex items-center gap-1">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 이 대학 폴더 삭제
           </button>
-        `;
+        ` : '';
       }
 
       const sample = (targetUniv.samples && targetUniv.samples[selectedMockSampleIdx]) ? targetUniv.samples[selectedMockSampleIdx] : null;
@@ -6512,7 +6512,8 @@ eventsHtml = dayEvents.map(e => {
       renderMockEvalUnivBadges();
     }
 
-    function deleteMockEvalUniv(id) {
+function deleteMockEvalUniv(id) {
+  if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
       const target = currentMockEvals.find(x => x.id === id);
       if (!target) return;
       if (!confirm(`'${target.univ}' 모의평가 폴더와 등록된 모든 샘플을 삭제할까요?`)) return;
@@ -6656,9 +6657,11 @@ eventsHtml = dayEvents.map(e => {
                 <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-blue-600"></i> 간담회 자료집/녹음 열기
               </a>
             ` : ''}
-            <button onclick="deleteForumFolder('${currentFolder.id}')" class="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition text-[11px] flex items-center gap-0.5">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 폴더 삭제
-            </button>
+            ${isCurrentTeacher() ? `
+              <button onclick="deleteForumFolder('${currentFolder.id}')" class="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition text-[11px] flex items-center gap-0.5">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 폴더 삭제
+              </button>
+            ` : ''}
           </div>
         `;
       }
@@ -6688,9 +6691,11 @@ eventsHtml = dayEvents.map(e => {
         <div class="border rounded-xl p-4 bg-white shadow-xs space-y-2.5 relative group hover:border-emerald-400 transition">
           <div class="flex items-center justify-between border-b pb-1.5">
             <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-black text-[11px]">질문 ${idx + 1}</span>
-            <button onclick="deleteTeacherForumQuestion('${item.id}')" title="질문 삭제" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition p-1">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-            </button>
+            ${isCurrentTeacher() ? `
+              <button onclick="deleteTeacherForumQuestion('${item.id}')" title="질문 삭제" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition p-1">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
           </div>
           
           <div class="space-y-2 text-xs">
@@ -6801,7 +6806,8 @@ eventsHtml = dayEvents.map(e => {
       }
     }
 
-    function deleteForumFolder(folderId) {
+function deleteForumFolder(folderId) {
+  if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
       const target = currentTeacherForums.find(f => f.id === folderId);
       if (!target) return;
       if (!confirm(`'${target.univ} - ${target.session}' 폴더와 등록된 모든 Q&A를 삭제할까요?`)) return;
@@ -6813,8 +6819,9 @@ eventsHtml = dayEvents.map(e => {
       renderTeacherForumCards();
     }
 
-    function deleteTeacherForumQuestion(questionId) {
-      const currentFolder = currentTeacherForums.find(f => f.id === selectedForumFolderId);
+function deleteTeacherForumQuestion(questionId) {
+  if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
+  const currentFolder = currentTeacherForums.find(f => f.id === selectedForumFolderId);
       if (!currentFolder) return;
       if (!confirm('이 질의응답을 삭제할까요?')) return;
 
@@ -6899,9 +6906,11 @@ eventsHtml = dayEvents.map(e => {
               <span class="font-black text-slate-800 text-base">${escapeHtml(item.univ)}</span>
               <div class="flex items-center gap-1.5">
                 <span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded text-[10px]">${escapeHtml(item.title || '설명회')}</span>
-                <button onclick="deleteBriefing('${item.id}')" title="자료 삭제" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition p-0.5">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
+                ${isCurrentTeacher() ? `
+                  <button onclick="deleteBriefing('${item.id}')" title="자료 삭제" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition p-0.5">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                ` : ''}
               </div>
             </div>
             
@@ -6989,8 +6998,9 @@ eventsHtml = dayEvents.map(e => {
       renderBriefingCards();
     }
 
-    function deleteBriefing(id) {
-      if (!confirm('이 입학설명회 자료를 삭제할까요?')) return;
+function deleteBriefing(id) {
+  if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
+  if (!confirm('이 입학설명회 자료를 삭제할까요?')) return;
       currentBriefings = currentBriefings.filter(x => x.id !== id);
       localStorage.setItem('BRIEFINGS_DATA', JSON.stringify(currentBriefings));
       renderBriefingCards();
