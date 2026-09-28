@@ -4104,14 +4104,14 @@ eventsHtml = dayEvents.map(e => {
         let vHtml = '';
         if (targetUniv.drive_video_url) {
           vHtml += `
-            <button onclick="openDriveVideoModal('${escapeHtml(targetUniv.drive_video_url)}', '${escapeHtml(targetUniv.univ)} 워크숍 영상')" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1">
+            <button type="button" onclick="openMockDriveVideoSafe()" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1">
               <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i> 드라이브 영상
             </button>
           `;
         }
         if (targetUniv.youtube_url) {
           vHtml += `
-            <button onclick="openBriefingVideo('${escapeHtml(targetUniv.youtube_url)}', '${escapeHtml(targetUniv.univ)}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold transition flex items-center gap-1">
+            <button type="button" onclick="openMockYoutubeVideoSafe()" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold transition flex items-center gap-1">
               <i data-lucide="video" class="w-3.5 h-3.5"></i> 유튜브 영상
             </button>
           `;
@@ -4175,10 +4175,10 @@ eventsHtml = dayEvents.map(e => {
               <span class="font-bold text-blue-900">현재 샘플: [${escapeHtml(sample.title)}]</span>
               ${isCurrentTeacher() ? `
                 <div class="flex items-center gap-1.5">
-                  <button onclick="openEditMockSampleModal(${selectedMockSampleIdx})" class="px-2.5 py-1 bg-white hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg font-bold transition flex items-center gap-1">
+                  <button type="button" onclick="openEditMockSampleModal(${selectedMockSampleIdx})" class="px-2.5 py-1 bg-white hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg font-bold transition flex items-center gap-1">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 샘플 내용 수정
                   </button>
-                  <button onclick="deleteMockEvalSample(${selectedMockSampleIdx})" class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded-lg font-bold transition flex items-center gap-0.5">
+                  <button type="button" onclick="deleteMockEvalSample(${selectedMockSampleIdx})" class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded-lg font-bold transition flex items-center gap-0.5">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 샘플 삭제
                   </button>
                 </div>
@@ -4500,20 +4500,20 @@ eventsHtml = dayEvents.map(e => {
           </div>
           <div class="flex flex-wrap items-center gap-2">
             ${currentFolder.drive_file_url ? `
-              <a href="${escapeHtml(currentFolder.drive_file_url)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg font-bold flex items-center gap-1 shadow-xs transition">
+              <button type="button" onclick="openForumFolderDriveSafe()" class="px-2.5 py-1 bg-white hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg font-bold flex items-center gap-1 shadow-xs transition">
                 <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-blue-600"></i> 간담회 자료집
-              </a>
+              </button>
             ` : ''}
             ${currentFolder.video_url ? `
-              <button onclick="handleGenericVideoOpen('${escapeHtml(currentFolder.video_url)}', '${escapeHtml(currentFolder.univ)} 간담회 영상')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg font-bold flex items-center gap-1 transition">
+              <button type="button" onclick="openForumFolderVideoSafe()" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg font-bold flex items-center gap-1 transition">
                 <i data-lucide="video" class="w-3.5 h-3.5"></i> 행사 영상
               </button>
             ` : ''}
             ${isCurrentTeacher() ? `
-              <button onclick="openEditTeacherForumFolderModal('${currentFolder.id}')" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg font-bold transition flex items-center gap-1">
+              <button type="button" onclick="openEditTeacherForumFolderModal('${currentFolder.id}')" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg font-bold transition flex items-center gap-1">
                 <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 폴더 수정
               </button>
-              <button onclick="deleteForumFolder('${currentFolder.id}')" class="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition text-xs flex items-center gap-0.5">
+              <button type="button" onclick="deleteForumFolder('${currentFolder.id}')" class="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition text-xs flex items-center gap-0.5">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 삭제
               </button>
             ` : ''}
@@ -4548,12 +4548,12 @@ eventsHtml = dayEvents.map(e => {
             <div class="flex items-center gap-2">
               <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-black text-[11px]">질문 ${idx + 1}</span>
               ${item.drive_url ? `
-                <a href="${escapeHtml(item.drive_url)}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded text-[10px] font-bold inline-flex items-center gap-1 border border-blue-200">
+                <a href="${encodeURI(item.drive_url)}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded text-[10px] font-bold inline-flex items-center gap-1 border border-blue-200">
                   <i data-lucide="hard-drive" class="w-3 h-3"></i> 참고자료
                 </a>
               ` : ''}
               ${item.video_url ? `
-                <button onclick="handleGenericVideoOpen('${escapeHtml(item.video_url)}', '질문 ${idx+1} 관련 영상')" class="px-2 py-0.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded text-[10px] font-bold inline-flex items-center gap-1 border border-rose-200">
+                <button type="button" onclick="openForumQuestionVideoSafe('${item.id}')" class="px-2 py-0.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded text-[10px] font-bold inline-flex items-center gap-1 border border-rose-200">
                   <i data-lucide="video" class="w-3 h-3"></i> 관련영상
                 </button>
               ` : ''}
@@ -4561,10 +4561,10 @@ eventsHtml = dayEvents.map(e => {
 
             ${isCurrentTeacher() ? `
               <div class="flex items-center gap-1">
-                <button onclick="openEditTeacherForumModal('${item.id}')" title="질문 수정" class="text-slate-400 hover:text-emerald-600 p-1 rounded hover:bg-emerald-50 transition">
+                <button type="button" onclick="openEditTeacherForumModal('${item.id}')" title="질문 수정" class="text-slate-400 hover:text-emerald-600 p-1 rounded hover:bg-emerald-50 transition">
                   <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                 </button>
-                <button onclick="deleteTeacherForumQuestion('${item.id}')" title="질문 삭제" class="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition">
+                <button type="button" onclick="deleteTeacherForumQuestion('${item.id}')" title="질문 삭제" class="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition">
                   <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 </button>
               </div>
@@ -4601,6 +4601,62 @@ eventsHtml = dayEvents.map(e => {
         openDriveVideoModal(url, title);
       }
     }
+
+    // [보안 패치] 따옴표 스크립트 인젝션(XSS) 방지 전용 안전 호출 헬퍼
+    function openMockDriveVideoSafe() {
+      const targetUniv = currentMockEvals.find(x => x.id === selectedMockUnivId);
+      if (targetUniv && targetUniv.drive_video_url) {
+        openDriveVideoModal(targetUniv.drive_video_url, (targetUniv.univ || '') + ' 워크숍 영상');
+      }
+    }
+
+    function openMockYoutubeVideoSafe() {
+      const targetUniv = currentMockEvals.find(x => x.id === selectedMockUnivId);
+      if (targetUniv && targetUniv.youtube_url) {
+        openBriefingVideo(targetUniv.youtube_url, targetUniv.univ || '');
+      }
+    }
+
+    function openForumFolderDriveSafe() {
+      const folder = currentTeacherForums.find(f => f.id === selectedForumFolderId);
+      if (folder && folder.drive_file_url) {
+        window.open(folder.drive_file_url, '_blank');
+      }
+    }
+
+    function openForumFolderVideoSafe() {
+      const folder = currentTeacherForums.find(f => f.id === selectedForumFolderId);
+      if (folder && folder.video_url) {
+        handleGenericVideoOpen(folder.video_url, (folder.univ || '') + ' 간담회 영상');
+      }
+    }
+
+    function openForumQuestionVideoSafe(qId) {
+      const folder = currentTeacherForums.find(f => f.id === selectedForumFolderId);
+      const q = folder?.questions?.find(item => item.id === qId);
+      if (q && q.video_url) {
+        handleGenericVideoOpen(q.video_url, '질문 관련 영상');
+      }
+    }
+
+    function openBriefingPdfById(itemId) {
+      const folder = currentBriefingFolders.find(f => f.id === selectedBriefingFolderId);
+      const item = folder?.items?.find(x => x.id === itemId);
+      if (item && item.pdfUrl) openBriefingPdf(item.pdfUrl);
+    }
+
+    function openBriefingDriveById(itemId) {
+      const folder = currentBriefingFolders.find(f => f.id === selectedBriefingFolderId);
+      const item = folder?.items?.find(x => x.id === itemId);
+      if (item && item.driveVideoUrl) openDriveVideoModal(item.driveVideoUrl, (item.univ || '') + ' 설명회 녹화영상');
+    }
+
+    function openBriefingYoutubeById(itemId) {
+      const folder = currentBriefingFolders.find(f => f.id === selectedBriefingFolderId);
+      const item = folder?.items?.find(x => x.id === itemId);
+      if (item && item.youtubeUrl) openBriefingVideo(item.youtubeUrl, item.univ || '');
+    }
+
 
     function openNewTeacherForumFolderModal() {
       document.getElementById('forumFolderEditId').value = '';
@@ -4883,15 +4939,15 @@ eventsHtml = dayEvents.map(e => {
           </div>
           <div class="flex flex-wrap items-center gap-2">
             ${currentFolder.drive_url ? `
-              <a href="${escapeHtml(currentFolder.drive_url)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg font-bold flex items-center gap-1 shadow-xs transition">
+              <a href="${encodeURI(currentFolder.drive_url)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg font-bold flex items-center gap-1 shadow-xs transition">
                 <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-blue-600"></i> 폴더 자료실 열기
               </a>
             ` : ''}
             ${isCurrentTeacher() ? `
-              <button onclick="openEditBriefingFolderModal('${currentFolder.id}')" class="px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 rounded-lg font-bold transition flex items-center gap-1">
+              <button type="button" onclick="openEditBriefingFolderModal('${currentFolder.id}')" class="px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 rounded-lg font-bold transition flex items-center gap-1">
                 <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 폴더 수정
               </button>
-              <button onclick="deleteBriefingFolder('${currentFolder.id}')" class="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition text-xs flex items-center gap-0.5">
+              <button type="button" onclick="deleteBriefingFolder('${currentFolder.id}')" class="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition text-xs flex items-center gap-0.5">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 폴더 삭제
               </button>
             ` : ''}
@@ -4928,10 +4984,10 @@ eventsHtml = dayEvents.map(e => {
               <div class="flex items-center gap-1.5">
                 <span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded text-[10px]">${escapeHtml(item.title || '설명회')}</span>
                 ${isCurrentTeacher() ? `
-                  <button onclick="openEditBriefingModal('${item.id}')" title="자료 수정" class="text-slate-400 hover:text-amber-600 p-1 rounded hover:bg-amber-50 transition">
+                  <button type="button" onclick="openEditBriefingModal('${item.id}')" title="자료 수정" class="text-slate-400 hover:text-amber-600 p-1 rounded hover:bg-amber-50 transition">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                   </button>
-                  <button onclick="deleteBriefing('${item.id}')" title="자료 삭제" class="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition">
+                  <button type="button" onclick="deleteBriefing('${item.id}')" title="자료 삭제" class="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                   </button>
                 ` : ''}
@@ -4948,19 +5004,19 @@ eventsHtml = dayEvents.map(e => {
 
           <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t text-[11px]">
             ${item.pdfUrl ? `
-              <button onclick="openBriefingPdf('${escapeHtml(item.pdfUrl)}')" class="flex-1 min-w-[75px] py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-bold transition flex items-center justify-center gap-1">
+              <button type="button" onclick="openBriefingPdfById('${item.id}')" class="flex-1 min-w-[75px] py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-bold transition flex items-center justify-center gap-1">
                 <i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF
               </button>
             ` : ''}
 
             ${item.driveVideoUrl ? `
-              <button onclick="openDriveVideoModal('${escapeHtml(item.driveVideoUrl)}', '${escapeHtml(item.univ)} 설명회 녹화영상')" class="flex-1 min-w-[85px] py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition flex items-center justify-center gap-1 shadow-xs">
+              <button type="button" onclick="openBriefingDriveById('${item.id}')" class="flex-1 min-w-[85px] py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition flex items-center justify-center gap-1 shadow-xs">
                 <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i> 드라이브
               </button>
             ` : ''}
 
             ${item.youtubeUrl ? `
-              <button onclick="openBriefingVideo('${escapeHtml(item.youtubeUrl)}', '${escapeHtml(item.univ)}')" class="flex-1 min-w-[80px] py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg font-bold transition flex items-center justify-center gap-1">
+              <button type="button" onclick="openBriefingYoutubeById('${item.id}')" class="flex-1 min-w-[80px] py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg font-bold transition flex items-center justify-center gap-1">
                 <i data-lucide="video" class="w-3.5 h-3.5"></i> 유튜브
               </button>
             ` : ''}
