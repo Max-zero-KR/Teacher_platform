@@ -5290,3 +5290,399 @@ eventsHtml = dayEvents.map(e => {
       lucide.createIcons();
     });
 
+    // =================================================================
+    // 💡 [기능 2] 팝업창(모달) 바깥 배경 클릭 시 자동 닫기 전역 핸들러
+    // =================================================================
+    window.addEventListener('click', (e) => {
+      // 닫기 대상 모달 ID 목록 (단, 비밀번호 강제변경 모달은 안전을 위해 제외)
+      const allModals = [
+        { id: 'examScheduleModal', closeFn: closeExamScheduleModal },
+        { id: 'materialUploadModal', closeFn: closeMaterialUploadModal },
+        { id: 'studyMaterialUploadModal', closeFn: closeStudyMaterialUploadModal },
+        { id: 'mockFolderModal', closeFn: closeMockFolderModal },
+        { id: 'newMockEvalModal', closeFn: closeNewMockEvalModal },
+        { id: 'forumFolderModal', closeFn: closeTeacherForumFolderModal },
+        { id: 'newTeacherForumModal', closeFn: closeNewTeacherForumModal },
+        { id: 'briefingFolderModal', closeFn: closeBriefingFolderModal },
+        { id: 'newBriefingModal', closeFn: closeNewBriefingModal },
+        { id: 'driveVideoModal', closeFn: closeDriveVideoModal },
+        { id: 'youtubePlayerModal', closeFn: closeYoutubePlayerModal },
+        { id: 'noticeDetailModal', closeFn: closeNoticeDetailModal },
+        { id: 'newNoticeModal', closeFn: closeNewNoticeModal },
+        { id: 'newEventModal', closeFn: closeNewEventModal },
+        { id: 'editUserModal', closeFn: closeEditUserModal },
+        { id: 'newFolderModal', closeFn: closeNewFolderModal },
+        { id: 'photoLightboxModal', closeFn: closePhotoLightbox },
+        { id: 'cardDetailModal', closeFn: closeCardDetailModal }
+      ];
+
+      allModals.forEach(m => {
+        const el = document.getElementById(m.id);
+        // 모달이 열려있고, 클릭된 대상이 모달 컨테이너(어두운 바깥 배경)인 경우 자동 닫기
+        if (el && !el.classList.contains('hidden') && e.target === el) {
+          if (m.closeFn) {
+            m.closeFn();
+          } else {
+            el.classList.add('hidden');
+          }
+        }
+      });
+    });
+
+
+    // =================================================================
+    // 💡 [기능 3] 입시상담카드 인쇄 엔진 (요약 / 상세 2종 리포트)
+    // =================================================================
+    async function printCounselCards(mode) {
+      let targetUserId = null;
+      let targetStudentName = '';
+      let targetStudentNo = '';
+      let targetClassNum = '';
+
+      if (isCurrentTeacher()) {
+        const selVal = pickerSelectedStudentId['counsel'] || document.getElementById('teacherStudentSelect')?.value;
+        if (!selVal) {
+          return alert('인쇄할 대상 학생을 먼저 위 명단에서 선택해주세요.');
+        }
+        targetUserId = selVal;
+        const studentInfo = allGrade3Students.find(s => s.id === targetUserId);
+        targetStudentName = studentInfo?.name || '학생';
+        targetStudentNo = studentInfo?.student_no || '';
+        targetClassNum = studentInfo?.class_num ? `3학년 ${studentInfo.class_num}반` : '';
+      } else {
+        if (!currentUser) return alert('로그인 후 이용할 수 있습니다.');
+        targetUserId = currentUser.id;
+        targetStudentName = currentProfile?.name || '학생';
+        targetStudentNo = currentProfile?.student_no || '';
+        targetClassNum = currentProfile?.class_num ? `3학년 ${currentProfile.class_num}반` : '';
+      }
+
+      // 카드 데이터 불러오기
+      const { data: cards, error } = await supabaseClient
+        .from('applications_12')
+        .select('*')
+        .eq('user_id', targetUserId);
+
+      if (error || !cards || cards.length === 0) {
+        return alert('등록된 입시상담카드 데이터가 없습니다.');
+      }
+
+      const susiList = cards.filter(c => c.slot_type === 'susi');
+      const specList = cards.filter(c => c.slot_type === 'special');
+      const jeongsiList = cards.filter(c => c.slot_type === 'jeongsi');
+      const printDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      // 인쇄용 HTML 빌드
+      let printContent = '';
+
+      if (mode === 'summary') {
+        // [1] 요약 인쇄 (한눈에 보는 15장 지원 현황표)
+        printContent = `
+          <div class="print-header">
+            <h2>대입 입시상담카드 [지원 요약 리포트]</h2>
+            <div class="print-meta">
+              <span><b>소속:</b> ${targetClassNum}</span>
+              <span><b>학번:</b> ${targetStudentNo}</span>
+              <span><b>성명:</b> ${targetStudentName}</span>
+              <span><b>출력일:</b> ${printDate}</span>
+            </div>
+          </div>
+
+          <div class="section-title">1. 일반 4년제 수시 6장 지망 현황</div>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">지망</th>
+                <th style="width:130px;">대학교</th>
+                <th style="width:140px;">모집단위(학과)</th>
+                <th>전형명</th>
+                <th style="width:110px;">수능최저</th>
+                <th style="width:65px;">추천서</th>
+                <th style="width:75px;">산출내신</th>
+                <th style="width:75px;">진단결과</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[1,2,3,4,5,6].map(num => {
+                const c = susiList.find(x => x.slot_num === num) || {};
+                const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
+                const diag = calculateAdmissionDiag(c.my_score, cutVal);
+                return `
+                  <tr>
+                    <td class="text-center font-bold">${num}지망</td>
+                    <td class="font-bold">${escapeHtml(c.university) || '-'}</td>
+                    <td>${escapeHtml(c.department) || '-'}</td>
+                    <td>${escapeHtml(c.admission_type) || '-'}</td>
+                    <td class="text-center font-semibold">${escapeHtml(c.min_criteria) || '-'}</td>
+                    <td class="text-center font-bold">${c.recommendation === 'O' ? '<span class="tag-rec">필요(O)</span>' : 'X'}</td>
+                    <td class="text-center font-bold text-blue">${c.my_score ? c.my_score + '등급' : '-'}</td>
+                    <td class="text-center"><span class="diag-badge diag-${diag.color}">${diag.text}</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="section-title" style="margin-top:18px;">2. 특수목적대 / 전문대 6장 지망 현황</div>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">지망</th>
+                <th style="width:130px;">대학교</th>
+                <th style="width:140px;">모집단위(학과)</th>
+                <th>전형명</th>
+                <th>비고 / 특이사항</th>
+                <th style="width:65px;">추천서</th>
+                <th style="width:75px;">산출내신</th>
+                <th style="width:75px;">진단결과</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[1,2,3,4,5,6].map(num => {
+                const c = specList.find(x => x.slot_num === num) || {};
+                const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
+                const diag = calculateAdmissionDiag(c.my_score, cutVal);
+                return `
+                  <tr>
+                    <td class="text-center font-bold">${num}지망</td>
+                    <td class="font-bold">${escapeHtml(c.university) || '-'}</td>
+                    <td>${escapeHtml(c.department) || '-'}</td>
+                    <td>${escapeHtml(c.admission_type) || '-'}</td>
+                    <td>${escapeHtml(c.memo) || '-'}</td>
+                    <td class="text-center font-bold">${c.recommendation === 'O' ? '<span class="tag-rec">필요(O)</span>' : 'X'}</td>
+                    <td class="text-center font-bold text-purple">${c.my_score ? c.my_score + '등급' : '-'}</td>
+                    <td class="text-center"><span class="diag-badge diag-${diag.color}">${diag.text}</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="section-title" style="margin-top:18px;">3. 정시 일반 3장 지망 현황 (가 · 나 · 다 군)</div>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th style="width:70px;">군별</th>
+                <th style="width:130px;">대학교</th>
+                <th style="width:140px;">모집단위(학과)</th>
+                <th>전형명</th>
+                <th>환산점수 / 비고</th>
+                <th style="width:65px;">추천서</th>
+                <th style="width:85px;">모평백분위</th>
+                <th style="width:75px;">진단결과</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[1,2,3].map(num => {
+                const jNames = { 1: '정시 (가군)', 2: '정시 (나군)', 3: '정시 (다군)' };
+                const c = jeongsiList.find(x => x.slot_num === num) || {};
+                const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
+                const diag = calculateJeongsiDiag(c.my_score, cutVal);
+                return `
+                  <tr>
+                    <td class="text-center font-bold text-amber">${jNames[num]}</td>
+                    <td class="font-bold">${escapeHtml(c.university) || '-'}</td>
+                    <td>${escapeHtml(c.department) || '-'}</td>
+                    <td>${escapeHtml(c.admission_type) || '-'}</td>
+                    <td>${escapeHtml(c.memo) || '-'}</td>
+                    <td class="text-center font-bold">${c.recommendation === 'O' ? '<span class="tag-rec">필요(O)</span>' : 'X'}</td>
+                    <td class="text-center font-bold text-indigo">${c.my_score ? c.my_score + '%' : '-'}</td>
+                    <td class="text-center"><span class="diag-badge diag-${diag.color}">${diag.text}</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      } else {
+        // [2] 상세 인쇄 (3개년 입결/경쟁률/모집인원/산출내신 정밀 리포트)
+        printContent = `
+          <div class="print-header">
+            <h2>대입 입시상담카드 [심층 분석 종합 리포트]</h2>
+            <div class="print-meta">
+              <span><b>소속:</b> ${targetClassNum}</span>
+              <span><b>학번:</b> ${targetStudentNo}</span>
+              <span><b>성명:</b> ${targetStudentName}</span>
+              <span><b>출력일:</b> ${printDate}</span>
+            </div>
+          </div>
+
+          <div class="section-title">1. 일반 수시 6장 3개년 심층 분석표</div>
+          <table class="report-table detail-table">
+            <thead>
+              <tr>
+                <th rowspan="2" style="width:42px;">지망</th>
+                <th rowspan="2" style="width:105px;">대학(모집단위)</th>
+                <th rowspan="2" style="width:110px;">전형(최저)</th>
+                <th colspan="3">3개년 경쟁률(:1)</th>
+                <th colspan="3">3개년 70%컷(등급)</th>
+                <th colspan="2">모집인원</th>
+                <th rowspan="2" style="width:65px;">산출내신</th>
+                <th rowspan="2" style="width:75px;">진단결과</th>
+              </tr>
+              <tr class="sub-head">
+                <th>2년전</th><th>작년</th><th>올해</th>
+                <th>2년전</th><th>작년</th><th>최근</th>
+                <th>작년</th><th>올해</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[1,2,3,4,5,6].map(num => {
+                const c = susiList.find(x => x.slot_num === num) || {};
+                const comp = c.comp_rates || [];
+                const cuts = c.cutoffs || [];
+                const cutVal = cuts[2] || cuts[1];
+                const diag = calculateAdmissionDiag(c.my_score, cutVal);
+                const recDiff = (c.recruit_curr && c.recruit_last) ? (c.recruit_curr - c.recruit_last) : null;
+                const recDiffText = recDiff !== null ? (recDiff > 0 ? `(+${recDiff})` : (recDiff < 0 ? `(${recDiff})` : '(0)')) : '';
+
+                return `
+                  <tr>
+                    <td class="text-center font-bold">${num}</td>
+                    <td><b>${escapeHtml(c.university) || '-'}</b><br><span class="dept-text">${escapeHtml(c.department) || '-'}</span></td>
+                    <td>${escapeHtml(c.admission_type) || '-'}<br><span class="min-text">최저: ${escapeHtml(c.min_criteria) || '없음'}</span></td>
+                    <td class="text-center">${comp[0] || '-'}</td>
+                    <td class="text-center">${comp[1] || '-'}</td>
+                    <td class="text-center font-bold text-blue">${comp[2] || '-'}</td>
+                    <td class="text-center">${cuts[0] ? cuts[0] + '등급' : '-'}</td>
+                    <td class="text-center">${cuts[1] ? cuts[1] + '등급' : '-'}</td>
+                    <td class="text-center font-bold text-emerald">${cuts[2] ? cuts[2] + '등급' : '-'}</td>
+                    <td class="text-center">${c.recruit_last ? c.recruit_last + '명' : '-'}</td>
+                    <td class="text-center font-bold">${c.recruit_curr ? c.recruit_curr + '명' : '-'} <small>${recDiffText}</small></td>
+                    <td class="text-center font-bold text-indigo">${c.my_score ? c.my_score + '등급' : '-'}</td>
+                    <td class="text-center"><span class="diag-badge diag-${diag.color}">${diag.text}</span><br><small class="text-slate">${diag.diff || ''}</small></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="section-title page-break-before" style="margin-top:20px;">2. 정시 3장 및 특목대 심층 분석표</div>
+          <table class="report-table detail-table">
+            <thead>
+              <tr>
+                <th rowspan="2" style="width:65px;">구분</th>
+                <th rowspan="2" style="width:105px;">대학(모집단위)</th>
+                <th rowspan="2" style="width:110px;">전형(비고)</th>
+                <th colspan="3">3개년 경쟁률(:1)</th>
+                <th colspan="3">3개년 70% 입결컷</th>
+                <th colspan="2">모집인원</th>
+                <th rowspan="2" style="width:75px;">내 점수</th>
+                <th rowspan="2" style="width:75px;">진단결과</th>
+              </tr>
+              <tr class="sub-head">
+                <th>2년전</th><th>작년</th><th>올해</th>
+                <th>2년전</th><th>작년</th><th>최근</th>
+                <th>작년</th><th>올해</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[1,2,3].map(num => {
+                const jNames = { 1: '정시(가)', 2: '정시(나)', 3: '정시(다)' };
+                const c = jeongsiList.find(x => x.slot_num === num) || {};
+                const comp = c.comp_rates || [];
+                const cuts = c.cutoffs || [];
+                const cutVal = cuts[2] || cuts[1];
+                const diag = calculateJeongsiDiag(c.my_score, cutVal);
+                return `
+                  <tr style="background:#fffdfa;">
+                    <td class="text-center font-bold text-amber">${jNames[num]}</td>
+                    <td><b>${escapeHtml(c.university) || '-'}</b><br><span class="dept-text">${escapeHtml(c.department) || '-'}</span></td>
+                    <td>${escapeHtml(c.admission_type) || '-'}<br><span class="min-text">${escapeHtml(c.memo) || '-'}</span></td>
+                    <td class="text-center">${comp[0] || '-'}</td>
+                    <td class="text-center">${comp[1] || '-'}</td>
+                    <td class="text-center font-bold text-amber">${comp[2] || '-'}</td>
+                    <td class="text-center">${cuts[0] ? cuts[0] + '%' : '-'}</td>
+                    <td class="text-center">${cuts[1] ? cuts[1] + '%' : '-'}</td>
+                    <td class="text-center font-bold text-emerald">${cuts[2] ? cuts[2] + '%' : '-'}</td>
+                    <td class="text-center">${c.recruit_last ? c.recruit_last + '명' : '-'}</td>
+                    <td class="text-center font-bold">${c.recruit_curr ? c.recruit_curr + '명' : '-'}</td>
+                    <td class="text-center font-bold text-indigo">${c.my_score ? c.my_score + '%' : '-'}</td>
+                    <td class="text-center"><span class="diag-badge diag-${diag.color}">${diag.text}</span><br><small class="text-slate">${diag.diff || ''}</small></td>
+                  </tr>
+                `;
+              }).join('')}
+              ${[1,2,3,4,5,6].map(num => {
+                const c = specList.find(x => x.slot_num === num) || {};
+                const comp = c.comp_rates || [];
+                const cuts = c.cutoffs || [];
+                const cutVal = cuts[2] || cuts[1];
+                const diag = calculateAdmissionDiag(c.my_score, cutVal);
+                return `
+                  <tr>
+                    <td class="text-center font-bold text-purple">특목 ${num}</td>
+                    <td><b>${escapeHtml(c.university) || '-'}</b><br><span class="dept-text">${escapeHtml(c.department) || '-'}</span></td>
+                    <td>${escapeHtml(c.admission_type) || '-'}<br><span class="min-text">${escapeHtml(c.memo) || '-'}</span></td>
+                    <td class="text-center">${comp[0] || '-'}</td>
+                    <td class="text-center">${comp[1] || '-'}</td>
+                    <td class="text-center font-bold">${comp[2] || '-'}</td>
+                    <td class="text-center">${cuts[0] ? cuts[0] + '등급' : '-'}</td>
+                    <td class="text-center">${cuts[1] ? cuts[1] + '등급' : '-'}</td>
+                    <td class="text-center font-bold text-emerald">${cuts[2] ? cuts[2] + '등급' : '-'}</td>
+                    <td class="text-center">${c.recruit_last ? c.recruit_last + '명' : '-'}</td>
+                    <td class="text-center font-bold">${c.recruit_curr ? c.recruit_curr + '명' : '-'}</td>
+                    <td class="text-center font-bold text-purple">${c.my_score ? c.my_score + '등급' : '-'}</td>
+                    <td class="text-center"><span class="diag-badge diag-${diag.color}">${diag.text}</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      // 새 인쇄 창 열기
+      const printWindow = window.open('', '_blank', 'width=950,height=900');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <title>${targetStudentName} 입시상담카드 인쇄</title>
+          <style>
+            @page { size: A4 portrait; margin: 12mm 10mm; }
+            body { font-family: 'Pretendard', sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 15px; }
+            .print-header { border-bottom: 2px solid #2563eb; padding-bottom: 8px; margin-bottom: 12px; }
+            .print-header h2 { margin: 0 0 6px 0; font-size: 18px; color: #1e3a8a; }
+            .print-meta { display: flex; gap: 20px; font-size: 12px; color: #475569; }
+            .section-title { font-size: 13px; font-weight: bold; color: #1e40af; margin-bottom: 6px; }
+            .report-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10.5px; }
+            .report-table th, .report-table td { border: 1px solid #cbd5e1; padding: 5px 6px; }
+            .report-table th { background: #f1f5f9; color: #334155; font-weight: bold; text-align: center; }
+            .detail-table .sub-head th { background: #f8fafc; font-size: 9.5px; padding: 3px; }
+            .text-center { text-align: center; }
+            .font-bold { font-weight: bold; }
+            .text-blue { color: #2563eb; }
+            .text-purple { color: #7c3aed; }
+            .text-amber { color: #d97706; }
+            .text-indigo { color: #4338ca; }
+            .text-emerald { color: #059669; }
+            .text-slate { color: #64748b; font-size: 9px; }
+            .tag-rec { background: #fee2e2; color: #dc2626; padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: bold; }
+            .diag-badge { display: inline-block; padding: 1px 6px; border-radius: 9999px; font-size: 9.5px; font-weight: 800; border: 1px solid transparent; }
+            .diag-purple { background: #f3e8ff; color: #7e22ce; border-color: #d8b4fe; }
+            .diag-amber { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+            .diag-blue { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+            .diag-emerald { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
+            .diag-rose { background: #ffe4e6; color: #be123c; border-color: #fecdd3; }
+            .diag-slate { background: #f1f5f9; color: #64748b; }
+            .dept-text { color: #475569; font-size: 10px; }
+            .min-text { color: #047857; font-size: 9.5px; }
+            @media print {
+              .page-break-before { page-break-before: always; }
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent}
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
