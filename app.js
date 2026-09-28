@@ -4015,50 +4015,31 @@ eventsHtml = dayEvents.map(e => {
     }
 
     // -------------------------------------------------------------
-    // [1] 모의서류평가 데이터 및 인터랙션 (폴더/샘플 수정·삭제 완비)
+    // [1] 모의서류평가 데이터 및 Supabase DB 연동 인터랙션
     // -------------------------------------------------------------
-    const DEFAULT_MOCK_EVALS = [
-      {
-        id: "mock_yonsei",
-        univ: "연세대학교",
-        type: "학생부종합(활동우수형)",
-        drive_video_url: "",
-        youtube_url: "",
-        samples: [
-          {
-            id: "s1",
-            title: "국어국문학과 (내신 2.1)",
-            result: "최초합격",
-            subjects: "국어 1.8 / 수학 2.6 / 영어 2.0 / 사회 1.9 (이수: 고전읽기, 심화국어)",
-            setek: "'현대시의 언어적 변천사' 탐구 보고서를 주도적으로 작성하고, 텍스트의 맥락적 읽기 능력이 매우 탁월함.",
-            changche: "인문학술 동아리 부장으로 활동하며 교내 문학 학술제 기획 및 멘토링 봉사 30시간 수행.",
-            actualComment: "내신(2.1) 대비 3학년 심화국어 세특의 학문적 탐구 주도성과 전공 관련 과목 선택의 위계가 매우 우수하게 평가됨."
-          }
-        ]
-      },
-      {
-        id: "mock_korea",
-        univ: "고려대학교",
-        type: "학생부종합(학업우수전형)",
-        drive_video_url: "",
-        youtube_url: "",
-        samples: [
-          {
-            id: "s2",
-            title: "컴퓨터학과 (내신 1.7)",
-            result: "최초합격",
-            subjects: "국어 2.0 / 수학 1.3 / 영어 1.6 / 과탐 1.4 (이수: 미적분, 기하, 정보, 인공지능수학)",
-            setek: "자료구조 기반 그래프 탐색 알고리즘을 C++로 직접 구현하고 시간복잡도를 개선하는 프로젝트를 수행함.",
-            changche: "SW 동아리 부장으로 교내 알고리즘 스터디 운영 및 교내 해커톤 최우수상 수상.",
-            actualComment: "수학 및 정보 과목의 위계를 완벽히 이수하였고 수능최저 4합 8을 충족하여 최상위권 평가를 받음."
-          }
-        ]
-      }
-    ];
-
-    let currentMockEvals = JSON.parse(localStorage.getItem('MOCK_EVALS_DATA') || 'null') || DEFAULT_MOCK_EVALS;
-    let selectedMockUnivId = currentMockEvals[0]?.id || "";
+    let currentMockEvals = [];
+    let selectedMockUnivId = "";
     let selectedMockSampleIdx = 0;
+
+    async function loadMockEvalsData() {
+      const { data, error } = await supabaseClient
+        .from('mock_eval_folders')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('모의평가 로드 실패:', error);
+        currentMockEvals = [];
+      } else {
+        currentMockEvals = data || [];
+      }
+
+      if (!selectedMockUnivId && currentMockEvals.length > 0) {
+        selectedMockUnivId = currentMockEvals[0].id;
+      }
+      renderMockEvalUnivBadges();
+      renderMockEvalDetails();
+    }
 
     function renderMockEvalUnivBadges() {
       const container = document.getElementById('mockEvalUnivBadgeContainer');
@@ -4107,7 +4088,6 @@ eventsHtml = dayEvents.map(e => {
         return;
       }
 
-      // 샘플 탭 버튼들
       if (tabsEl) {
         if (!targetUniv.samples || targetUniv.samples.length === 0) {
           tabsEl.innerHTML = '<span class="text-xs text-slate-400 py-1">등록된 생기부 샘플이 없습니다. 우측 [+ 이 대학에 샘플 추가] 버튼을 눌러주세요.</span>';
@@ -4122,7 +4102,6 @@ eventsHtml = dayEvents.map(e => {
         }
       }
 
-      // 대학 워크숍 영상 버튼
       if (videoBtnsEl) {
         let vHtml = '';
         if (targetUniv.drive_video_url) {
@@ -4142,7 +4121,6 @@ eventsHtml = dayEvents.map(e => {
         videoBtnsEl.innerHTML = vHtml;
       }
 
-      // 대학 폴더 수정 / 삭제 버튼 (교사용)
       if (actionBtnsEl) {
         actionBtnsEl.innerHTML = isCurrentTeacher() ? `
           <button type="button" onclick="openEditMockFolderModal('${targetUniv.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 text-blue-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1">
@@ -4171,7 +4149,6 @@ eventsHtml = dayEvents.map(e => {
 
       if (contentEl) {
         contentEl.innerHTML = `
-          <!-- 좌측: 생기부 발췌문 -->
           <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
             <div class="flex items-center justify-between border-b pb-2">
               <h3 class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
@@ -4195,7 +4172,6 @@ eventsHtml = dayEvents.map(e => {
             </div>
           </div>
 
-          <!-- 우측: 교사 모의 채점 & 대학 실채점 및 샘플 수정/삭제 -->
           <div class="space-y-4 text-xs">
             <div class="flex items-center justify-between bg-blue-50/60 p-3 rounded-xl border border-blue-100">
               <span class="font-bold text-blue-900">현재 샘플: [${escapeHtml(sample.title)}]</span>
@@ -4261,7 +4237,6 @@ eventsHtml = dayEvents.map(e => {
       renderMockEvalDetails();
     }
 
-    // 모의평가 폴더 등록 & 수정
     function openNewMockFolderModal() {
       document.getElementById('mockFolderEditId').value = '';
       document.getElementById('mockFolderModalTitle').innerHTML = '<i data-lucide="folder-plus" class="w-4 h-4 text-blue-600"></i> 새 모의평가 대학 폴더 생성';
@@ -4292,7 +4267,7 @@ eventsHtml = dayEvents.map(e => {
       document.getElementById('mockFolderModal').classList.add('hidden');
     }
 
-    function saveMockEvalFolder() {
+    async function saveMockEvalFolder() {
       const editId = document.getElementById('mockFolderEditId').value;
       const univ = document.getElementById('mockFolderUniv').value.trim();
       const type = document.getElementById('mockFolderType').value.trim();
@@ -4301,51 +4276,46 @@ eventsHtml = dayEvents.map(e => {
 
       if (!univ) return alert('대학교명을 입력해주세요.');
 
+      const record = {
+        univ: univ,
+        type: type || '학생부종합전형',
+        drive_video_url: driveVideo,
+        youtube_url: youtubeUrl
+      };
+
       if (editId) {
-        const target = currentMockEvals.find(x => x.id === editId);
-        if (target) {
-          target.univ = univ;
-          target.type = type || '학생부종합전형';
-          target.drive_video_url = driveVideo;
-          target.youtube_url = youtubeUrl;
-        }
-        alert(`[${univ}] 대학 폴더 정보가 수정되었습니다!`);
+        const { error } = await supabaseClient.from('mock_eval_folders').update(record).eq('id', editId);
+        if (error) return alert('수정 실패: ' + error.message);
+        alert(`[${univ}] 대학 폴더가 성공적으로 수정되었습니다!`);
       } else {
-        const newId = 'mock_' + Date.now();
-        currentMockEvals.push({
-          id: newId,
-          univ: univ,
-          type: type || '학생부종합전형',
-          drive_video_url: driveVideo,
-          youtube_url: youtubeUrl,
-          samples: []
-        });
-        selectedMockUnivId = newId;
+        record.id = 'mock_' + Date.now();
+        record.samples = [];
+        const { error } = await supabaseClient.from('mock_eval_folders').insert([record]);
+        if (error) return alert('생성 실패: ' + error.message);
+        selectedMockUnivId = record.id;
         selectedMockSampleIdx = 0;
-        alert(`[${univ}] 대학 폴더가 생성되었습니다!`);
+        alert(`[${univ}] 새 대학 폴더가 DB에 생성되었습니다!`);
       }
 
-      localStorage.setItem('MOCK_EVALS_DATA', JSON.stringify(currentMockEvals));
       closeMockFolderModal();
-      renderMockEvalUnivBadges();
-      renderMockEvalDetails();
+      loadMockEvalsData();
     }
 
-    function deleteMockEvalUniv(id) {
+    async function deleteMockEvalUniv(id) {
       if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
       const target = currentMockEvals.find(x => x.id === id);
       if (!target) return;
       if (!confirm(`'${target.univ}' 모의평가 폴더와 등록된 모든 샘플을 완전히 삭제할까요?`)) return;
 
-      currentMockEvals = currentMockEvals.filter(x => x.id !== id);
-      localStorage.setItem('MOCK_EVALS_DATA', JSON.stringify(currentMockEvals));
-      selectedMockUnivId = currentMockEvals[0]?.id || "";
+      const { error } = await supabaseClient.from('mock_eval_folders').delete().eq('id', id);
+      if (error) return alert('삭제 실패: ' + error.message);
+
+      alert(`'${target.univ}' 폴더가 완전히 삭제되었습니다.`);
+      selectedMockUnivId = "";
       selectedMockSampleIdx = 0;
-      renderMockEvalUnivBadges();
-      renderMockEvalDetails();
+      loadMockEvalsData();
     }
 
-    // 모의평가 생기부 샘플 등록 & 수정 & 삭제
     function openNewMockSampleModal() {
       const targetUniv = currentMockEvals.find(x => x.id === selectedMockUnivId);
       if (!targetUniv) return alert('먼저 대학 폴더를 선택하거나 생성해주세요.');
@@ -4387,7 +4357,7 @@ eventsHtml = dayEvents.map(e => {
       document.getElementById('newMockEvalModal').classList.add('hidden');
     }
 
-    function saveNewMockEvalSample() {
+    async function saveNewMockEvalSample() {
       const targetUniv = currentMockEvals.find(x => x.id === selectedMockUnivId);
       if (!targetUniv) return alert('대학 폴더를 찾을 수 없습니다.');
 
@@ -4401,96 +4371,79 @@ eventsHtml = dayEvents.map(e => {
 
       if (!title) return alert('샘플 이름/학과명을 입력해주세요.');
 
-      if (!targetUniv.samples) targetUniv.samples = [];
+      const updatedSamples = targetUniv.samples ? [...targetUniv.samples] : [];
 
-      if (editIdx >= 0 && targetUniv.samples[editIdx]) {
-        targetUniv.samples[editIdx] = {
-          ...targetUniv.samples[editIdx],
+      if (editIdx >= 0 && updatedSamples[editIdx]) {
+        updatedSamples[editIdx] = {
+          ...updatedSamples[editIdx],
           title, result, subjects, setek, changche, actualComment
         };
-        alert('생기부 샘플 내용이 성공적으로 수정되었습니다!');
       } else {
-        targetUniv.samples.push({
+        updatedSamples.push({
           id: 'sample_' + Date.now(),
           title, result, subjects, setek, changche, actualComment
         });
-        selectedMockSampleIdx = targetUniv.samples.length - 1;
-        alert(`[${targetUniv.univ}]에 새 생기부 샘플이 등록되었습니다!`);
+        selectedMockSampleIdx = updatedSamples.length - 1;
       }
 
-      localStorage.setItem('MOCK_EVALS_DATA', JSON.stringify(currentMockEvals));
+      const { error } = await supabaseClient
+        .from('mock_eval_folders')
+        .update({ samples: updatedSamples })
+        .eq('id', targetUniv.id);
+
+      if (error) return alert('샘플 저장 실패: ' + error.message);
+
+      alert('생기부 샘플이 DB에 안전하게 저장되었습니다!');
       closeNewMockEvalModal();
-      renderMockEvalDetails();
-      renderMockEvalUnivBadges();
+      loadMockEvalsData();
     }
 
-    function deleteMockEvalSample(sampleIdx) {
+    async function deleteMockEvalSample(sampleIdx) {
       if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
       const targetUniv = currentMockEvals.find(x => x.id === selectedMockUnivId);
       if (!targetUniv || !targetUniv.samples || !targetUniv.samples[sampleIdx]) return;
 
-      const sampleTitle = targetUniv.samples[sampleIdx].title || '이 샘플';
-      if (!confirm(`'${sampleTitle}' 생기부 샘플을 삭제할까요?`)) return;
+      if (!confirm(`'${targetUniv.samples[sampleIdx].title}' 생기부 샘플을 삭제할까요?`)) return;
 
-      targetUniv.samples.splice(sampleIdx, 1);
+      const updatedSamples = targetUniv.samples.filter((_, idx) => idx !== sampleIdx);
+      const { error } = await supabaseClient
+        .from('mock_eval_folders')
+        .update({ samples: updatedSamples })
+        .eq('id', targetUniv.id);
+
+      if (error) return alert('샘플 삭제 실패: ' + error.message);
+
       selectedMockSampleIdx = 0;
-      localStorage.setItem('MOCK_EVALS_DATA', JSON.stringify(currentMockEvals));
       alert('샘플이 삭제되었습니다.');
-      renderMockEvalDetails();
-      renderMockEvalUnivBadges();
+      loadMockEvalsData();
     }
 
 
     // -------------------------------------------------------------
-    // [2] 교사간담회 Q&A 데이터 및 인터랙션 (폴더/Q&A 수정·삭제 및 링크 지원)
+    // [2] 교사간담회 Q&A 데이터 및 Supabase DB 연동 인터랙션
     // -------------------------------------------------------------
-    const DEFAULT_TEACHER_FORUMS = [
-      {
-        id: "forum_korea_2026",
-        univ: "고려대학교",
-        session: "2026 책임사정관 정례간담회 (5월)",
-        drive_file_url: "",
-        video_url: "",
-        questions: [
-          {
-            id: "q1",
-            question: "자연계열 지원자가 고교에서 '미적분'을 이수하지 못했을 경우 정성평가에서 실질 감점은 어느 정도인가요?",
-            answer: "고교 편제표상 개설되었음에도 학생이 선택을 기피한 것이라면 학업 및 진로역량에서 상당한 감점입니다. 단, 학교 편제상 미개설된 과목이라면 소명되어 불이익이 없습니다.",
-            tip: "학교 알리미 교육과정 편제표를 사정관이 먼저 대조하므로 학생 개인의 회피 여부가 핵심.",
-            drive_url: "",
-            video_url: ""
-          },
-          {
-            id: "q2",
-            question: "수능최저 4합 8 충족 시 실질 경쟁률 하락 폭은 어느 정도인가요?",
-            answer: "최초 지원 경쟁률 대비 최저 충족 실질 경쟁률은 약 1/3 수준으로 대폭 낮아집니다.",
-            tip: "학업우수전형 지원자는 수능최저 충족 관리가 1순위 합격 열쇠.",
-            drive_url: "",
-            video_url: ""
-          }
-        ]
-      },
-      {
-        id: "forum_yonsei_2026",
-        univ: "연세대학교",
-        session: "2026 진로진학부장 간담회",
-        drive_file_url: "",
-        video_url: "",
-        questions: [
-          {
-            id: "q3",
-            question: "인문계열 지원자가 수학 확률과통계 외에 미적분을 추가 이수하면 가산점이 있나요?",
-            answer: "경영/경제계열은 미적분 이수 시 수리적 탐구역량에서 매우 긍정적 평가를 받습니다. 어문/인문학부는 필수 사항은 아니지만, 학업 열정 측면에서 적극 반영합니다.",
-            tip: "상경계열 진학 희망자는 가급적 미적분 이수 강력 권장.",
-            drive_url: "",
-            video_url: ""
-          }
-        ]
-      }
-    ];
+    let currentTeacherForums = [];
+    let selectedForumFolderId = "";
 
-    let currentTeacherForums = JSON.parse(localStorage.getItem('TEACHER_FORUMS_DATA') || 'null') || DEFAULT_TEACHER_FORUMS;
-    let selectedForumFolderId = currentTeacherForums[0]?.id || "";
+    async function loadTeacherForumsData() {
+      const { data, error } = await supabaseClient
+        .from('teacher_forum_folders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('간담회 로드 실패:', error);
+        currentTeacherForums = [];
+      } else {
+        currentTeacherForums = data || [];
+      }
+
+      if (!selectedForumFolderId && currentTeacherForums.length > 0) {
+        selectedForumFolderId = currentTeacherForums[0].id;
+      }
+      renderTeacherForumUnivBadges();
+      renderTeacherForumCards();
+    }
 
     function renderTeacherForumUnivBadges() {
       const container = document.getElementById('forumUnivBadgeContainer');
@@ -4538,7 +4491,6 @@ eventsHtml = dayEvents.map(e => {
         return;
       }
 
-      // 상단 배너: 폴더 정보 및 영상/자료 링크 + 수정/삭제 버튼
       if (bannerEl) {
         bannerEl.innerHTML = `
           <div class="flex flex-wrap items-center gap-2">
@@ -4643,7 +4595,6 @@ eventsHtml = dayEvents.map(e => {
       lucide.createIcons();
     }
 
-    // 유튜브/드라이브 링크 통합 재생 헬퍼
     function handleGenericVideoOpen(url, title) {
       if (!url) return alert('등록된 영상 링크가 없습니다.');
       if (url.includes('youtu.be') || url.includes('youtube.com')) {
@@ -4653,7 +4604,6 @@ eventsHtml = dayEvents.map(e => {
       }
     }
 
-    // 간담회 폴더 등록 & 수정 & 삭제
     function openNewTeacherForumFolderModal() {
       document.getElementById('forumFolderEditId').value = '';
       document.getElementById('forumFolderModalTitle').innerHTML = '<i data-lucide="folder-plus" class="w-4 h-4 text-emerald-600"></i> 새 간담회 행사 폴더 생성';
@@ -4685,7 +4635,7 @@ eventsHtml = dayEvents.map(e => {
       document.getElementById('forumFolderModal').classList.add('hidden');
     }
 
-    function saveTeacherForumFolder() {
+    async function saveTeacherForumFolder() {
       const editId = document.getElementById('forumFolderEditId').value;
       const univ = document.getElementById('forumFolderUniv').value.trim();
       const session = document.getElementById('forumFolderSession').value.trim();
@@ -4694,49 +4644,44 @@ eventsHtml = dayEvents.map(e => {
 
       if (!univ || !session) return alert('대학명과 간담회 행사명을 입력해주세요.');
 
+      const record = {
+        univ: univ,
+        session: session,
+        drive_file_url: driveUrl,
+        video_url: videoUrl
+      };
+
       if (editId) {
-        const target = currentTeacherForums.find(f => f.id === editId);
-        if (target) {
-          target.univ = univ;
-          target.session = session;
-          target.drive_file_url = driveUrl;
-          target.video_url = videoUrl;
-        }
-        alert(`[${univ}] 간담회 정보가 수정되었습니다!`);
+        const { error } = await supabaseClient.from('teacher_forum_folders').update(record).eq('id', editId);
+        if (error) return alert('수정 실패: ' + error.message);
+        alert(`[${univ}] 간담회 정보가 성공적으로 수정되었습니다!`);
       } else {
-        const newFolderId = 'forum_' + Date.now();
-        currentTeacherForums.unshift({
-          id: newFolderId,
-          univ: univ,
-          session: session,
-          drive_file_url: driveUrl,
-          video_url: videoUrl,
-          questions: []
-        });
-        selectedForumFolderId = newFolderId;
-        alert(`[${univ} - ${session}] 간담회 폴더가 생성되었습니다!`);
+        record.id = 'forum_' + Date.now();
+        record.questions = [];
+        const { error } = await supabaseClient.from('teacher_forum_folders').insert([record]);
+        if (error) return alert('생성 실패: ' + error.message);
+        selectedForumFolderId = record.id;
+        alert(`[${univ} - ${session}] 새 간담회 폴더가 DB에 생성되었습니다!`);
       }
 
-      localStorage.setItem('TEACHER_FORUMS_DATA', JSON.stringify(currentTeacherForums));
       closeTeacherForumFolderModal();
-      renderTeacherForumUnivBadges();
-      renderTeacherForumCards();
+      loadTeacherForumsData();
     }
 
-    function deleteForumFolder(folderId) {
+    async function deleteForumFolder(folderId) {
       if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
       const target = currentTeacherForums.find(f => f.id === folderId);
       if (!target) return;
       if (!confirm(`'${target.univ} - ${target.session}' 폴더와 등록된 모든 Q&A를 삭제할까요?`)) return;
 
-      currentTeacherForums = currentTeacherForums.filter(f => f.id !== folderId);
-      localStorage.setItem('TEACHER_FORUMS_DATA', JSON.stringify(currentTeacherForums));
-      selectedForumFolderId = currentTeacherForums[0]?.id || "";
-      renderTeacherForumUnivBadges();
-      renderTeacherForumCards();
+      const { error } = await supabaseClient.from('teacher_forum_folders').delete().eq('id', folderId);
+      if (error) return alert('삭제 실패: ' + error.message);
+
+      alert('간담회 폴더가 완전히 삭제되었습니다.');
+      selectedForumFolderId = "";
+      loadTeacherForumsData();
     }
 
-    // 간담회 질문(Q&A) 등록 & 수정 & 삭제
     function openNewTeacherForumModal() {
       const currentFolder = currentTeacherForums.find(f => f.id === selectedForumFolderId);
       if (!currentFolder) return alert('먼저 간담회 폴더를 생성하거나 선택해주세요.');
@@ -4779,7 +4724,7 @@ eventsHtml = dayEvents.map(e => {
       document.getElementById('newTeacherForumModal').classList.add('hidden');
     }
 
-    function saveTeacherForumQuestion() {
+    async function saveTeacherForumQuestion() {
       const currentFolder = currentTeacherForums.find(f => f.id === selectedForumFolderId);
       if (!currentFolder) return alert('간담회 폴더를 찾을 수 없습니다.');
 
@@ -4793,10 +4738,10 @@ eventsHtml = dayEvents.map(e => {
 
       if (!q || !a) return alert('질문과 사정관 답변을 모두 입력해주세요.');
 
-      if (!currentFolder.questions) currentFolder.questions = [];
+      const updatedQuestions = currentFolder.questions ? [...currentFolder.questions] : [];
 
       if (editId) {
-        const targetQ = currentFolder.questions.find(item => item.id === editId);
+        const targetQ = updatedQuestions.find(item => item.id === editId);
         if (targetQ) {
           targetQ.question = q;
           targetQ.answer = a;
@@ -4804,10 +4749,8 @@ eventsHtml = dayEvents.map(e => {
           targetQ.drive_url = driveUrl;
           targetQ.video_url = videoUrl;
         }
-        alert('질문이 성공적으로 수정되었습니다!');
-        closeNewTeacherForumModal();
       } else {
-        currentFolder.questions.push({
+        updatedQuestions.push({
           id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3),
           question: q,
           answer: a,
@@ -4815,124 +4758,75 @@ eventsHtml = dayEvents.map(e => {
           drive_url: driveUrl,
           video_url: videoUrl
         });
-
-        if (keepOpen) {
-          document.getElementById('forumInputQuestion').value = '';
-          document.getElementById('forumInputAnswer').value = '';
-          document.getElementById('forumInputTip').value = '';
-          document.getElementById('forumInputDriveUrl').value = '';
-          document.getElementById('forumInputVideoUrl').value = '';
-          document.getElementById('forumInputQuestion').focus();
-          alert('질문이 저장되었습니다! 다음 질문을 바로 입력하세요.');
-        } else {
-          alert('질문과 답변이 등록되었습니다!');
-          closeNewTeacherForumModal();
-        }
       }
 
-      localStorage.setItem('TEACHER_FORUMS_DATA', JSON.stringify(currentTeacherForums));
-      renderTeacherForumCards();
-      renderTeacherForumUnivBadges();
+      const { error } = await supabaseClient
+        .from('teacher_forum_folders')
+        .update({ questions: updatedQuestions })
+        .eq('id', currentFolder.id);
+
+      if (error) return alert('질문 저장 실패: ' + error.message);
+
+      if (!editId && keepOpen) {
+        document.getElementById('forumInputQuestion').value = '';
+        document.getElementById('forumInputAnswer').value = '';
+        document.getElementById('forumInputTip').value = '';
+        document.getElementById('forumInputDriveUrl').value = '';
+        document.getElementById('forumInputVideoUrl').value = '';
+        document.getElementById('forumInputQuestion').focus();
+        alert('질문이 DB에 저장되었습니다! 다음 질문을 바로 입력하세요.');
+      } else {
+        alert('질문이 성공적으로 저장되었습니다!');
+        closeNewTeacherForumModal();
+      }
+
+      loadTeacherForumsData();
     }
 
-    function deleteTeacherForumQuestion(questionId) {
+    async function deleteTeacherForumQuestion(questionId) {
       if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
       const currentFolder = currentTeacherForums.find(f => f.id === selectedForumFolderId);
       if (!currentFolder) return;
       if (!confirm('이 질의응답을 삭제할까요?')) return;
 
-      currentFolder.questions = currentFolder.questions.filter(q => q.id !== questionId);
-      localStorage.setItem('TEACHER_FORUMS_DATA', JSON.stringify(currentTeacherForums));
-      renderTeacherForumCards();
-      renderTeacherForumUnivBadges();
+      const updatedQuestions = currentFolder.questions.filter(q => q.id !== questionId);
+      const { error } = await supabaseClient
+        .from('teacher_forum_folders')
+        .update({ questions: updatedQuestions })
+        .eq('id', currentFolder.id);
+
+      if (error) return alert('삭제 실패: ' + error.message);
+
+      alert('질문이 삭제되었습니다.');
+      loadTeacherForumsData();
     }
 
 
     // -------------------------------------------------------------
-    // [3] 입학설명회 전형 주요사항 (자유 폴더 시스템 전면 개편)
+    // [3] 입학설명회 전형 주요사항 및 Supabase DB 연동 인터랙션
     // -------------------------------------------------------------
-    const DEFAULT_BRIEFING_FOLDERS = [
-      {
-        id: "bf_capital",
-        name: "수도권 주요 대학",
-        description: "성균관대, 중앙대, 한양대 등 서울 및 수도권 주요 15개 대학",
-        drive_url: "",
-        items: [
-          {
-            id: "skku",
-            univ: "성균관대학교",
-            title: "2027학년도 대입전형 시행계획",
-            changes: "1. 수시 학생부종합 수능최저 탐구 반영 시 상위 1과목으로 완화\n2. 학생부교과(학교장추천) 진로선택과목 정성평가 20% 도입\n3. 정시 다군 글로벌융합학부 신설 (모집인원 45명 선발)",
-            pdfUrl: "https://admission.skku.edu",
-            driveVideoUrl: "",
-            youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          },
-          {
-            id: "cau",
-            univ: "중앙대학교",
-            title: "2027학년도 대입전형 주요사항",
-            changes: "1. CAU융합인재 면접 전면 폐지 (서류 100% 일괄선발로 개편)\n2. 지역균형(교과) 고교별 추천 가능 인원 최대 20명으로 확대\n3. 수능 영어 1~2등급 간 환산점수 감점 폭 대폭 축소",
-            pdfUrl: "https://admission.cau.ac.kr",
-            driveVideoUrl: "",
-            youtubeUrl: "https://youtu.be/dQw4w9WgXcQ"
-          }
-        ]
-      },
-      {
-        id: "bf_national",
-        name: "지방 거점 국립대",
-        description: "충북대, 충남대, 경북대, 부산대, 전남대, 강원대 등 거점국립대",
-        drive_url: "",
-        items: [
-          {
-            id: "cbnu",
-            univ: "충북대학교",
-            title: "2027학년도 수시·정시 모집요강 주요사항",
-            changes: "1. 학생부교과 지역인재전형 선발 비율 55%로 대폭 확대\n2. 자연계열 수능최저 수학 미적분/기하 필수 반영 폐지(확통 허용)\n3. 진로선택과목 B등급 성취도 환산 감점 완화",
-            pdfUrl: "https://ipsi.chungbuk.ac.kr",
-            driveVideoUrl: "",
-            youtubeUrl: ""
-          }
-        ]
-      },
-      {
-        id: "bf_private",
-        name: "지방 주요 사립대",
-        description: "영남대, 계명대, 동아대, 한남대, 조선대 등 지방 사립 명문",
-        drive_url: "",
-        items: [
-          {
-            id: "yu",
-            univ: "영남대학교",
-            title: "2027학년도 신입학 전형계획",
-            changes: "1. 자율전공학부 무전공 선발 대폭 확대 (수시 및 정시 분할)\n2. 간호학과 및 약학과 수능최저 기준 합산 방식 조정\n3. 학생부종합 면접 문항 간소화",
-            pdfUrl: "https://enter.yu.ac.kr",
-            driveVideoUrl: "",
-            youtubeUrl: ""
-          }
-        ]
-      },
-      {
-        id: "bf_special",
-        name: "의약학 및 특수목적대",
-        description: "KAIST, UNIST, 의·치·한·약·수 및 사관학교 등 특수대학",
-        drive_url: "",
-        items: [
-          {
-            id: "kentech",
-            univ: "한국에너지공과대학교(KENTECH)",
-            title: "2027 신입생 수시모집 가이드",
-            changes: "1. 수시 6회 지원 제한 미적용 (군외 선발 유지)\n2. 창의성 면접 평가 비중 및 진행 방식 안내\n3. 학생부 수·과학 교과 탐구역량 정성평가 100%",
-            pdfUrl: "https://www.kentech.ac.kr",
-            driveVideoUrl: "",
-            youtubeUrl: ""
-          }
-        ]
-      }
-    ];
+    let currentBriefingFolders = [];
+    let selectedBriefingFolderId = "";
 
-    let currentBriefingFolders = JSON.parse(localStorage.getItem('BRIEFING_FOLDERS_DATA') || 'null') || DEFAULT_BRIEFING_FOLDERS;
-    let selectedBriefingFolderId = currentBriefingFolders[0]?.id || "";
+    async function loadBriefingFoldersData() {
+      const { data, error } = await supabaseClient
+        .from('briefing_folders')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('설명회 로드 실패:', error);
+        currentBriefingFolders = [];
+      } else {
+        currentBriefingFolders = data || [];
+      }
+
+      if (!selectedBriefingFolderId && currentBriefingFolders.length > 0) {
+        selectedBriefingFolderId = currentBriefingFolders[0].id;
+      }
+      renderBriefingFolderBadges();
+      renderBriefingCards();
+    }
 
     function renderBriefingFolderBadges() {
       const container = document.getElementById('briefingFolderBadgeContainer');
@@ -4980,7 +4874,6 @@ eventsHtml = dayEvents.map(e => {
         return;
       }
 
-      // 상단 배너 표시 (폴더 정보, 드라이브 링크, 폴더 수정/삭제 버튼)
       if (bannerEl) {
         bannerEl.innerHTML = `
           <div class="flex flex-wrap items-center gap-2">
@@ -5080,7 +4973,6 @@ eventsHtml = dayEvents.map(e => {
       lucide.createIcons();
     }
 
-    // 설명회 폴더 등록 & 수정 & 삭제
     function openNewBriefingFolderModal() {
       document.getElementById('briefingFolderEditId').value = '';
       document.getElementById('briefingFolderModalTitle').innerHTML = '<i data-lucide="folder-plus" class="w-4 h-4 text-amber-600"></i> 새 입학설명회 폴더 생성';
@@ -5110,7 +5002,7 @@ eventsHtml = dayEvents.map(e => {
       document.getElementById('briefingFolderModal').classList.add('hidden');
     }
 
-    function saveBriefingFolder() {
+    async function saveBriefingFolder() {
       const editId = document.getElementById('briefingFolderEditId').value;
       const name = document.getElementById('briefingFolderName').value.trim();
       const desc = document.getElementById('briefingFolderDesc').value.trim();
@@ -5118,47 +5010,43 @@ eventsHtml = dayEvents.map(e => {
 
       if (!name) return alert('폴더 이름을 입력해주세요.');
 
+      const record = {
+        name: name,
+        description: desc,
+        drive_url: driveUrl
+      };
+
       if (editId) {
-        const folder = currentBriefingFolders.find(f => f.id === editId);
-        if (folder) {
-          folder.name = name;
-          folder.description = desc;
-          folder.drive_url = driveUrl;
-        }
-        alert(`'${name}' 폴더 정보가 수정되었습니다!`);
+        const { error } = await supabaseClient.from('briefing_folders').update(record).eq('id', editId);
+        if (error) return alert('수정 실패: ' + error.message);
+        alert(`'${name}' 폴더가 성공적으로 수정되었습니다!`);
       } else {
-        const newFolderId = 'bf_' + Date.now();
-        currentBriefingFolders.push({
-          id: newFolderId,
-          name: name,
-          description: desc,
-          drive_url: driveUrl,
-          items: []
-        });
-        selectedBriefingFolderId = newFolderId;
-        alert(`'${name}' 폴더가 생성되었습니다!`);
+        record.id = 'bf_' + Date.now();
+        record.items = [];
+        const { error } = await supabaseClient.from('briefing_folders').insert([record]);
+        if (error) return alert('생성 실패: ' + error.message);
+        selectedBriefingFolderId = record.id;
+        alert(`'${name}' 새 설명회 폴더가 DB에 생성되었습니다!`);
       }
 
-      localStorage.setItem('BRIEFING_FOLDERS_DATA', JSON.stringify(currentBriefingFolders));
       closeBriefingFolderModal();
-      renderBriefingFolderBadges();
-      renderBriefingCards();
+      loadBriefingFoldersData();
     }
 
-    function deleteBriefingFolder(folderId) {
+    async function deleteBriefingFolder(folderId) {
       if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
       const folder = currentBriefingFolders.find(f => f.id === folderId);
       if (!folder) return;
       if (!confirm(`'${folder.name}' 폴더와 안에 담긴 모든 설명회 자료를 삭제할까요?`)) return;
 
-      currentBriefingFolders = currentBriefingFolders.filter(f => f.id !== folderId);
-      localStorage.setItem('BRIEFING_FOLDERS_DATA', JSON.stringify(currentBriefingFolders));
-      selectedBriefingFolderId = currentBriefingFolders[0]?.id || "";
-      renderBriefingFolderBadges();
-      renderBriefingCards();
+      const { error } = await supabaseClient.from('briefing_folders').delete().eq('id', folderId);
+      if (error) return alert('삭제 실패: ' + error.message);
+
+      alert('설명회 폴더가 삭제되었습니다.');
+      selectedBriefingFolderId = "";
+      loadBriefingFoldersData();
     }
 
-    // 설명회 대학자료 등록 & 수정 & 삭제
     function openNewBriefingModal() {
       const currentFolder = currentBriefingFolders.find(f => f.id === selectedBriefingFolderId);
       if (!currentFolder) return alert('먼저 설명회 폴더를 생성하거나 선택해주세요.');
@@ -5201,7 +5089,7 @@ eventsHtml = dayEvents.map(e => {
       document.getElementById('newBriefingModal').classList.add('hidden');
     }
 
-    function saveNewBriefing() {
+    async function saveNewBriefing() {
       const currentFolder = currentBriefingFolders.find(f => f.id === selectedBriefingFolderId);
       if (!currentFolder) return alert('설명회 폴더를 찾을 수 없습니다.');
 
@@ -5215,10 +5103,10 @@ eventsHtml = dayEvents.map(e => {
 
       if (!univ || !changes) return alert('대학교명과 핵심 변동사항을 입력해주세요.');
 
-      if (!currentFolder.items) currentFolder.items = [];
+      const updatedItems = currentFolder.items ? [...currentFolder.items] : [];
 
       if (editId) {
-        const item = currentFolder.items.find(x => x.id === editId);
+        const item = updatedItems.find(x => x.id === editId);
         if (item) {
           item.univ = univ;
           item.title = title;
@@ -5227,32 +5115,41 @@ eventsHtml = dayEvents.map(e => {
           item.driveVideoUrl = driveVideoUrl;
           item.youtubeUrl = youtubeUrl;
         }
-        alert(`[${univ}] 설명회 자료가 성공적으로 수정되었습니다!`);
       } else {
-        const newId = 'briefing_' + Date.now();
-        currentFolder.items.unshift({
-          id: newId,
+        updatedItems.unshift({
+          id: 'briefing_' + Date.now(),
           univ, title, changes, pdfUrl, driveVideoUrl, youtubeUrl
         });
-        alert(`[${univ}] 설명회 자료가 등록되었습니다!`);
       }
 
-      localStorage.setItem('BRIEFING_FOLDERS_DATA', JSON.stringify(currentBriefingFolders));
+      const { error } = await supabaseClient
+        .from('briefing_folders')
+        .update({ items: updatedItems })
+        .eq('id', currentFolder.id);
+
+      if (error) return alert('자료 저장 실패: ' + error.message);
+
+      alert(`[${univ}] 설명회 자료가 DB에 안전하게 저장되었습니다!`);
       closeNewBriefingModal();
-      renderBriefingCards();
-      renderBriefingFolderBadges();
+      loadBriefingFoldersData();
     }
 
-    function deleteBriefing(id) {
+    async function deleteBriefing(id) {
       if (!isCurrentTeacher()) return alert('선생님만 삭제할 수 있습니다.');
       const currentFolder = currentBriefingFolders.find(f => f.id === selectedBriefingFolderId);
       if (!currentFolder) return;
       if (!confirm('이 입학설명회 자료를 삭제할까요?')) return;
 
-      currentFolder.items = currentFolder.items.filter(x => x.id !== id);
-      localStorage.setItem('BRIEFING_FOLDERS_DATA', JSON.stringify(currentBriefingFolders));
-      renderBriefingCards();
-      renderBriefingFolderBadges();
+      const updatedItems = currentFolder.items.filter(x => x.id !== id);
+      const { error } = await supabaseClient
+        .from('briefing_folders')
+        .update({ items: updatedItems })
+        .eq('id', currentFolder.id);
+
+      if (error) return alert('삭제 실패: ' + error.message);
+
+      alert('설명회 자료가 삭제되었습니다.');
+      loadBriefingFoldersData();
     }
 
     function openBriefingPdf(url) {
@@ -5271,14 +5168,11 @@ eventsHtml = dayEvents.map(e => {
       lucide.createIcons();
     }
 
-    // 초기화 시 3대 화면 데이터 자동 렌더링 호출
+    // 💡 초기화 시 3대 화면 데이터 자동 로드 (Supabase DB에서 불러오기)
     function initAdmissionSubPages() {
-      renderMockEvalUnivBadges();
-      renderMockEvalDetails();
-      renderTeacherForumUnivBadges();
-      renderTeacherForumCards();
-      renderBriefingFolderBadges();
-      renderBriefingCards();
+      loadMockEvalsData();
+      loadTeacherForumsData();
+      loadBriefingFoldersData();
     }
 
     
