@@ -53,12 +53,12 @@
       <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3 hidden">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">구분 (역할)</label>
-          <select id="regRole" onchange="toggleRoleFields()" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="student">학생</option>
-            <option value="teacher">교사 (담임교사)</option>
-            <option value="head">교사 (학년부장 / 관리자 - 전체 반)</option>
-            <option value="parent">학부모</option>
-          </select>
+<select id="regRole" onchange="toggleRoleFields()" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+  <option value="student">학생</option>
+  <option value="teacher">교사 (담임교사)</option>
+  <option value="parent">학부모</option>
+</select>
+<!-- 부장교사/관리자는 담임 승인 후 회원관리 메뉴에서 역할 승격 권장 -->
         </div>
 
         <div id="classSelectField">
@@ -3319,7 +3319,12 @@ async function loadExamSchedules() {
   let q = supabaseClient.from('admission_schedules').select('*').order('exam_date', { ascending: true });
   if (queryTargetUserId) {
     q = q.eq('user_id', queryTargetUserId);
+  } else if (isCurrentTeacher() && activeClassNum !== 'all') {
+    // [수정] 특정 학급 모드일 때는 해당 학급 학생들의 일정만 가져옴
+    q = q.eq('class_num', activeClassNum);
   }
+
+  const { data, error } = await q;
 
   const { data, error } = await q;
 
@@ -3934,7 +3939,11 @@ async function autoFetchMockScoreForJeongsi(slotNum) {
   const t1 = scores.find(s => s.subject_key === 'tam1')?.percentile;
   const t2 = scores.find(s => s.subject_key === 'tam2')?.percentile;
 
-  const pList = [k, m, t1, t2].filter(v => v !== null && v !== undefined && v !== '' && !isNaN(v)).map(Number);
+  // [수정] 숫자가 아닌 값(NaN)이나 빈 칸을 더 안전하게 걸러내어 계산 튕김 방지
+  const pList = [k, m, t1, t2]
+    .map(v => (v !== null && v !== undefined && v !== '') ? Number(v) : NaN)
+    .filter(v => !isNaN(v) && v > 0);
+
   if (pList.length === 0) {
     alert(`[${round}]에 등록된 백분위 성적이 없습니다.`);
     return;
@@ -5295,18 +5304,32 @@ const studentId = directStudentId || document.getElementById('mockStudentSelect'
     }
 
     // 학급 폴더 클릭 시
-    function selectPickerClass(pickerType, classNum) {
-      pickerCurrentClass[pickerType] = classNum;
-      if (pickerType === 'schedules') {
-        pickerSelectedStudentId['schedules'] = 'all';
-        const scSelect = document.getElementById('scheduleStudentSelect');
-        if (scSelect) scSelect.value = 'all';
-        loadExamSchedules();
-      } else {
-        pickerSelectedStudentId[pickerType] = null; // 반 변경 시 선택 초기화
-      }
-      renderAllFolderPickers();
+function selectPickerClass(pickerType, classNum) {
+  pickerCurrentClass[pickerType] = classNum;
+  if (pickerType === 'schedules') {
+    pickerSelectedStudentId['schedules'] = 'all';
+    const scSelect = document.getElementById('scheduleStudentSelect');
+    if (scSelect) scSelect.value = 'all';
+    loadExamSchedules();
+  } else {
+    pickerSelectedStudentId[pickerType] = null; // 반 변경 시 선택 초기화
+    
+    // [수정] 반 폴더 이동 시 이전 학생 화면 잔상 즉시 초기화
+    if (pickerType === 'survey') {
+      const card = document.getElementById('surveyTeacherDetailCard');
+      if (card) card.innerHTML = '<p class="text-center text-slate-400 py-12">위 명단에서 학생 아이콘을 누르면 인적사항과 선택과목이 표시됩니다.</p>';
+    } else if (pickerType === 'counsel') {
+      const cont = document.getElementById('teacherCardsContainer');
+      if (cont) cont.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">위 명단에서 학생 아이콘을 누르면 입시상담카드가 나타납니다.</p>';
+    } else if (pickerType === 'mock') {
+      const cont = document.getElementById('teacherMockContainer');
+      if (cont) cont.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
+    } else if (pickerType === 'minCheck') {
+      renderMinimumCheckAnalysis();
     }
+  }
+  renderAllFolderPickers();
+}
 
     // 학생 아이콘 카드 클릭 시
     function selectPickerStudent(pickerType, studentId) {
@@ -6184,9 +6207,14 @@ eventsHtml = dayEvents.map(e => {
   let bgClass = 'bg-blue-50 text-blue-800 border-blue-100';
   let badgeText = isAllSchool ? '<span class="text-[9px] px-1 bg-slate-200 text-slate-700 rounded font-bold mr-1 shrink-0">전체</span>' : '<span class="text-[9px] px-1 bg-blue-200 text-blue-800 rounded font-bold mr-1 shrink-0">학급</span>';
 
+  // [수정] 학생 화면에서는 타인의 상담 실명을 숨기고 익명 처리
+  let displayTitle = e.title;
   if (isCounsel) {
     bgClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
     badgeText = '<span class="text-[9px] px-1 bg-emerald-200 text-emerald-900 rounded font-bold mr-1 shrink-0">상담</span>';
+    if (!isCurrentTeacher() && e.target_user_id !== currentUser?.id) {
+      displayTitle = '[상담 예약완료]';
+    }
   } else if (isExam) {
     bgClass = 'bg-rose-50 text-rose-800 border-rose-200 font-bold';
     badgeText = '<span class="text-[9px] px-1 bg-rose-200 text-rose-900 rounded font-bold mr-1 shrink-0">시험</span>';
@@ -6196,10 +6224,10 @@ eventsHtml = dayEvents.map(e => {
     ? '<button type="button" onclick="event.stopPropagation(); deleteCalendarEvent(\'' + e.id + '\')" class="text-xs opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-700 font-bold px-1 transition" title="일정 삭제">×</button>' 
     : '';
   
-  return '<div class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 border ' + bgClass + '" title="' + escapeHtml(e.title) + '">' +
+  return '<div class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 border ' + bgClass + '" title="' + escapeHtml(displayTitle) + '">' +
            '<div class="flex items-center gap-0.5 min-w-0">' +
              badgeText +
-             '<span class="truncate">' + escapeHtml(e.title) + '</span>' +
+             '<span class="truncate">' + escapeHtml(displayTitle) + '</span>' +
            '</div>' +
            delBtn +
          '</div>';
