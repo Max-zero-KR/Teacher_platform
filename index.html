@@ -687,6 +687,15 @@
               </h2>
               <p class="text-xs text-slate-500 mt-0.5">학생이 입력한 일반 수시 6장, 특목·전문대 6장, 정시 3장이 실시간으로 연동됩니다.</p>
             </div>
+            <!-- 인쇄 버튼 영역 -->
+            <div class="flex items-center gap-2">
+              <button onclick="printCounselCards('summary')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm border border-slate-200">
+                <i data-lucide="printer" class="w-3.5 h-3.5 text-blue-600"></i> 요약 인쇄
+              </button>
+              <button onclick="printCounselCards('detail')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> 상세 분석 인쇄
+              </button>
+            </div>
             <!-- 내부 호환용 숨김 select -->
             <select id="teacherStudentSelect" class="hidden"></select>
           </div>
@@ -1092,16 +1101,24 @@
       <!-- 8. [학생: 입시상담카드] 내 15장 원서함 (수시6 + 특목6 + 정시3) -->
       <!-- ======================================================= -->
       <section id="view-myCards" class="view-panel hidden space-y-6">
-        <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
+        <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="font-bold text-blue-900 text-base flex items-center gap-2">
               <i data-lucide="award" class="w-5 h-5 text-blue-600"></i> 입시지도 : 내 입시상담카드 (수시 6장 + 특목·전문대 6장 + 정시 3장)
             </h2>
             <p class="text-xs text-blue-700 mt-0.5">작성 후 [전체 카드 저장하기]를 누르면 담임선생님 교무실 화면에 실시간으로 반영됩니다.</p>
           </div>
-          <button onclick="saveStudent12Cards()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
-            <i data-lucide="save" class="w-4 h-4"></i> 전체 카드 저장하기
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="printCounselCards('summary')" class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg shadow-sm border border-slate-200 transition flex items-center gap-1.5">
+              <i data-lucide="printer" class="w-3.5 h-3.5 text-blue-600"></i> 요약 인쇄
+            </button>
+            <button onclick="printCounselCards('detail')" class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg shadow-sm border border-slate-200 transition flex items-center gap-1.5">
+              <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-600"></i> 상세 인쇄
+            </button>
+            <button onclick="saveStudent12Cards()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
+              <i data-lucide="save" class="w-4 h-4"></i> 전체 카드 저장하기
+            </button>
+          </div>
         </div>
 
         <!-- 1) 수시 6장 -->
@@ -1915,58 +1932,60 @@
     </div>
   </div>
 
-  <!-- [모달 3-B: 입학설명회 대학자료 등록/수정 모달] -->
+  <!-- [모달 3-B: 입학설명회 대학자료 등록/수정 모달 - 모의평가급 대형 와이드창] -->
   <div id="newBriefingModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-3 text-xs max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center pb-2 border-b">
+    <div class="bg-white rounded-2xl max-w-4xl w-full p-6 md:p-8 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center pb-3 border-b">
         <div>
-          <h3 id="briefingModalTitle" class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-            <i data-lucide="presentation" class="w-4 h-4 text-amber-500"></i> 새 입학설명회 자료 등록
+          <h3 id="briefingModalTitle" class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i data-lucide="presentation" class="w-5 h-5 text-amber-500"></i> 입학설명회 대학자료 등록
           </h3>
-          <p id="briefingModalFolderLabel" class="text-[11px] font-bold text-amber-700 mt-0.5">대상 폴더: -</p>
+          <p id="briefingModalFolderLabel" class="text-xs font-bold text-amber-700 mt-1">대상 폴더: -</p>
         </div>
-        <button onclick="closeNewBriefingModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button onclick="closeNewBriefingModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
       </div>
       <input type="hidden" id="briefingEditId" value="">
-      <div class="space-y-2.5">
-        <div class="grid grid-cols-2 gap-2">
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block font-semibold text-slate-700 mb-0.5">대학교명</label>
-            <input type="text" id="briefingInputUniv" placeholder="예: 충북대학교, 영남대학교" class="w-full p-2 border rounded-lg outline-none font-bold">
+            <label class="block font-bold text-slate-700 mb-1">대학교명</label>
+            <input type="text" id="briefingInputUniv" placeholder="예: 충북대학교, 영남대학교" class="w-full p-2.5 border rounded-lg outline-none font-bold text-sm">
           </div>
           <div>
-            <label class="block font-semibold text-slate-700 mb-0.5">전형계획 제목</label>
-            <input type="text" id="briefingInputTitle" placeholder="예: 2027학년도 대입전형 주요사항" class="w-full p-2 border rounded-lg outline-none font-semibold">
+            <label class="block font-bold text-slate-700 mb-1">전형계획 제목 / 요약 제목</label>
+            <input type="text" id="briefingInputTitle" placeholder="예: 2027학년도 대입전형 주요사항" class="w-full p-2.5 border rounded-lg outline-none font-semibold text-sm">
           </div>
         </div>
+
         <div>
-          <label class="block font-semibold text-slate-700 mb-0.5">핵심 변동사항 요약</label>
-          <textarea id="briefingInputChanges" rows="5" placeholder="1. 수시 학생부종합 수능최저 완화&#10;2. 지역인재전형 선발비율 50%로 확대&#10;3. 진로선택과목 가산점 산출방식 변경" class="w-full p-2 border rounded-lg outline-none leading-relaxed"></textarea>
+          <label class="block font-bold text-slate-700 mb-1">전형별 핵심 변동사항 및 주요 특징 (충분히 넓은 입력 공간)</label>
+          <textarea id="briefingInputChanges" rows="9" placeholder="1. 수시 학생부종합 수능최저 탐구 상위 1과목으로 완화&#10;2. 지역인재전형 선발비율 55%로 대폭 확대&#10;3. 진로선택과목 B등급 성취도 환산 감점폭 완화&#10;4. 정시 수능 반영영역 필수지정 폐지 (자연계열 확통/사탐 응시자 지원 허용)" class="w-full p-3.5 border rounded-xl outline-none leading-relaxed text-slate-800 font-sans text-xs focus:ring-2 focus:ring-amber-400"></textarea>
         </div>
-        <div>
-          <label class="block font-semibold text-blue-700 mb-0.5 flex items-center gap-1">
-            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> 설명회 요약 PDF / 웹 링크
-          </label>
-          <input type="url" id="briefingInputPdf" placeholder="https://drive.google.com/... 또는 공식 PDF 웹 링크" class="w-full p-2 border rounded-lg outline-none">
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-amber-50/50 p-4 rounded-xl border border-amber-200">
           <div>
-            <label class="block font-semibold text-blue-700 mb-0.5 flex items-center gap-1">
+            <label class="block font-bold text-blue-800 mb-1 flex items-center gap-1">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i> 설명회 요약 PDF / 웹 링크
+            </label>
+            <input type="url" id="briefingInputPdf" placeholder="https://drive.google.com/... 또는 공식 PDF 웹 링크" class="w-full p-2 border rounded-lg bg-white outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-blue-700 mb-1 flex items-center gap-1">
               <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i> 설명회 영상 (구글 드라이브)
             </label>
-            <input type="url" id="briefingInputDriveVideo" placeholder="https://drive.google.com/file/d/..." class="w-full p-2 border rounded-lg outline-none">
+            <input type="url" id="briefingInputDriveVideo" placeholder="https://drive.google.com/file/d/..." class="w-full p-2 border rounded-lg bg-white outline-none">
           </div>
           <div>
-            <label class="block font-semibold text-rose-700 mb-0.5 flex items-center gap-1">
-              <i data-lucide="video" class="w-3.5 h-3.5"></i> 설명회 영상 (유튜브)
+            <label class="block font-bold text-rose-700 mb-1 flex items-center gap-1">
+              <i data-lucide="video" class="w-3.5 h-3.5"></i> 설명회 영상 (유튜브 링크)
             </label>
-            <input type="url" id="briefingInputYoutube" placeholder="https://youtu.be/..." class="w-full p-2 border rounded-lg outline-none">
+            <input type="url" id="briefingInputYoutube" placeholder="https://youtu.be/..." class="w-full p-2 border rounded-lg bg-white outline-none">
           </div>
         </div>
       </div>
-      <div class="flex gap-2 pt-2 border-t">
-        <button onclick="closeNewBriefingModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold">취소</button>
-        <button onclick="saveNewBriefing()" id="briefingSubmitBtn" class="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold shadow">등록 완료</button>
+      <div class="flex gap-2 pt-3 border-t">
+        <button onclick="closeNewBriefingModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold">취소</button>
+        <button onclick="saveNewBriefing()" id="briefingSubmitBtn" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold shadow text-sm">등록 완료</button>
       </div>
     </div>
   </div>
