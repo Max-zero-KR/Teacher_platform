@@ -350,20 +350,29 @@
           </button>
         </div>
 
-        <!-- 입시자료 (모바일 서브메뉴) -->
+        <!-- 입시자료 (모바일 7개 일원화) -->
         <div class="space-y-1 pt-1 border-t">
           <p class="text-[11px] font-bold text-slate-400 px-3 pt-2">입시자료실</p>
-          <button onclick="navAndClose('mockDocEval')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
-            <i data-lucide="file-check-2" class="w-4 h-4 text-blue-600"></i> 모의서류평가
+          <button onclick="navAndCloseWithFilter('materials', 'interview')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="mic" class="w-4 h-4 text-blue-500"></i> 1. 면접 자료
           </button>
-          <button onclick="navAndClose('teacherForum')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
-            <i data-lucide="messages-square" class="w-4 h-4 text-emerald-600"></i> 교사간담회 (Q&A)
+          <button onclick="navAndCloseWithFilter('materials', 'eval_case')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="file-check-2" class="w-4 h-4 text-emerald-500"></i> 2. 학종 평가 사례
           </button>
-          <button onclick="navAndClose('admissionBriefing')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
-            <i data-lucide="presentation" class="w-4 h-4 text-amber-500"></i> 입학설명회 (전형요약)
+          <button onclick="navAndCloseWithFilter('materials', 'analysis')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-500"></i> 3. 학종 결과 분석
           </button>
-          <button onclick="navAndClose('materials')" class="w-full text-left px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 flex items-center gap-2 text-xs">
-            <i data-lucide="folder" class="w-4 h-4 text-slate-400"></i> 자료실 아카이브 전체
+          <button onclick="navAndCloseWithFilter('materials', 'guideline')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="folder-kanban" class="w-4 h-4 text-amber-500"></i> 4. 입학전형 모음
+          </button>
+          <button onclick="navAndClose('mockDocEval')" class="w-full text-left px-3 py-2 rounded-lg text-blue-700 hover:bg-blue-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i> 5. 모의서류평가
+          </button>
+          <button onclick="navAndClose('teacherForum')" class="w-full text-left px-3 py-2 rounded-lg text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="messages-square" class="w-4 h-4 text-emerald-600"></i> 6. 교사간담회 (Q&A)
+          </button>
+          <button onclick="navAndClose('admissionBriefing')" class="w-full text-left px-3 py-2 rounded-lg text-amber-700 hover:bg-amber-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="presentation" class="w-4 h-4 text-amber-500"></i> 7. 입학설명회 (전형요약)
           </button>
         </div>
 
@@ -2472,6 +2481,10 @@ if (isTeacher) {
   document.getElementById('addAlbumFolderBtn')?.classList.remove('hidden');
   document.getElementById('addMaterialBtn')?.classList.remove('hidden');
      document.getElementById('addStudyMaterialBtn')?.classList.remove('hidden');
+        document.getElementById('addMockEvalBtn')?.classList.remove('hidden');
+      document.getElementById('addTeacherForumBtn')?.classList.remove('hidden');
+      document.getElementById('addBriefingBtn')?.classList.remove('hidden');
+
 
   document.getElementById('albumUploadLabel')?.classList.remove('hidden'); // ★ 추가
 
@@ -2518,6 +2531,8 @@ if (isTeacher) {
       loadAdmissionMaterials();
       loadStudyMaterials();
       renderMinimumCheckAnalysis();
+            initAdmissionSubPages();
+
       lucide.createIcons();
     }
 
@@ -2582,12 +2597,16 @@ if (isTeacher) {
         renderMinimumCheckAnalysis();
       } else if (viewId === 'studyMaterials') {
         loadStudyMaterials();
-              } else if (viewId === 'mockDocEval' || viewId === 'teacherForum' || viewId === 'admissionBriefing') {
-        lucide.createIcons();
-
+      } else if (viewId === 'mockDocEval') {
+        renderMockEvalUnivBadges();
+        renderMockEvalDetails();
+      } else if (viewId === 'teacherForum') {
+        renderTeacherForumUnivBadges();
+        renderTeacherForumCards();
+      } else if (viewId === 'admissionBriefing') {
+        renderBriefingCards();
       }
 
-      
       window.scrollTo({ top: 0, behavior: 'smooth' });
       lucide.createIcons();
     }
