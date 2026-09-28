@@ -5294,7 +5294,20 @@ eventsHtml = dayEvents.map(e => {
     // 💡 [기능 2] 팝업창(모달) 바깥 배경 클릭 시 자동 닫기 전역 핸들러
     // =================================================================
     window.addEventListener('click', (e) => {
-      // 닫기 대상 모달 ID 목록 (단, 비밀번호 강제변경 모달은 안전을 위해 제외)
+      // 1) [학급 앨범 전용] 사진 확대창(라이트박스) 배경 클릭 시 닫기
+      const lbModal = document.getElementById('photoLightboxModal');
+      if (lbModal && !lbModal.classList.contains('hidden') && lbModal.contains(e.target)) {
+        const isPhoto = (e.target.id === 'lightboxImage'); // 사진 본체 클릭 여부
+        const isButton = e.target.closest('button');       // 좌우 넘김 화살표 및 상단 버튼 클릭 여부
+
+        // 사진 본체나 버튼이 아닌 주변의 검은 배경을 눌렀다면 즉시 닫기
+        if (!isPhoto && !isButton) {
+          closePhotoLightbox();
+          return;
+        }
+      }
+
+      // 2) 일반 팝업 모달 ID 목록
       const allModals = [
         { id: 'examScheduleModal', closeFn: closeExamScheduleModal },
         { id: 'materialUploadModal', closeFn: closeMaterialUploadModal },
@@ -5312,7 +5325,6 @@ eventsHtml = dayEvents.map(e => {
         { id: 'newEventModal', closeFn: closeNewEventModal },
         { id: 'editUserModal', closeFn: closeEditUserModal },
         { id: 'newFolderModal', closeFn: closeNewFolderModal },
-        { id: 'photoLightboxModal', closeFn: closePhotoLightbox },
         { id: 'cardDetailModal', closeFn: closeCardDetailModal }
       ];
 
@@ -5328,7 +5340,6 @@ eventsHtml = dayEvents.map(e => {
         }
       });
     });
-
 
     // =================================================================
     // 💡 [기능 3] 입시상담카드 인쇄 엔진 (요약 / 상세 2종 리포트)
