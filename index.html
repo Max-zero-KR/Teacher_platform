@@ -194,24 +194,26 @@
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
             </button>
 
-            <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-48 hidden group-hover:block z-50">
+            <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-52 hidden group-hover:block z-50">
               <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
-                <button onclick="changeViewWithFilter('materials', 'interview')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
-                  <i data-lucide="mic" class="w-3.5 h-3.5 text-blue-500"></i>
-                  <span>면접 자료</span>
+                <button onclick="changeView('mockDocEval')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-blue-600"></i>
+                  <span>모의서류평가</span>
                 </button>
-                <button onclick="changeViewWithFilter('materials', 'eval_case')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
-                  <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-emerald-500"></i>
-                  <span>학종 평가 사례</span>
+                <button onclick="changeView('teacherForum')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="messages-square" class="w-3.5 h-3.5 text-emerald-600"></i>
+                  <span>교사간담회 (Q&A)</span>
                 </button>
-                <button onclick="changeViewWithFilter('materials', 'analysis')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
-                  <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-indigo-500"></i>
-                  <span>학종 결과 분석</span>
+                <button onclick="changeView('admissionBriefing')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="presentation" class="w-3.5 h-3.5 text-amber-500"></i>
+                  <span>입학설명회 (전형요약)</span>
                 </button>
-                <button onclick="changeViewWithFilter('materials', 'guideline')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
-                  <i data-lucide="folder-kanban" class="w-3.5 h-3.5 text-amber-500"></i>
-                  <span>입학전형 모음</span>
-                </button>
+                <div class="border-t pt-1">
+                  <button onclick="changeView('materials')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50 transition flex items-center gap-2">
+                    <i data-lucide="folder" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>전체 자료 아카이브</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -339,7 +341,22 @@
         <!-- 입시자료 -->
         <div class="space-y-1 pt-1 border-t">
           <p class="text-[11px] font-bold text-slate-400 px-3 pt-2">입시자료실</p>
-          <button onclick="navAndClose('materials')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+        <!-- 입시자료 (모바일) -->
+        <div class="space-y-1 pt-1 border-t">
+          <p class="text-[11px] font-bold text-slate-400 px-3 pt-2">입시자료실</p>
+          <button onclick="navAndClose('mockDocEval')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="file-check-2" class="w-4 h-4 text-blue-600"></i> 모의서류평가
+          </button>
+          <button onclick="navAndClose('teacherForum')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="messages-square" class="w-4 h-4 text-emerald-600"></i> 교사간담회 (Q&A)
+          </button>
+          <button onclick="navAndClose('admissionBriefing')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-xs font-semibold">
+            <i data-lucide="presentation" class="w-4 h-4 text-amber-500"></i> 입학설명회 (전형요약)
+          </button>
+          <button onclick="navAndClose('materials')" class="w-full text-left px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 flex items-center gap-2 text-xs">
+            <i data-lucide="folder" class="w-4 h-4 text-slate-400"></i> 전체 자료실 목록
+          </button>
+        </div>
             <i data-lucide="book-open" class="w-4 h-4 text-blue-500"></i> 자료 아카이브 전체
           </button>
         </div>
@@ -1331,6 +1348,235 @@
           </div>
         </div>
       </section>
+
+      <!-- ======================================================= -->
+      <!-- [신규/입시자료 1] 모의서류평가 (샘플 생기부 vs 실제 대학 평가) -->
+      <!-- ======================================================= -->
+      <section id="view-mockDocEval" class="view-panel hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
+            <div>
+              <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-xs font-bold mb-1 border border-blue-200">
+                <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i> 학종 서류 실전 모의평가
+              </div>
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                모의서류평가 워크숍
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">대학별 합격/불합격 샘플 생기부를 바탕으로 교사가 직접 정성평가해보고 실제 입학사정관의 채점표 및 총평과 대조합니다.</p>
+            </div>
+            
+            <div class="flex items-center gap-2 text-xs">
+              <label class="font-bold text-slate-600">대상 대학 선택:</label>
+              <select class="px-3 py-1.5 border rounded-lg font-bold text-blue-600 bg-slate-50 outline-none">
+                <option value="yonsei">연세대학교 [활동우수형]</option>
+                <option value="korea">고려대학교 [학업우수전형]</option>
+                <option value="sungkyun">성균관대학교 [융합형]</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 샘플 생기부 탭 (2~3개) -->
+          <div class="flex gap-2 border-b pb-2">
+            <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold">샘플 1: 국어국문 (내신 2.1)</button>
+            <button class="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-xs font-medium">샘플 2: 미디어커뮤니케이션 (내신 2.4)</button>
+            <button class="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-xs font-medium">샘플 3: 철학과 (내신 2.8)</button>
+          </div>
+
+          <!-- 2단 화면: 좌측(생기부 원문 발췌) / 우측(교사 채점 & 대학 실채점) -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 좌측: 생기부 주요 기록 -->
+            <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+              <h3 class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+                <i data-lucide="book-open" class="w-4 h-4 text-blue-600"></i> 샘플 1 학생부 핵심 발췌문
+              </h3>
+              <div class="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                <div class="bg-white p-3 rounded-lg border">
+                  <span class="font-bold text-blue-700 block mb-1">■ 과목 이수 현황 및 내신</span>
+                  <p class="text-slate-600 leading-relaxed">국어 1.8 / 수학 2.6 / 영어 2.0 / 사회 1.9 (이수과목: 고전읽기, 심화국어, 세계사, 윤리와 사상)</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg border">
+                  <span class="font-bold text-blue-700 block mb-1">■ 3학년 국어 세특</span>
+                  <p class="text-slate-600 leading-relaxed">'현대시의 언어적 변천사' 탐구 발표를 주도함. 단순한 작품 감상을 넘어 당시 사회적 배경과 어휘 선택의 상호작용을 언어학적 관점에서 구조화하여 소논문 형태로 보고서를 제출함.</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg border">
+                  <span class="font-bold text-blue-700 block mb-1">■ 창체 동아리 및 진로활동</span>
+                  <p class="text-slate-600 leading-relaxed">인문학술 동아리 부장으로 활동하며 비판적 텍스트 읽기 세미나를 연간 12회 기획함. 지역 도서관 청소년 문학 멘토링 봉사 30시간 참여.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 우측: 모의 평가 및 실제 평가 대조 -->
+            <div class="space-y-4 text-xs">
+              <!-- 교사 모의 채점 영역 -->
+              <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-xs space-y-3">
+                <span class="font-bold text-slate-800 block text-sm">✍️ 선생님 모의 채점</span>
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="block text-slate-600 font-semibold mb-1">학업역량</label>
+                    <select class="w-full p-1.5 border rounded bg-white font-bold text-blue-600">
+                      <option>A (우수)</option><option>B (보통)</option><option>C (미흡)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-slate-600 font-semibold mb-1">진로역량</label>
+                    <select class="w-full p-1.5 border rounded bg-white font-bold text-emerald-600">
+                      <option>A+ (탁월)</option><option>A (우수)</option><option>B (보통)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-slate-600 font-semibold mb-1">공동체역량</label>
+                    <select class="w-full p-1.5 border rounded bg-white font-bold text-amber-600">
+                      <option>A (우수)</option><option>B (보통)</option>
+                    </select>
+                  </div>
+                </div>
+                <textarea rows="2" placeholder="선생님의 총평 또는 불합격/합격 예상 이유를 메모해보세요." class="w-full p-2 border rounded text-xs outline-none"></textarea>
+              </div>
+
+              <!-- 실제 대학 평가 결과 (클릭 시 펼치기 토글) -->
+              <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-emerald-900 text-sm flex items-center gap-1.5">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i> 대학의 실제 평가 결과
+                  </span>
+                  <span class="px-2 py-0.5 bg-emerald-600 text-white rounded text-[10px] font-black">최초합격</span>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-emerald-100 space-y-1.5 leading-relaxed text-slate-700">
+                  <p><strong>• 입학사정관 실채점:</strong> 학업역량 A- / 진로역량 A+ / 공동체역량 A</p>
+                  <p><strong>• 실제 사정관 총평:</strong> 내신 수치(2.1) 대비 3학년 심화국어와 소논문형 세특에서 학문적 호기심과 주도성이 매우 뚜렷함. 전공 적합성에서 최고점을 받아 서류 1단계 합격 견인함.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- [신규/입시자료 2] 교사간담회 (대학별 입학사정관 Q&A) -->
+      <!-- ======================================================= -->
+      <section id="view-teacherForum" class="view-panel hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
+            <div>
+              <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-xs font-bold mb-1 border border-emerald-200">
+                <i data-lucide="messages-square" class="w-3.5 h-3.5"></i> 고교-대학 연계 질의응답
+              </div>
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                교사간담회 입학사정관 Q&A
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">대학별 책임입학사정관과의 간담회에서 나온 핵심 질문과 공식 답변 내용을 열람하고 검색합니다.</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="질문 키워드 검색 (예: 미적분, 감점, 탐구)..." class="px-3 py-1.5 text-xs border rounded-lg outline-none bg-slate-50 w-56">
+            </div>
+          </div>
+
+          <!-- 대학별 간담회 질의응답 아코디언 카드 -->
+          <div class="space-y-4 text-xs">
+            <div class="border rounded-xl p-4 bg-slate-50/50 space-y-3">
+              <div class="flex items-center justify-between border-b pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded font-bold">고려대학교</span>
+                  <span class="text-slate-500 font-medium">진로진학부장 간담회 (책임사정관)</span>
+                </div>
+                <span class="text-slate-400">2026. 05 진행</span>
+              </div>
+              
+              <div class="space-y-2">
+                <div class="bg-white p-3.5 rounded-lg border space-y-1.5">
+                  <div class="font-bold text-slate-800 flex items-start gap-2">
+                    <span class="text-blue-600 font-black">Q.</span>
+                    <span>자연계열 지원자가 고교에서 '미적분'을 이수하지 못했을 경우 정성평가에서 실질적인 영향은 어떤가요?</span>
+                  </div>
+                  <div class="pl-5 text-slate-600 leading-relaxed border-l-2 border-emerald-400 my-1">
+                    <span class="font-bold text-emerald-800">[사정관 공식 답변]</span><br>
+                    고교 교육과정 편제표상 과목이 개설되었음에도 학생이 회피하여 미이수한 것이라면 학업역량/진로역량에서 상당한 감점 요인입니다. 단, 학교 편제상 개설되지 못해 이수하지 못한 경우에는 소명되며 불이익을 주지 않습니다.
+                  </div>
+                </div>
+
+                <div class="bg-white p-3.5 rounded-lg border space-y-1.5">
+                  <div class="font-bold text-slate-800 flex items-start gap-2">
+                    <span class="text-blue-600 font-black">Q.</span>
+                    <span>인문계열에서 진로선택과목(성취도 A/B/C) 평가는 어떤 방식을 취하나요?</span>
+                  </div>
+                  <div class="pl-5 text-slate-600 leading-relaxed border-l-2 border-emerald-400 my-1">
+                    <span class="font-bold text-emerald-800">[사정관 공식 답변]</span><br>
+                    성취도 비율(A 비율이 50%를 넘는지 여부)과 세특의 구체적 서술 내용을 동시에 확인합니다. A를 받았더라도 세특에 구체적인 탐구 과정이 없다면 형식적 점수로만 반영됩니다.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- [신규/입시자료 3] 입학설명회 (대입전형 주요사항 요약) -->
+      <!-- ======================================================= -->
+      <section id="view-admissionBriefing" class="view-panel hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
+            <div>
+              <div class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded-full text-xs font-bold mb-1 border border-amber-200">
+                <i data-lucide="presentation" class="w-3.5 h-3.5"></i> 대학별 공식 전형 브리핑
+              </div>
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                입학설명회 전형 주요사항
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">대학별 최신 입학설명회에서 발표된 전형 변동사항, 모집인원 변화, 수능최저 변경점을 요약 정리한 자료실입니다.</p>
+            </div>
+            
+            <div class="flex items-center gap-2 text-xs">
+              <button class="px-3 py-1.5 bg-amber-500 text-white rounded-lg font-bold">수도권 주요대</button>
+              <button class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200">거점국립대</button>
+              <button class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200">의약학/특수대</button>
+            </div>
+          </div>
+
+          <!-- 대학별 전형 주요사항 카드 그리드 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <div class="border rounded-xl p-4 bg-white shadow-xs space-y-3 hover:border-amber-400 transition">
+              <div class="flex items-center justify-between">
+                <span class="font-black text-slate-800 text-sm">성균관대학교</span>
+                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded text-[10px]">2027 전형계획</span>
+              </div>
+              <div class="space-y-1.5 bg-slate-50 p-2.5 rounded-lg border text-slate-700 leading-relaxed">
+                <p class="font-bold text-slate-900">📌 전년대비 핵심 변동사항</p>
+                <p>1. 수시 학종 탐구 반영 시 상위 1과목으로 수능최저 완화</p>
+                <p>2. 학생부교과 진로선택과목 정성평가 20% 도입</p>
+                <p>3. 정시 다군 글로벌융합학부 신설 (모집인원 45명)</p>
+              </div>
+              <div class="flex items-center justify-between pt-1 text-[11px]">
+                <span class="text-slate-400">설명회 자료집 수록</span>
+                <a href="#" class="font-bold text-amber-600 hover:underline flex items-center gap-1">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i> 요약 PDF 보기
+                </a>
+              </div>
+            </div>
+
+            <div class="border rounded-xl p-4 bg-white shadow-xs space-y-3 hover:border-amber-400 transition">
+              <div class="flex items-center justify-between">
+                <span class="font-black text-slate-800 text-sm">중앙대학교</span>
+                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded text-[10px]">2027 전형계획</span>
+              </div>
+              <div class="space-y-1.5 bg-slate-50 p-2.5 rounded-lg border text-slate-700 leading-relaxed">
+                <p class="font-bold text-slate-900">📌 전년대비 핵심 변동사항</p>
+                <p>1. CAU융합인재 면접 전면 폐지 (서류 100% 일괄선발)</p>
+                <p>2. 지역균형(교과) 고교별 추천 가능 인원 20명으로 확대</p>
+                <p>3. 수능 영어 1~2등급 간 환산점수 감점 폭 축소</p>
+              </div>
+              <div class="flex items-center justify-between pt-1 text-[11px]">
+                <span class="text-slate-400">설명회 영상 연동</span>
+                <a href="#" class="font-bold text-rose-600 hover:underline flex items-center gap-1">
+                  <i data-lucide="video" class="w-3.5 h-3.5"></i> 설명회 영상보기
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       
     </main>
   </div>
@@ -2279,8 +2525,12 @@ if (isTeacher) {
         renderMinimumCheckAnalysis();
       } else if (viewId === 'studyMaterials') {
         loadStudyMaterials();
+              } else if (viewId === 'mockDocEval' || viewId === 'teacherForum' || viewId === 'admissionBriefing') {
+        lucide.createIcons();
+
       }
 
+      
       window.scrollTo({ top: 0, behavior: 'smooth' });
       lucide.createIcons();
     }
