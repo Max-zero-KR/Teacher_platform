@@ -3466,9 +3466,7 @@ async function autoFetchMockScoreForJeongsi(slotNum) {
     updateLiveCardDiag('jeongsi', slotNum);
   }
 }
-     }
-   }
-
+    
 function toggleCardDetailInputs(type, num) {
   const box = document.getElementById(`${type}_detail_box_${num}`);
   if (box) box.classList.toggle('hidden');
@@ -3819,6 +3817,10 @@ function openCardDetailModal(slotType, slotNum) {
   lucide.createIcons();
 }
 
+function closeCardDetailModal() {
+  document.getElementById('cardDetailModal').classList.add('hidden');
+}
+    
    function renderModalCharts(compRates, cutoffs, myScore, isJeongsi = false) {
      const years = ['2025', '2026', '2027'];
 
