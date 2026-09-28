@@ -482,13 +482,11 @@ if (isTeacher) {
       } else if (viewId === 'studyMaterials') {
         loadStudyMaterials();
       } else if (viewId === 'mockDocEval') {
-        renderMockEvalUnivBadges();
-        renderMockEvalDetails();
+        loadMockEvalsData();
       } else if (viewId === 'teacherForum') {
-        renderTeacherForumUnivBadges();
-        renderTeacherForumCards();
+        loadTeacherForumsData();
       } else if (viewId === 'admissionBriefing') {
-        renderBriefingCards();
+        loadBriefingFoldersData();
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
