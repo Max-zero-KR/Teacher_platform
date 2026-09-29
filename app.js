@@ -5343,7 +5343,7 @@ function closeCalendarEventDetail() {
         { id: 'newEventModal', closeFn: closeNewEventModal },
         { id: 'editUserModal', closeFn: closeEditUserModal },
         { id: 'newFolderModal', closeFn: closeNewFolderModal },
-        { id: 'cardDetailModal', closeFn: closeCardDetailModal }
+        { id: 'cardDetailModal', closeFn: closeCardDetailModal },
         { id: 'calendarEventDetailModal', closeFn: closeCalendarEventDetail },
 
       ];
