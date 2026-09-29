@@ -3886,95 +3886,165 @@ async function deleteCalendarEvent(id) {
       renderCalendar();
     }
 
-    async function renderCalendar() {
-      const grid = document.getElementById('calendarGrid');
-      if (!grid) return;
+let currentMonthCalendarEvents = [];
 
-      const year = calViewDate.getFullYear();
-      const month = calViewDate.getMonth();
+async function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  if (!grid) return;
 
-      const labelEl = document.getElementById('calendarCurrentMonthLabel');
-      if (labelEl) {
-        labelEl.innerText = year + '. ' + String(month + 1).padStart(2, '0');
-      }
+  const year = calViewDate.getFullYear();
+  const month = calViewDate.getMonth();
 
-      let calQuery = supabaseClient.from('calendar_events').select('*');
-      if (activeClassNum !== 'all') {
-        calQuery = calQuery.or('class_num.eq.' + activeClassNum + ',class_num.eq.0,class_num.is.null');
-      }
-      const { data: events } = await calQuery;
-
-      const firstDayIndex = new Date(year, month, 1).getDay();
-      const lastDate = new Date(year, month + 1, 0).getDate();
-
-      let cells = '';
-
-      for (let b = 0; b < firstDayIndex; b++) {
-        cells += '<div class="bg-slate-50/50 min-h-[115px] p-2 rounded border border-slate-100"></div>';
-      }
-
-      for (let day = 1; day <= lastDate; day++) {
-        const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-        const dayEvents = events ? events.filter(e => e.event_date === dateStr) : [];
-        
-        const dayOfWeek = new Date(year, month, day).getDay(); 
-        let dayColor = 'text-slate-700';
-        if (dayOfWeek === 0) dayColor = 'text-rose-500 font-bold';
-        else if (dayOfWeek === 6) dayColor = 'text-blue-500 font-bold';
-
-        let eventsHtml = '';
-        if (dayEvents.length > 0) {
-eventsHtml = dayEvents.map(e => {
-  const isCounsel = (e.category === 'counsel');
-  const isExam = (e.category === 'exam');
-  const isAllSchool = (!e.class_num || e.class_num === 0);
-
-  let bgClass = 'bg-blue-50 text-blue-800 border-blue-100';
-  let badgeText = isAllSchool ? '<span class="text-[9px] px-1 bg-slate-200 text-slate-700 rounded font-bold mr-1 shrink-0">전체</span>' : '<span class="text-[9px] px-1 bg-blue-200 text-blue-800 rounded font-bold mr-1 shrink-0">학급</span>';
-
-  // [수정] 학생 화면에서는 타인의 상담 실명을 숨기고 익명 처리
-  let displayTitle = e.title;
-  if (isCounsel) {
-    bgClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-    badgeText = '<span class="text-[9px] px-1 bg-emerald-200 text-emerald-900 rounded font-bold mr-1 shrink-0">상담</span>';
-    if (!isCurrentTeacher() && e.target_user_id !== currentUser?.id) {
-      displayTitle = '[상담 예약완료]';
-    }
-  } else if (isExam) {
-    bgClass = 'bg-rose-50 text-rose-800 border-rose-200 font-bold';
-    badgeText = '<span class="text-[9px] px-1 bg-rose-200 text-rose-900 rounded font-bold mr-1 shrink-0">시험</span>';
+  const labelEl = document.getElementById('calendarCurrentMonthLabel');
+  if (labelEl) {
+    labelEl.innerText = year + '. ' + String(month + 1).padStart(2, '0');
   }
-  
-  const delBtn = isCurrentTeacher() 
-    ? '<button type="button" onclick="event.stopPropagation(); deleteCalendarEvent(\'' + e.id + '\')" class="text-xs opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-700 font-bold px-1 transition" title="일정 삭제">×</button>' 
-    : '';
-  
-  return '<div class="group px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 border ' + bgClass + '" title="' + escapeHtml(displayTitle) + '">' +
-           '<div class="flex items-center gap-0.5 min-w-0">' +
-             badgeText +
-             '<span class="truncate">' + escapeHtml(displayTitle) + '</span>' +
-           '</div>' +
-           delBtn +
-         '</div>';
-}).join('');
+
+  let calQuery = supabaseClient.from('calendar_events').select('*');
+  if (activeClassNum !== 'all') {
+    calQuery = calQuery.or('class_num.eq.' + activeClassNum + ',class_num.eq.0,class_num.is.null');
+  }
+  const { data: events } = await calQuery;
+  currentMonthCalendarEvents = events || [];
+
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+
+  let cells = '';
+
+  for (let b = 0; b < firstDayIndex; b++) {
+    cells += '<div class="bg-slate-50/50 min-h-[55px] md:min-h-[115px] p-1.5 md:p-2 rounded border border-slate-100"></div>';
+  }
+
+  for (let day = 1; day <= lastDate; day++) {
+    const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    const dayEvents = currentMonthCalendarEvents.filter(e => e.event_date === dateStr);
+    
+    const dayOfWeek = new Date(year, month, day).getDay(); 
+    let dayColor = 'text-slate-700';
+    if (dayOfWeek === 0) dayColor = 'text-rose-500 font-bold';
+    else if (dayOfWeek === 6) dayColor = 'text-blue-500 font-bold';
+
+    let pcEventsHtml = '';
+    let mobileDotsHtml = '';
+
+    if (dayEvents.length > 0) {
+      dayEvents.forEach(e => {
+        const isCounsel = (e.category === 'counsel');
+        const isExam = (e.category === 'exam');
+        const isAllSchool = (!e.class_num || e.class_num === 0);
+
+        let bgClass = 'bg-blue-50 text-blue-800 border-blue-100 hover:bg-blue-100';
+        let badgeText = isAllSchool 
+          ? '<span class="text-[9px] px-1 bg-slate-200 text-slate-700 rounded font-bold mr-1 shrink-0">전체</span>' 
+          : '<span class="text-[9px] px-1 bg-blue-200 text-blue-800 rounded font-bold mr-1 shrink-0">학급</span>';
+        let dotColor = 'bg-blue-500';
+
+        let displayTitle = e.title;
+        if (isCounsel) {
+          bgClass = 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100';
+          badgeText = '<span class="text-[9px] px-1 bg-emerald-200 text-emerald-900 rounded font-bold mr-1 shrink-0">상담</span>';
+          dotColor = 'bg-emerald-500';
+          if (!isCurrentTeacher() && e.target_user_id !== currentUser?.id) {
+            displayTitle = '[상담 예약완료]';
+          }
+        } else if (isExam) {
+          bgClass = 'bg-rose-50 text-rose-800 border-rose-200 font-bold hover:bg-rose-100';
+          badgeText = '<span class="text-[9px] px-1 bg-rose-200 text-rose-900 rounded font-bold mr-1 shrink-0">시험</span>';
+          dotColor = 'bg-rose-500';
         }
 
-        const countBadge = dayEvents.length > 0 ? '<span class="text-[9px] px-1 bg-slate-100 text-slate-500 rounded font-semibold">' + dayEvents.length + '</span>' : '';
+        // PC 화면: 일정 텍스트 바 (클릭 시 팝업)
+        pcEventsHtml += `
+          <div onclick="openCalendarEventDetail('${e.id}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[11px] leading-tight font-medium truncate flex items-center justify-between gap-1 border transition shadow-2xs ${bgClass}" title="${escapeHtml(displayTitle)}">
+            <div class="flex items-center gap-0.5 min-w-0">
+              ${badgeText}
+              <span class="truncate">${escapeHtml(displayTitle)}</span>
+            </div>
+          </div>
+        `;
 
-        cells += '<div class="bg-white min-h-[115px] p-2 border border-slate-100 rounded-lg flex flex-col justify-start gap-1.5 shadow-sm hover:border-blue-300 transition">' +
-                   '<div class="flex items-center justify-between">' +
-                     '<span class="text-xs ' + dayColor + '">' + day + '</span>' +
-                     countBadge +
-                   '</div>' +
-                   '<div class="space-y-1 overflow-y-auto max-h-[85px] pr-0.5">' +
-                     eventsHtml +
-                   '</div>' +
-                 '</div>';
-      }
-
-      grid.innerHTML = cells;
-      lucide.createIcons();
+        // 모바일 화면: 작은 원형 점 Dot (터치 시 팝업)
+        mobileDotsHtml += `
+          <button type="button" onclick="event.stopPropagation(); openCalendarEventDetail('${e.id}')" class="w-2.5 h-2.5 rounded-full ${dotColor} transition-transform active:scale-125" title="${escapeHtml(displayTitle)}"></button>
+        `;
+      });
     }
+
+    const countBadge = dayEvents.length > 0 
+      ? '<span class="text-[9px] px-1 bg-slate-100 text-slate-500 rounded font-semibold hidden md:inline-block">' + dayEvents.length + '</span>' 
+      : '';
+
+    cells += `
+      <div class="bg-white min-h-[55px] md:min-h-[115px] p-1.5 md:p-2 border border-slate-100 rounded-lg flex flex-col justify-start gap-1 shadow-sm hover:border-blue-300 transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs ${dayColor}">${day}</span>
+          ${countBadge}
+        </div>
+        <div class="flex flex-wrap gap-1 md:hidden mt-0.5">
+          ${mobileDotsHtml}
+        </div>
+        <div class="hidden md:flex flex-col space-y-1 overflow-y-auto max-h-[85px] pr-0.5">
+          ${pcEventsHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  grid.innerHTML = cells;
+  lucide.createIcons();
+}
+
+function openCalendarEventDetail(eventId) {
+  const event = currentMonthCalendarEvents.find(e => e.id === eventId);
+  if (!event) return;
+
+  const isCounsel = (event.category === 'counsel');
+  const isExam = (event.category === 'exam');
+  const isAllSchool = (!event.class_num || event.class_num === 0);
+
+  const badgeEl = document.getElementById('calDetailBadge');
+  if (isCounsel) {
+    badgeEl.innerText = '학생 상담';
+    badgeEl.className = 'inline-block px-2 py-0.5 rounded text-[10px] font-bold mb-1 bg-emerald-100 text-emerald-800';
+  } else if (isExam) {
+    badgeEl.innerText = '시험 / 모의평가';
+    badgeEl.className = 'inline-block px-2 py-0.5 rounded text-[10px] font-bold mb-1 bg-rose-100 text-rose-800';
+  } else {
+    badgeEl.innerText = '학사 일정';
+    badgeEl.className = 'inline-block px-2 py-0.5 rounded text-[10px] font-bold mb-1 bg-blue-100 text-blue-800';
+  }
+
+  let title = event.title;
+  if (isCounsel && !isCurrentTeacher() && event.target_user_id !== currentUser?.id) {
+    title = '[상담 예약완료]';
+  }
+  document.getElementById('calDetailTitle').innerText = title;
+  document.getElementById('calDetailDate').innerText = event.event_date;
+  document.getElementById('calDetailScope').innerText = isAllSchool ? '3학년 전체 학사 일정' : `${event.class_num || 2}반 전용 일정`;
+
+  const delBtn = document.getElementById('calDetailDeleteBtn');
+  if (delBtn) {
+    if (isCurrentTeacher()) {
+      delBtn.classList.remove('hidden');
+      delBtn.onclick = async () => {
+        closeCalendarEventDetail();
+        await deleteCalendarEvent(event.id);
+      };
+    } else {
+      delBtn.classList.add('hidden');
+    }
+  }
+
+  document.getElementById('calendarEventDetailModal').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function closeCalendarEventDetail() {
+  const modal = document.getElementById('calendarEventDetailModal');
+  if (modal) modal.classList.add('hidden');
+}
+
 
     // =================================================================
     // 💡 [입시자료 확장 3종] 모의평가 · 간담회 · 입학설명회 전체 인터랙션 로직
@@ -5274,6 +5344,8 @@ eventsHtml = dayEvents.map(e => {
         { id: 'editUserModal', closeFn: closeEditUserModal },
         { id: 'newFolderModal', closeFn: closeNewFolderModal },
         { id: 'cardDetailModal', closeFn: closeCardDetailModal }
+        { id: 'calendarEventDetailModal', closeFn: closeCalendarEventDetail },
+
       ];
 
       allModals.forEach(m => {
