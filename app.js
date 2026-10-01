@@ -2275,94 +2275,169 @@ function closeCardDetailModal() {
       { key: 'tam2', name: '탐구2', options: ['생활과 윤리','윤리와 사상','한국지리','세계지리','사회·문화','경제','정치와 법','동아시아사','세계사','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학II','화학II','생명과학II','지구과학II'] }
     ];
 
-    function renderMockScoreInputs() {
-      const tbody = document.getElementById('mockInputTableBody');
-      tbody.innerHTML = SUBJECT_ROWS.map(s => `
-        <tr>
-          <td class="p-2.5 font-bold text-slate-700">${s.name}</td>
-          <td class="p-2.5">
-            <select id="mock_subj_${s.key}" class="px-2 py-1 border rounded bg-white font-medium">
-              ${s.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-            </select>
-          </td>
-          <td class="p-2.5"><input type="number" id="mock_raw_${s.key}" placeholder="0~100" class="w-full px-2 py-1 border rounded"></td>
-          <td class="p-2.5"><input type="number" id="mock_std_${s.key}" placeholder="표점" class="w-full px-2 py-1 border rounded"></td>
-          <td class="p-2.5"><input type="number" step="0.01" id="mock_pct_${s.key}" placeholder="백분위" class="w-full px-2 py-1 border rounded font-bold text-blue-600"></td>
-          <td class="p-2.5"><input type="number" step="0.01" id="mock_cumpct_${s.key}" placeholder="누적" class="w-full px-2 py-1 border rounded"></td>
-          <td class="p-2.5"><input type="number" id="mock_grd_${s.key}" placeholder="등급" min="1" max="9" class="w-full px-2 py-1 border rounded font-bold"></td>
-        </tr>
-      `).join('');
-    }
+// [절대평가 등급 자동 계산 만능 도우미: 영어 100점 / 한국사 50점 만점]
+function calcAbsoluteGrade(key, rawScore) {
+  if (rawScore === '' || rawScore === null || isNaN(rawScore)) return '';
+  const score = Number(rawScore);
+  if (key === 'english') {
+    if (score >= 90) return 1;
+    if (score >= 80) return 2;
+    if (score >= 70) return 3;
+    if (score >= 60) return 4;
+    if (score >= 50) return 5;
+    if (score >= 40) return 6;
+    if (score >= 30) return 7;
+    if (score >= 20) return 8;
+    return 9;
+  } else if (key === 'history') {
+    if (score >= 40) return 1;
+    if (score >= 35) return 2;
+    if (score >= 30) return 3;
+    if (score >= 25) return 4;
+    if (score >= 20) return 5;
+    if (score >= 15) return 6;
+    if (score >= 10) return 7;
+    if (score >= 5) return 8;
+    return 9;
+  }
+  return '';
+}
 
-    async function loadStudentMockScoresForRound() {
-      const round = document.getElementById('mockRoundSelect').value;
-      const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', currentUser.id).eq('exam_round', round);
+// [원점수 타이핑 시 즉시 등급 자동 계산 이벤트]
+function handleAutoGrade(prefix, key) {
+  if (key !== 'english' && key !== 'history') return;
+  const rawEl = document.getElementById(`${prefix}_raw_${key}`);
+  const grdEl = document.getElementById(`${prefix}_grd_${key}`);
+  if (!rawEl || !grdEl) return;
+  const grade = calcAbsoluteGrade(key, rawEl.value);
+  grdEl.value = grade;
+}
 
-      SUBJECT_ROWS.forEach(s => {
-        document.getElementById(`mock_raw_${s.key}`).value = '';
-        document.getElementById(`mock_std_${s.key}`).value = '';
-        document.getElementById(`mock_pct_${s.key}`).value = '';
-        document.getElementById(`mock_cumpct_${s.key}`).value = '';
-        document.getElementById(`mock_grd_${s.key}`).value = '';
-      });
+function renderMockScoreInputs() {
+  const tbody = document.getElementById('mockInputTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = SUBJECT_ROWS.map(s => {
+    const isAbs = (s.key === 'english' || s.key === 'history');
+    const maxScore = (s.key === 'history') ? 50 : 100;
+    const rawPlaceholder = (s.key === 'history') ? '0~50' : '0~100';
 
-      if (scores) {
-        scores.forEach(row => {
-          const s = SUBJECT_ROWS.find(item => item.key === row.subject_key);
-          if (s) {
-            const selSubj = document.getElementById(`mock_subj_${s.key}`);
-            if (selSubj) selSubj.value = row.subject_name;
-            document.getElementById(`mock_raw_${s.key}`).value = row.raw_score ?? '';
-            document.getElementById(`mock_std_${s.key}`).value = row.standard_score ?? '';
-            document.getElementById(`mock_pct_${s.key}`).value = row.percentile ?? '';
-            document.getElementById(`mock_cumpct_${s.key}`).value = row.cum_percentile ?? '';
-            document.getElementById(`mock_grd_${s.key}`).value = row.grade ?? '';
+    return `
+      <tr>
+        <td class="p-2.5 font-bold text-slate-700">
+          ${s.name}
+          ${isAbs ? '<span class="ml-1 text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-black border border-emerald-200">절대</span>' : ''}
+        </td>
+        <td class="p-2.5">
+          <select id="mock_subj_${s.key}" class="px-2 py-1 border rounded bg-white font-medium text-xs">
+            ${s.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+          </select>
+        </td>
+        <td class="p-2.5">
+          <input type="number" id="mock_raw_${s.key}" min="0" max="${maxScore}" placeholder="${rawPlaceholder}"
+            oninput="${isAbs ? `handleAutoGrade('mock', '${s.key}')` : ''}"
+            class="w-full px-2 py-1 border rounded font-semibold text-slate-800 text-xs">
+        </td>
+        <td class="p-2.5">
+          ${isAbs
+            ? `<input type="text" id="mock_std_${s.key}" value="-" disabled title="절대평가 과목은 표준점수가 없습니다." class="w-full px-2 py-1 border rounded bg-slate-100 text-slate-400 text-center cursor-not-allowed text-xs">`
+            : `<input type="number" id="mock_std_${s.key}" placeholder="표점" class="w-full px-2 py-1 border rounded text-xs">`
           }
-        });
-      }
-    }
+        </td>
+        <td class="p-2.5">
+          ${isAbs
+            ? `<input type="text" id="mock_pct_${s.key}" value="-" disabled title="절대평가 과목은 백분위가 없습니다." class="w-full px-2 py-1 border rounded bg-slate-100 text-slate-400 text-center cursor-not-allowed text-xs">`
+            : `<input type="number" step="0.01" id="mock_pct_${s.key}" placeholder="백분위" class="w-full px-2 py-1 border rounded font-bold text-blue-600 text-xs">`
+          }
+        </td>
+        <td class="p-2.5">
+          ${isAbs
+            ? `<input type="text" id="mock_cumpct_${s.key}" value="-" disabled title="절대평가 과목은 누적백분위가 없습니다." class="w-full px-2 py-1 border rounded bg-slate-100 text-slate-400 text-center cursor-not-allowed text-xs">`
+            : `<input type="number" step="0.01" id="mock_cumpct_${s.key}" placeholder="누적" class="w-full px-2 py-1 border rounded text-xs">`
+          }
+        </td>
+        <td class="p-2.5">
+          <input type="number" id="mock_grd_${s.key}" placeholder="등급" min="1" max="9"
+            class="w-full px-2 py-1 border rounded font-black text-center text-xs ${isAbs ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-white font-bold'}">
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
 
-    async function saveMockScores() {
-      const round = document.getElementById('mockRoundSelect').value;
-      const records = [];
+async function loadStudentMockScoresForRound() {
+  const round = document.getElementById('mockRoundSelect').value;
+  const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', currentUser.id).eq('exam_round', round);
 
-      SUBJECT_ROWS.forEach(s => {
-        const subjName = document.getElementById(`mock_subj_${s.key}`).value;
-        const raw = document.getElementById(`mock_raw_${s.key}`).value;
-        const std = document.getElementById(`mock_std_${s.key}`).value;
-        const pct = document.getElementById(`mock_pct_${s.key}`).value;
-        const cumpct = document.getElementById(`mock_cumpct_${s.key}`).value;
-        const grd = document.getElementById(`mock_grd_${s.key}`).value;
+  SUBJECT_ROWS.forEach(s => {
+    const isAbs = (s.key === 'english' || s.key === 'history');
+    document.getElementById(`mock_raw_${s.key}`).value = '';
+    document.getElementById(`mock_std_${s.key}`).value = isAbs ? '-' : '';
+    document.getElementById(`mock_pct_${s.key}`).value = isAbs ? '-' : '';
+    document.getElementById(`mock_cumpct_${s.key}`).value = isAbs ? '-' : '';
+    document.getElementById(`mock_grd_${s.key}`).value = '';
+  });
 
-        if (raw || std || pct || grd) {
-          records.push({
-            user_id: currentUser.id,
-            exam_round: round,
-            subject_key: s.key,
-            subject_name: subjName,
-            raw_score: raw ? parseInt(raw) : null,
-            standard_score: std ? parseInt(std) : null,
-            percentile: pct ? parseFloat(pct) : null,
-            cum_percentile: cumpct ? parseFloat(cumpct) : null,
-            grade: grd ? parseInt(grd) : null
-          });
+  if (scores) {
+    scores.forEach(row => {
+      const s = SUBJECT_ROWS.find(item => item.key === row.subject_key);
+      if (s) {
+        const isAbs = (s.key === 'english' || s.key === 'history');
+        const selSubj = document.getElementById(`mock_subj_${s.key}`);
+        if (selSubj) selSubj.value = row.subject_name;
+        document.getElementById(`mock_raw_${s.key}`).value = row.raw_score ?? '';
+        if (!isAbs) {
+          document.getElementById(`mock_std_${s.key}`).value = row.standard_score ?? '';
+          document.getElementById(`mock_pct_${s.key}`).value = row.percentile ?? '';
+          document.getElementById(`mock_cumpct_${s.key}`).value = row.cum_percentile ?? '';
         }
+        document.getElementById(`mock_grd_${s.key}`).value = row.grade ?? '';
+      }
+    });
+  }
+}
+
+async function saveMockScores() {
+  const round = document.getElementById('mockRoundSelect').value;
+  const records = [];
+
+  SUBJECT_ROWS.forEach(s => {
+    const isAbs = (s.key === 'english' || s.key === 'history');
+    const subjName = document.getElementById(`mock_subj_${s.key}`)?.value;
+    const raw = document.getElementById(`mock_raw_${s.key}`)?.value;
+    const std = document.getElementById(`mock_std_${s.key}`)?.value;
+    const pct = document.getElementById(`mock_pct_${s.key}`)?.value;
+    const cumpct = document.getElementById(`mock_cumpct_${s.key}`)?.value;
+    const grd = document.getElementById(`mock_grd_${s.key}`)?.value;
+
+    if (raw || grd || (!isAbs && (std || pct || cumpct))) {
+      records.push({
+        user_id: currentUser.id,
+        exam_round: round,
+        subject_key: s.key,
+        subject_name: subjName,
+        raw_score: raw ? parseInt(raw) : null,
+        standard_score: (!isAbs && std && !isNaN(std)) ? parseInt(std) : null,
+        percentile: (!isAbs && pct && !isNaN(pct)) ? parseFloat(pct) : null,
+        cum_percentile: (!isAbs && cumpct && !isNaN(cumpct)) ? parseFloat(cumpct) : null,
+        grade: grd ? parseInt(grd) : null
       });
-
-      if (records.length === 0) return alert('입력된 점수가 없습니다.');
-
-   const { error: mockErr } = await supabaseClient
-     .from('mock_scores')
-     .upsert(records, { onConflict: 'user_id,exam_round,subject_key' });
-
-   if (mockErr) {
-     alert('모의고사 성적 저장 실패: ' + mockErr.message);
-     return;
-   }
-   alert(`${round} 모의고사 성적이 성공적으로 저장되었습니다!`);
-      renderMockChart(currentUser.id, 'studentMockChart');
-      renderMinimumCheckAnalysis();
     }
+  });
+
+  if (records.length === 0) return alert('입력된 점수가 없습니다.');
+
+  const { error: mockErr } = await supabaseClient
+    .from('mock_scores')
+    .upsert(records, { onConflict: 'user_id,exam_round,subject_key' });
+
+  if (mockErr) {
+    alert('모의고사 성적 저장 실패: ' + mockErr.message);
+    return;
+  }
+  alert(`${round} 모의고사 성적이 성공적으로 저장되었습니다!`);
+  renderMockChart(currentUser.id, 'studentMockChart');
+  renderMinimumCheckAnalysis();
+}
 
     async function renderMockChart(userId, canvasId) {
       const rounds = ['3월학평', '5월학평', '6월모평', '7월학평', '9월모평', '10월학평', '수능'];
@@ -2482,99 +2557,128 @@ function closeCardDetailModal() {
       renderMockChart(studentId, 'teacherMockChartCanvas');
     }
 
-    function renderTeacherMockInputRows() {
-      const tbody = document.getElementById('teacherMockTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = SUBJECT_ROWS.map(s => `
-        <tr>
-          <td class="p-2 font-bold text-slate-700">${s.name}</td>
-          <td class="p-2">
-            <select id="t_mock_subj_${s.key}" class="px-2 py-1 border rounded bg-white text-xs">
-              ${s.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-            </select>
-          </td>
-          <td class="p-2"><input type="number" id="t_mock_raw_${s.key}" placeholder="0~100" class="w-full px-2 py-1 border rounded text-xs"></td>
-          <td class="p-2"><input type="number" id="t_mock_std_${s.key}" placeholder="표점" class="w-full px-2 py-1 border rounded text-xs"></td>
-          <td class="p-2"><input type="number" step="0.01" id="t_mock_pct_${s.key}" placeholder="백분위" class="w-full px-2 py-1 border rounded text-xs font-bold text-blue-600"></td>
-          <td class="p-2"><input type="number" id="t_mock_grd_${s.key}" placeholder="등급" min="1" max="9" class="w-full px-2 py-1 border rounded text-xs font-bold"></td>
-        </tr>
-      `).join('');
-    }
+function renderTeacherMockInputRows() {
+  const tbody = document.getElementById('teacherMockTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = SUBJECT_ROWS.map(s => {
+    const isAbs = (s.key === 'english' || s.key === 'history');
+    const maxScore = (s.key === 'history') ? 50 : 100;
+    const rawPlaceholder = (s.key === 'history') ? '0~50' : '0~100';
 
-    async function loadTeacherMockScoresForRound() {
-      if (!currentTeacherMockTargetId) return;
-      const round = document.getElementById('teacherMockRoundSelect').value;
+    return `
+      <tr>
+        <td class="p-2 font-bold text-slate-700">
+          ${s.name}
+          ${isAbs ? '<span class="ml-1 text-[9px] text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded font-black border border-emerald-200">절대</span>' : ''}
+        </td>
+        <td class="p-2">
+          <select id="t_mock_subj_${s.key}" class="px-2 py-1 border rounded bg-white text-xs">
+            ${s.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+          </select>
+        </td>
+        <td class="p-2">
+          <input type="number" id="t_mock_raw_${s.key}" min="0" max="${maxScore}" placeholder="${rawPlaceholder}"
+            oninput="${isAbs ? `handleAutoGrade('t_mock', '${s.key}')` : ''}"
+            class="w-full px-2 py-1 border rounded text-xs font-semibold">
+        </td>
+        <td class="p-2">
+          ${isAbs
+            ? `<input type="text" id="t_mock_std_${s.key}" value="-" disabled title="절대평가 미산출" class="w-full px-2 py-1 border rounded bg-slate-100 text-slate-400 text-center cursor-not-allowed text-xs">`
+            : `<input type="number" id="t_mock_std_${s.key}" placeholder="표점" class="w-full px-2 py-1 border rounded text-xs">`
+          }
+        </td>
+        <td class="p-2">
+          ${isAbs
+            ? `<input type="text" id="t_mock_pct_${s.key}" value="-" disabled title="절대평가 미산출" class="w-full px-2 py-1 border rounded bg-slate-100 text-slate-400 text-center cursor-not-allowed text-xs">`
+            : `<input type="number" step="0.01" id="t_mock_pct_${s.key}" placeholder="백분위" class="w-full px-2 py-1 border rounded text-xs font-bold text-blue-600">`
+          }
+        </td>
+        <td class="p-2">
+          <input type="number" id="t_mock_grd_${s.key}" placeholder="등급" min="1" max="9"
+            class="w-full px-2 py-1 border rounded text-xs font-black text-center ${isAbs ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-white font-bold'}">
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
 
-      SUBJECT_ROWS.forEach(s => {
+async function loadTeacherMockScoresForRound() {
+  if (!currentTeacherMockTargetId) return;
+  const round = document.getElementById('teacherMockRoundSelect').value;
+
+  SUBJECT_ROWS.forEach(s => {
+    const isAbs = (s.key === 'english' || s.key === 'history');
+    const r = document.getElementById(`t_mock_raw_${s.key}`);
+    const st = document.getElementById(`t_mock_std_${s.key}`);
+    const p = document.getElementById(`t_mock_pct_${s.key}`);
+    const g = document.getElementById(`t_mock_grd_${s.key}`);
+    if (r) r.value = '';
+    if (st) st.value = isAbs ? '-' : '';
+    if (p) p.value = isAbs ? '-' : '';
+    if (g) g.value = '';
+  });
+
+  const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', currentTeacherMockTargetId).eq('exam_round', round);
+
+  if (scores) {
+    scores.forEach(row => {
+      const s = SUBJECT_ROWS.find(item => item.key === row.subject_key);
+      if (s) {
+        const isAbs = (s.key === 'english' || s.key === 'history');
+        const selSubj = document.getElementById(`t_mock_subj_${s.key}`);
+        if (selSubj) selSubj.value = row.subject_name;
         const r = document.getElementById(`t_mock_raw_${s.key}`);
         const st = document.getElementById(`t_mock_std_${s.key}`);
         const p = document.getElementById(`t_mock_pct_${s.key}`);
         const g = document.getElementById(`t_mock_grd_${s.key}`);
-        if (r) r.value = '';
-        if (st) st.value = '';
-        if (p) p.value = '';
-        if (g) g.value = '';
-      });
-
-      const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', currentTeacherMockTargetId).eq('exam_round', round);
-
-      if (scores) {
-        scores.forEach(row => {
-          const s = SUBJECT_ROWS.find(item => item.key === row.subject_key);
-          if (s) {
-            const selSubj = document.getElementById(`t_mock_subj_${s.key}`);
-            if (selSubj) selSubj.value = row.subject_name;
-            const r = document.getElementById(`t_mock_raw_${s.key}`);
-            const st = document.getElementById(`t_mock_std_${s.key}`);
-            const p = document.getElementById(`t_mock_pct_${s.key}`);
-            const g = document.getElementById(`t_mock_grd_${s.key}`);
-            if (r) r.value = row.raw_score ?? '';
-            if (st) st.value = row.standard_score ?? '';
-            if (p) p.value = row.percentile ?? '';
-            if (g) g.value = row.grade ?? '';
-          }
-        });
+        if (r) r.value = row.raw_score ?? '';
+        if (st && !isAbs) st.value = row.standard_score ?? '';
+        if (p && !isAbs) p.value = row.percentile ?? '';
+        if (g) g.value = row.grade ?? '';
       }
-    }
+    });
+  }
+}
 
-    async function saveTeacherMockScores() {
-      if (!currentTeacherMockTargetId) return alert('선택된 학생이 없습니다.');
-      const round = document.getElementById('teacherMockRoundSelect').value;
-      const records = [];
+async function saveTeacherMockScores() {
+  if (!currentTeacherMockTargetId) return alert('선택된 학생이 없습니다.');
+  const round = document.getElementById('teacherMockRoundSelect').value;
+  const records = [];
 
-      SUBJECT_ROWS.forEach(s => {
-        const subjName = document.getElementById(`t_mock_subj_${s.key}`)?.value;
-        const raw = document.getElementById(`t_mock_raw_${s.key}`)?.value;
-        const std = document.getElementById(`t_mock_std_${s.key}`)?.value;
-        const pct = document.getElementById(`t_mock_pct_${s.key}`)?.value;
-        const grd = document.getElementById(`t_mock_grd_${s.key}`)?.value;
+  SUBJECT_ROWS.forEach(s => {
+    const isAbs = (s.key === 'english' || s.key === 'history');
+    const subjName = document.getElementById(`t_mock_subj_${s.key}`)?.value;
+    const raw = document.getElementById(`t_mock_raw_${s.key}`)?.value;
+    const std = document.getElementById(`t_mock_std_${s.key}`)?.value;
+    const pct = document.getElementById(`t_mock_pct_${s.key}`)?.value;
+    const grd = document.getElementById(`t_mock_grd_${s.key}`)?.value;
 
-        if (raw || std || pct || grd) {
-          records.push({
-            user_id: currentTeacherMockTargetId,
-            exam_round: round,
-            subject_key: s.key,
-            subject_name: subjName,
-            raw_score: raw ? parseInt(raw) : null,
-            standard_score: std ? parseInt(std) : null,
-            percentile: pct ? parseFloat(pct) : null,
-            grade: grd ? parseInt(grd) : null
-          });
-        }
+    if (raw || grd || (!isAbs && (std || pct))) {
+      records.push({
+        user_id: currentTeacherMockTargetId,
+        exam_round: round,
+        subject_key: s.key,
+        subject_name: subjName,
+        raw_score: raw ? parseInt(raw) : null,
+        standard_score: (!isAbs && std && !isNaN(std)) ? parseInt(std) : null,
+        percentile: (!isAbs && pct && !isNaN(pct)) ? parseFloat(pct) : null,
+        grade: grd ? parseInt(grd) : null
       });
-
-      if (records.length === 0) return alert('입력된 점수가 없습니다.');
-
-      const { error } = await supabaseClient
-        .from('mock_scores')
-        .upsert(records, { onConflict: 'user_id,exam_round,subject_key' });
-
-      if (error) return alert('성적 저장 실패: ' + error.message);
-
-      alert(`${round} 모의고사 성적이 선생님 권한으로 성공적으로 저장되었습니다!`);
-      renderMockChart(currentTeacherMockTargetId, 'teacherMockChartCanvas');
-      renderMinimumCheckAnalysis();
     }
+  });
+
+  if (records.length === 0) return alert('입력된 점수가 없습니다.');
+
+  const { error } = await supabaseClient
+    .from('mock_scores')
+    .upsert(records, { onConflict: 'user_id,exam_round,subject_key' });
+
+  if (error) return alert('성적 저장 실패: ' + error.message);
+
+  alert(`${round} 모의고사 성적이 선생님 권한으로 성공적으로 저장되었습니다!`);
+  renderMockChart(currentTeacherMockTargetId, 'teacherMockChartCanvas');
+  renderMinimumCheckAnalysis();
+}
 
     async function loadMySurveyData() {
       const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', currentUser.id).single();
