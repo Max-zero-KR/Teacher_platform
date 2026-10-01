@@ -6176,10 +6176,10 @@ async function loadSongRecommendations() {
     .from('song_recommendations')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(30);
 
   if (error || !data || data.length === 0) {
-    container.innerHTML = '<p class="text-center text-slate-400 py-6">학생들이 보낸 추천곡이 아직 없습니다.</p>';
+    container.innerHTML = '<p class="text-center text-slate-400 py-6">접수된 학생 추천곡이 아직 없습니다.</p>';
     return;
   }
 
@@ -6194,11 +6194,36 @@ async function loadSongRecommendations() {
           추천자: ${escapeHtml(item.student_name)} (${escapeHtml(item.student_no)}) ${item.reason ? '• ' + escapeHtml(item.reason) : ''}
         </p>
       </div>
-      <button onclick="pickRecommendationToInput('${escapeHtml(item.song_title)}', '${escapeHtml(item.artist || '')}', '${escapeHtml(item.student_name)}', '${encodeURI(item.youtube_url || '')}')" class="px-2.5 py-1 bg-white hover:bg-purple-600 hover:text-white border border-purple-200 rounded-lg text-[11px] font-bold text-purple-700 transition shrink-0">
-        선정 채택
-      </button>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button onclick="pickRecommendationToInput('${escapeHtml(item.song_title)}', '${escapeHtml(item.artist || '')}', '${escapeHtml(item.student_name)}', '${encodeURI(item.youtube_url || '')}')" class="px-2.5 py-1 bg-white hover:bg-purple-600 hover:text-white border border-purple-200 rounded-lg text-[11px] font-bold text-purple-700 transition">
+          선정 채택
+        </button>
+        <button onclick="deleteSongRecommendation('${item.id}')" title="이 추천곡 삭제" class="px-2 py-1 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg text-[11px] font-bold transition flex items-center gap-0.5">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 삭제
+        </button>
+      </div>
     </div>
   `).join('');
+
+  lucide.createIcons();
+}
+
+// [선생님 전용] 학생 신청곡 개별 삭제 함수
+async function deleteSongRecommendation(recId) {
+  if (!confirm('이 학생의 신청곡을 목록에서 완전히 삭제할까요?')) return;
+
+  const { error } = await supabaseClient
+    .from('song_recommendations')
+    .delete()
+    .eq('id', recId);
+
+  if (error) {
+    alert('삭제 실패: ' + error.message);
+    return;
+  }
+
+  alert('신청곡이 목록에서 삭제되었습니다.');
+  loadSongRecommendations();
 }
 
 function pickRecommendationToInput(title, artist, studentName, youtubeUrl) {
