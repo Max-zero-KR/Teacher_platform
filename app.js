@@ -346,70 +346,62 @@ function navAndClose(viewId) {
 
       const isTeacher = (currentProfile.role === 'admin' || currentProfile.role === 'teacher');
 
-if (isTeacher) {
-  document.getElementById('teacherApprovalMenuWrapper').classList.remove('hidden');
-  document.getElementById('postNoticeBtn').classList.remove('hidden');
-  document.getElementById('teacherHomeSummary').classList.remove('hidden');
-  document.getElementById('studentHomeSummary').classList.add('hidden');
-  document.getElementById('teacherSchedulePickerWrapper')?.classList.remove('hidden');
-  document.getElementById('teacherMinCheckPickerWrapper')?.classList.remove('hidden');
+      if (isTeacher) {
+        document.getElementById('teacherApprovalMenuWrapper')?.classList.remove('hidden');
+        document.getElementById('postNoticeBtn')?.classList.remove('hidden');
+        document.getElementById('teacherHomeSummary')?.classList.remove('hidden');
+        document.getElementById('studentHomeSummary')?.classList.add('hidden');
+        document.getElementById('teacherSchedulePickerWrapper')?.classList.remove('hidden');
+        document.getElementById('teacherMinCheckPickerWrapper')?.classList.remove('hidden');
 
-  // [교사 로그인 시]
-  document.getElementById('teacherOnlyAdmissionMaterials')?.classList.remove('hidden');
-  document.getElementById('mobileTeacherOnlyAdmissionMaterials')?.classList.remove('hidden');
-  document.getElementById('manageDailySongBtn')?.classList.remove('hidden');
+        // [교사 로그인 시: 입시자료 3종 메뉴 및 노래 선정 버튼 노출]
+        document.getElementById('teacherOnlyAdmissionMaterials')?.classList.remove('hidden');
+        document.getElementById('mobileTeacherOnlyAdmissionMaterials')?.classList.remove('hidden');
+        document.getElementById('manageDailySongBtn')?.classList.remove('hidden');
 
-  loadUsersData();
-  loadTeacherStudentSelects();
-  loadTeacherCounselRequests();
-} else {
-  document.getElementById('teacherApprovalMenuWrapper').classList.add('hidden');
-  document.getElementById('postNoticeBtn').classList.add('hidden');
-  
-  // [학생 로그인 시: 교사 전용 입시자료 3종 메뉴 완벽 차단]
-  document.getElementById('teacherOnlyAdmissionMaterials')?.classList.add('hidden');
-  document.getElementById('mobileTeacherOnlyAdmissionMaterials')?.classList.add('hidden');
-  document.getElementById('manageDailySongBtn')?.classList.add('hidden');
+        // [교사 전용 등록 버튼 활성화]
+        document.getElementById('addCalendarEventBtn')?.classList.remove('hidden');
+        document.getElementById('addAlbumFolderBtn')?.classList.remove('hidden');
+        document.getElementById('addMaterialBtn')?.classList.remove('hidden');
+        document.getElementById('addStudyMaterialBtn')?.classList.remove('hidden');
+        document.getElementById('addMockFolderBtn')?.classList.remove('hidden');
+        document.getElementById('addMockSampleBtn')?.classList.remove('hidden');
+        document.getElementById('addForumFolderBtn')?.classList.remove('hidden');
+        document.getElementById('addTeacherForumBtn')?.classList.remove('hidden');
+        document.getElementById('addBriefingFolderBtn')?.classList.remove('hidden');
+        document.getElementById('addBriefingBtn')?.classList.remove('hidden');
+        document.getElementById('albumUploadLabel')?.classList.remove('hidden');
 
-    
-  // [교사 전용 등록 버튼 활성화]
-  document.getElementById('addCalendarEventBtn')?.classList.remove('hidden');
-  document.getElementById('addAlbumFolderBtn')?.classList.remove('hidden');
-  document.getElementById('addMaterialBtn')?.classList.remove('hidden');
-  document.getElementById('addStudyMaterialBtn')?.classList.remove('hidden');
-  document.getElementById('addMockFolderBtn')?.classList.remove('hidden');
-  document.getElementById('addMockSampleBtn')?.classList.remove('hidden');
-  document.getElementById('addForumFolderBtn')?.classList.remove('hidden');
-  document.getElementById('addTeacherForumBtn')?.classList.remove('hidden');
-  document.getElementById('addBriefingFolderBtn')?.classList.remove('hidden');
-  document.getElementById('addBriefingBtn')?.classList.remove('hidden');
-  document.getElementById('albumUploadLabel')?.classList.remove('hidden');
+        loadUsersData();
+        loadTeacherStudentSelects();
+        loadTeacherCounselRequests();
+      } else {
+        document.getElementById('teacherApprovalMenuWrapper')?.classList.add('hidden');
+        document.getElementById('postNoticeBtn')?.classList.add('hidden');
+        document.getElementById('teacherHomeSummary')?.classList.add('hidden');
+        document.getElementById('studentHomeSummary')?.classList.remove('hidden');
+        document.getElementById('teacherSchedulePickerWrapper')?.classList.add('hidden');
+        document.getElementById('teacherMinCheckPickerWrapper')?.classList.add('hidden');
 
-  loadUsersData();
-  loadTeacherStudentSelects();
-  loadTeacherCounselRequests();
-} else {
-  document.getElementById('teacherApprovalMenuWrapper').classList.add('hidden');
-  document.getElementById('postNoticeBtn').classList.add('hidden');
-  document.getElementById('teacherHomeSummary').classList.add('hidden');
-  document.getElementById('studentHomeSummary').classList.remove('hidden');
-  document.getElementById('teacherSchedulePickerWrapper')?.classList.add('hidden');
-  document.getElementById('teacherMinCheckPickerWrapper')?.classList.add('hidden');
+        // [학생 로그인 시: 교사 전용 입시자료 3종 메뉴 완벽 차단 & 노래 관리 숨김]
+        document.getElementById('teacherOnlyAdmissionMaterials')?.classList.add('hidden');
+        document.getElementById('mobileTeacherOnlyAdmissionMaterials')?.classList.add('hidden');
+        document.getElementById('manageDailySongBtn')?.classList.add('hidden');
 
-  // [학생 화면에서 등록 버튼 비활성화/숨김]
-  document.getElementById('addCalendarEventBtn')?.classList.add('hidden');
-  document.getElementById('addAlbumFolderBtn')?.classList.add('hidden');
-  document.getElementById('addMaterialBtn')?.classList.add('hidden');
-  document.getElementById('addStudyMaterialBtn')?.classList.add('hidden');
-  document.getElementById('addMockFolderBtn')?.classList.add('hidden');
-  document.getElementById('addMockSampleBtn')?.classList.add('hidden');
-  document.getElementById('addForumFolderBtn')?.classList.add('hidden');
-  document.getElementById('addTeacherForumBtn')?.classList.add('hidden');
-  document.getElementById('addBriefingFolderBtn')?.classList.add('hidden');
-  document.getElementById('addBriefingBtn')?.classList.add('hidden');
-  document.getElementById('albumUploadLabel')?.classList.add('hidden');
+        // [학생 화면에서 등록 버튼 비활성화/숨김]
+        document.getElementById('addCalendarEventBtn')?.classList.add('hidden');
+        document.getElementById('addAlbumFolderBtn')?.classList.add('hidden');
+        document.getElementById('addMaterialBtn')?.classList.add('hidden');
+        document.getElementById('addStudyMaterialBtn')?.classList.add('hidden');
+        document.getElementById('addMockFolderBtn')?.classList.add('hidden');
+        document.getElementById('addMockSampleBtn')?.classList.add('hidden');
+        document.getElementById('addForumFolderBtn')?.classList.add('hidden');
+        document.getElementById('addTeacherForumBtn')?.classList.add('hidden');
+        document.getElementById('addBriefingFolderBtn')?.classList.add('hidden');
+        document.getElementById('addBriefingBtn')?.classList.add('hidden');
+        document.getElementById('albumUploadLabel')?.classList.add('hidden');
 
-  renderStudent12CardInputs();
+        renderStudent12CardInputs();
         loadStudentExisting12Cards();
         loadMySurveyData();
         renderMockScoreInputs();
@@ -495,11 +487,6 @@ if (isTeacher) {
         return;
       }
 
-      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
-      const target = document.getElementById('view-' + viewId);
-      if (target) target.classList.remove('hidden');
-
-    function changeView(viewId) {
       document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
       const target = document.getElementById('view-' + viewId);
       if (target) target.classList.remove('hidden');
@@ -1876,251 +1863,262 @@ let currentTeacherCardsCache = [];
 let modalCompChartInstance = null;
 let modalCutChartInstance = null;
 
-   async function loadStudent12CardsForTeacher(directStudentId) {
-     const studentId = directStudentId || document.getElementById('teacherStudentSelect')?.value;
-     const container = document.getElementById('teacherCardsContainer');
-     if (!studentId) {
-       container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
-       return;
-     }
+// [교사 직접 입력] 입시카드 수정 팝업 열기 (전역 함수로 안전 분리)
+function openTeacherCardEditModal(slotType, slotNum, e) {
+  if (e) e.stopPropagation();
+  const studentId = pickerSelectedStudentId['counsel'] || document.getElementById('teacherStudentSelect')?.value;
+  if (!studentId) return alert('선택된 학생이 없습니다.');
 
-    // [교사 직접 입력] 입시카드 수정 팝업 열기
-    function openTeacherCardEditModal(slotType, slotNum, e) {
-      if (e) e.stopPropagation();
-      const studentId = pickerSelectedStudentId['counsel'] || document.getElementById('teacherStudentSelect')?.value;
-      if (!studentId) return alert('선택된 학생이 없습니다.');
+  const targetStudent = allGrade3Students.find(s => s.id === studentId);
+  const studentName = targetStudent?.name || '학생';
+  const studentNo = targetStudent?.student_no || '';
 
-      const targetStudent = allGrade3Students.find(s => s.id === studentId);
-      const studentName = targetStudent?.name || '학생';
-      const studentNo = targetStudent?.student_no || '';
+  const card = currentTeacherCardsCache.find(c => c.slot_type === slotType && c.slot_num === slotNum) || {};
 
-      const card = currentTeacherCardsCache.find(c => c.slot_type === slotType && c.slot_num === slotNum) || {};
+  document.getElementById('teacherEditSlotType').value = slotType;
+  document.getElementById('teacherEditSlotNum').value = slotNum;
 
-      document.getElementById('teacherEditSlotType').value = slotType;
-      document.getElementById('teacherEditSlotNum').value = slotNum;
+  const typeLabels = { susi: '일반 수시', special: '특목/전문대', jeongsi: '정시' };
+  const isJeongsi = (slotType === 'jeongsi');
+  const jNames = { 1: '가군', 2: '나군', 3: '다군' };
 
-      const typeLabels = { susi: '일반 수시', special: '특목/전문대', jeongsi: '정시' };
-      const isJeongsi = (slotType === 'jeongsi');
-      const jNames = { 1: '가군', 2: '나군', 3: '다군' };
+  document.getElementById('teacherEditCardSlotBadge').innerText = isJeongsi ? `정시 (${jNames[slotNum]})` : `${typeLabels[slotType]} ${slotNum}지망`;
+  document.getElementById('teacherEditCardStudentInfo').innerText = `수정 대상 학생: [${studentName}] (${studentNo})`;
 
-      document.getElementById('teacherEditCardSlotBadge').innerText = isJeongsi ? `정시 (${jNames[slotNum]})` : `${typeLabels[slotType]} ${slotNum}지망`;
-      document.getElementById('teacherEditCardStudentInfo').innerText = `수정 대상 학생: [${studentName}] (${studentNo})`;
+  document.getElementById('teacherEditUniv').value = card.university || '';
+  document.getElementById('teacherEditDept').value = card.department || '';
+  document.getElementById('teacherEditType').value = card.admission_type || '';
+  document.getElementById('teacherEditMinMemo').value = (slotType === 'susi' ? card.min_criteria : card.memo) || '';
+  document.getElementById('teacherEditMinLabel').innerText = (slotType === 'susi') ? '수능최저기준 (예: 3합 7)' : '환산점수 / 비고 (예: 712.5점)';
+  document.getElementById('teacherEditRec').value = card.recommendation || 'X';
 
-      document.getElementById('teacherEditUniv').value = card.university || '';
-      document.getElementById('teacherEditDept').value = card.department || '';
-      document.getElementById('teacherEditType').value = card.admission_type || '';
-      document.getElementById('teacherEditMinMemo').value = (slotType === 'susi' ? card.min_criteria : card.memo) || '';
-      document.getElementById('teacherEditMinLabel').innerText = (slotType === 'susi') ? '수능최저기준 (예: 3합 7)' : '환산점수 / 비고 (예: 712.5점)';
-      document.getElementById('teacherEditRec').value = card.recommendation || 'X';
+  document.getElementById('teacherEditMyScore').value = card.my_score ?? '';
+  document.getElementById('teacherEditMyScoreLabel').innerText = isJeongsi ? '모평 백분위 (국·수·탐 평균 %)' : '학교별 산출내신 (등급)';
+  document.getElementById('teacherEditCutLabel').innerText = isJeongsi ? '🎯 3개년 70% 백분위컷 (%)' : '🎯 3개년 70% 입결컷 (등급)';
 
-      document.getElementById('teacherEditMyScore').value = card.my_score ?? '';
-      document.getElementById('teacherEditMyScoreLabel').innerText = isJeongsi ? '모평 백분위 (국·수·탐 평균 %)' : '학교별 산출내신 (등급)';
-      document.getElementById('teacherEditCutLabel').innerText = isJeongsi ? '🎯 3개년 70% 백분위컷 (%)' : '🎯 3개년 70% 입결컷 (등급)';
+  const comp = card.comp_rates || [];
+  const cuts = card.cutoffs || [];
+  document.getElementById('teacherEditComp1').value = comp[0] ?? '';
+  document.getElementById('teacherEditComp2').value = comp[1] ?? '';
+  document.getElementById('teacherEditComp3').value = comp[2] ?? '';
+  document.getElementById('teacherEditCut1').value = cuts[0] ?? '';
+  document.getElementById('teacherEditCut2').value = cuts[1] ?? '';
+  document.getElementById('teacherEditCut3').value = cuts[2] ?? '';
 
-      const comp = card.comp_rates || [];
-      const cuts = card.cutoffs || [];
-      document.getElementById('teacherEditComp1').value = comp[0] ?? '';
-      document.getElementById('teacherEditComp2').value = comp[1] ?? '';
-      document.getElementById('teacherEditComp3').value = comp[2] ?? '';
-      document.getElementById('teacherEditCut1').value = cuts[0] ?? '';
-      document.getElementById('teacherEditCut2').value = cuts[1] ?? '';
-      document.getElementById('teacherEditCut3').value = cuts[2] ?? '';
+  document.getElementById('teacherEditRecLast').value = card.recruit_last ?? '';
+  document.getElementById('teacherEditRecCurr').value = card.recruit_curr ?? '';
 
-      document.getElementById('teacherEditRecLast').value = card.recruit_last ?? '';
-      document.getElementById('teacherEditRecCurr').value = card.recruit_curr ?? '';
+  document.getElementById('teacherCardEditModal').classList.remove('hidden');
+  lucide.createIcons();
+}
 
-      document.getElementById('teacherCardEditModal').classList.remove('hidden');
-      lucide.createIcons();
-    }
+function closeTeacherCardEditModal() {
+  document.getElementById('teacherCardEditModal').classList.add('hidden');
+}
 
-    function closeTeacherCardEditModal() {
-      document.getElementById('teacherCardEditModal').classList.add('hidden');
-    }
+async function saveCardByTeacher() {
+  const studentId = pickerSelectedStudentId['counsel'] || document.getElementById('teacherStudentSelect')?.value;
+  if (!studentId) return alert('선택된 학생이 없습니다.');
 
-    async function saveCardByTeacher() {
-      const studentId = pickerSelectedStudentId['counsel'] || document.getElementById('teacherStudentSelect')?.value;
-      if (!studentId) return alert('선택된 학생이 없습니다.');
+  const targetStudent = allGrade3Students.find(s => s.id === studentId);
+  const slotType = document.getElementById('teacherEditSlotType').value;
+  const slotNum = parseInt(document.getElementById('teacherEditSlotNum').value);
 
-      const targetStudent = allGrade3Students.find(s => s.id === studentId);
-      const slotType = document.getElementById('teacherEditSlotType').value;
-      const slotNum = parseInt(document.getElementById('teacherEditSlotNum').value);
+  const comp1 = parseFloat(document.getElementById('teacherEditComp1').value) || null;
+  const comp2 = parseFloat(document.getElementById('teacherEditComp2').value) || null;
+  const comp3 = parseFloat(document.getElementById('teacherEditComp3').value) || null;
 
-      const comp1 = parseFloat(document.getElementById('teacherEditComp1').value) || null;
-      const comp2 = parseFloat(document.getElementById('teacherEditComp2').value) || null;
-      const comp3 = parseFloat(document.getElementById('teacherEditComp3').value) || null;
+  const cut1 = parseFloat(document.getElementById('teacherEditCut1').value) || null;
+  const cut2 = parseFloat(document.getElementById('teacherEditCut2').value) || null;
+  const cut3 = parseFloat(document.getElementById('teacherEditCut3').value) || null;
 
-      const cut1 = parseFloat(document.getElementById('teacherEditCut1').value) || null;
-      const cut2 = parseFloat(document.getElementById('teacherEditCut2').value) || null;
-      const cut3 = parseFloat(document.getElementById('teacherEditCut3').value) || null;
+  const recLast = parseInt(document.getElementById('teacherEditRecLast').value) || null;
+  const recCurr = parseInt(document.getElementById('teacherEditRecCurr').value) || null;
+  const myScore = parseFloat(document.getElementById('teacherEditMyScore').value) || null;
 
-      const recLast = parseInt(document.getElementById('teacherEditRecLast').value) || null;
-      const recCurr = parseInt(document.getElementById('teacherEditRecCurr').value) || null;
-      const myScore = parseFloat(document.getElementById('teacherEditMyScore').value) || null;
+  let diag;
+  if (slotType === 'jeongsi') {
+    diag = calculateJeongsiDiag(myScore, cut3 || cut2 || cut1);
+  } else {
+    diag = calculateAdmissionDiag(myScore, cut3 || cut2 || cut1);
+  }
 
-      let diag;
-      if (slotType === 'jeongsi') {
-        diag = calculateJeongsiDiag(myScore, cut3 || cut2 || cut1);
-      } else {
-        diag = calculateAdmissionDiag(myScore, cut3 || cut2 || cut1);
-      }
+  const record = {
+    user_id: studentId,
+    student_no: targetStudent?.student_no || '',
+    student_name: targetStudent?.name || '',
+    slot_type: slotType,
+    slot_num: slotNum,
+    university: document.getElementById('teacherEditUniv').value.trim(),
+    department: document.getElementById('teacherEditDept').value.trim(),
+    admission_type: document.getElementById('teacherEditType').value.trim(),
+    recommendation: document.getElementById('teacherEditRec').value,
+    comp_rates: [comp1, comp2, comp3],
+    cutoffs: [cut1, cut2, cut3],
+    recruit_last: recLast,
+    recruit_curr: recCurr,
+    my_score: myScore,
+    diag_result: diag.text
+  };
 
-      const record = {
-        user_id: studentId,
-        student_no: targetStudent?.student_no || '',
-        student_name: targetStudent?.name || '',
-        slot_type: slotType,
-        slot_num: slotNum,
-        university: document.getElementById('teacherEditUniv').value.trim(),
-        department: document.getElementById('teacherEditDept').value.trim(),
-        admission_type: document.getElementById('teacherEditType').value.trim(),
-        recommendation: document.getElementById('teacherEditRec').value,
-        comp_rates: [comp1, comp2, comp3],
-        cutoffs: [cut1, cut2, cut3],
-        recruit_last: recLast,
-        recruit_curr: recCurr,
-        my_score: myScore,
-        diag_result: diag.text
-      };
+  if (slotType === 'susi') {
+    record.min_criteria = document.getElementById('teacherEditMinMemo').value.trim();
+  } else {
+    record.memo = document.getElementById('teacherEditMinMemo').value.trim();
+  }
 
-      if (slotType === 'susi') {
-        record.min_criteria = document.getElementById('teacherEditMinMemo').value.trim();
-      } else {
-        record.memo = document.getElementById('teacherEditMinMemo').value.trim();
-      }
+  const saveBtn = document.getElementById('teacherCardSaveBtn');
+  saveBtn.innerText = '저장 중...';
+  saveBtn.disabled = true;
 
-      const saveBtn = document.getElementById('teacherCardSaveBtn');
-      saveBtn.innerText = '저장 중...';
-      saveBtn.disabled = true;
+  const { error } = await supabaseClient
+    .from('applications_12')
+    .upsert([record], { onConflict: 'user_id,slot_type,slot_num' });
 
-      const { error } = await supabaseClient
-        .from('applications_12')
-        .upsert([record], { onConflict: 'user_id,slot_type,slot_num' });
+  saveBtn.innerText = '선생님 권한으로 카드 저장';
+  saveBtn.disabled = false;
 
-      saveBtn.innerText = '선생님 권한으로 카드 저장';
-      saveBtn.disabled = false;
+  if (error) return alert('카드 저장 실패: ' + error.message);
 
-      if (error) return alert('카드 저장 실패: ' + error.message);
+  alert(`[${targetStudent?.name}] 학생의 ${slotNum}지망 카드가 안전하게 저장되었습니다!`);
+  closeTeacherCardEditModal();
+  loadStudent12CardsForTeacher(studentId);
+  renderMinimumCheckAnalysis();
+}
 
-      alert(`[${targetStudent?.name}] 학생의 ${slotNum}지망 카드가 안전하게 저장되었습니다!`);
-      closeTeacherCardEditModal();
-      loadStudent12CardsForTeacher(studentId);
-      renderMinimumCheckAnalysis();
-    }
+async function loadStudent12CardsForTeacher(directStudentId) {
+  const studentId = directStudentId || document.getElementById('teacherStudentSelect')?.value;
+  const container = document.getElementById('teacherCardsContainer');
+  if (!studentId) {
+    container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
+    return;
+  }
 
-       
-     const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', studentId);
-     currentTeacherCardsCache = cards || [];
+  const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', studentId);
+  currentTeacherCardsCache = cards || [];
 
-     const susiList = cards ? cards.filter(c => c.slot_type === 'susi') : [];
-     const specList = cards ? cards.filter(c => c.slot_type === 'special') : [];
-     const jeongsiList = cards ? cards.filter(c => c.slot_type === 'jeongsi') : [];
-     const jeongsiNames = { 1: '정시 (가군)', 2: '정시 (나군)', 3: '정시 (다군)' };
+  const susiList = cards ? cards.filter(c => c.slot_type === 'susi') : [];
+  const specList = cards ? cards.filter(c => c.slot_type === 'special') : [];
+  const jeongsiList = cards ? cards.filter(c => c.slot_type === 'jeongsi') : [];
+  const jeongsiNames = { 1: '정시 (가군)', 2: '정시 (나군)', 3: '정시 (다군)' };
 
-     container.innerHTML = `
-       <!-- 1. 수시 6장 -->
-       <div class="bg-white p-5 rounded-xl border border-slate-200 space-y-2">
-         <div class="flex items-center justify-between">
-           <h3 class="font-bold text-blue-700 text-sm">일반 수시 6장 지망 현황</h3>
-           <span class="text-[11px] text-slate-400">💡 카드를 클릭하면 3개년 선 그래프가 열립니다.</span>
-         </div>
-         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-           ${[1,2,3,4,5,6].map(num => {
-             const c = susiList.find(x => x.slot_num === num) || {};
-             const isRecRequired = (c.recommendation === 'O');
-             const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
-             const diag = calculateAdmissionDiag(c.my_score, cutVal);
-             return `
-               <div onclick="openCardDetailModal('susi', ${num})" class="p-3.5 rounded-xl border text-xs flex flex-col justify-between space-y-2 transition cursor-pointer hover:shadow-md hover:border-blue-400 ${isRecRequired ? 'bg-rose-50/40 border-rose-200' : 'bg-slate-50 border-slate-200'}">
-                 <div>
-                   <div class="flex items-center justify-between mb-1">
-                     <span class="font-bold text-blue-600">${num}지망</span>
-                     <div class="flex items-center gap-1">${getDiagBadgeHtml(diag)}${isRecRequired ? '<span class="px-1.5 py-0.5 bg-rose-600 text-white rounded font-black text-[9px]">추천 O</span>' : ''}</div>
-                   </div>
-                   <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
-                   <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
-                   <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
-                   <div class="text-emerald-700 font-semibold mt-1">최저: ${escapeHtml(c.min_criteria) || '-'}</div>
-                 </div>
-                 <div class="pt-2 border-t flex items-center justify-between text-[11px]">
-                   <span class="text-slate-500">산출내신: <b class="text-indigo-600">${c.my_score ? c.my_score + '등급' : '-'}</b></span>
-                   <span class="text-blue-600 font-bold">상세보기 →</span>
-                 </div>
-               </div>
-             `;
-           }).join('')}
-         </div>
-       </div>
+  container.innerHTML = `
+    <!-- 1. 수시 6장 -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 space-y-2">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-blue-700 text-sm">일반 수시 6장 지망 현황</h3>
+        <span class="text-[11px] text-slate-400">💡 카드를 클릭하면 3개년 선 그래프가 열리고, [수정]으로 직접 기입할 수 있습니다.</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        ${[1,2,3,4,5,6].map(num => {
+          const c = susiList.find(x => x.slot_num === num) || {};
+          const isRecRequired = (c.recommendation === 'O');
+          const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
+          const diag = calculateAdmissionDiag(c.my_score, cutVal);
+          return `
+            <div onclick="openCardDetailModal('susi', ${num})" class="p-3.5 rounded-xl border text-xs flex flex-col justify-between space-y-2 transition cursor-pointer hover:shadow-md hover:border-blue-400 ${isRecRequired ? 'bg-rose-50/40 border-rose-200' : 'bg-slate-50 border-slate-200'}">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold text-blue-600">${num}지망</span>
+                  <div class="flex items-center gap-1.5">
+                    ${getDiagBadgeHtml(diag)}
+                    ${isRecRequired ? '<span class="px-1.5 py-0.5 bg-rose-600 text-white rounded font-black text-[9px]">추천 O</span>' : ''}
+                    <button onclick="openTeacherCardEditModal('susi', ${num}, event)" class="px-2 py-0.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-[10px] font-bold transition">✏️ 수정</button>
+                  </div>
+                </div>
+                <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
+                <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                <div class="text-emerald-700 font-semibold mt-1">최저: ${escapeHtml(c.min_criteria) || '-'}</div>
+              </div>
+              <div class="pt-2 border-t flex items-center justify-between text-[11px]">
+                <span class="text-slate-500">산출내신: <b class="text-indigo-600">${c.my_score ? c.my_score + '등급' : '-'}</b></span>
+                <span class="text-blue-600 font-bold">상세보기 →</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
 
-       <!-- 2. 특수목적대 6장 (클릭 시 팝업 지원) -->
-       <div class="bg-white p-5 rounded-xl border border-purple-200 space-y-2">
-         <div class="flex items-center justify-between">
-           <h3 class="font-bold text-purple-700 text-sm">특수목적대 / 전문대 6장 현황</h3>
-           <span class="text-[11px] text-slate-400">💡 카드를 클릭하면 3개년 선 그래프가 열립니다.</span>
-         </div>
-         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-           ${[1,2,3,4,5,6].map(num => {
-             const c = specList.find(x => x.slot_num === num) || {};
-             const isRecRequired = (c.recommendation === 'O');
-             const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
-             const diag = calculateAdmissionDiag(c.my_score, cutVal);
-             return `
-               <div onclick="openCardDetailModal('special', ${num})" class="p-3.5 rounded-xl border text-xs flex flex-col justify-between space-y-2 transition cursor-pointer hover:shadow-md hover:border-purple-400 ${isRecRequired ? 'bg-purple-50/60 border-purple-300' : 'bg-slate-50 border-slate-200'}">
-                 <div>
-                   <div class="flex items-center justify-between mb-1">
-                     <span class="font-bold text-purple-600">${num}지망</span>
-                     <div class="flex items-center gap-1">${getDiagBadgeHtml(diag)}${isRecRequired ? '<span class="px-1.5 py-0.5 bg-purple-600 text-white rounded font-black text-[9px]">추천 O</span>' : ''}</div>
-                   </div>
-                   <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
-                   <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
-                   <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
-                   <div class="text-slate-500">비고: ${escapeHtml(c.memo) || '-'}</div>
-                 </div>
-                 <div class="pt-2 border-t flex items-center justify-between text-[11px]">
-                   <span class="text-slate-500">산출내신: <b class="text-indigo-600">${c.my_score ? c.my_score + '등급' : '-'}</b></span>
-                   <span class="text-purple-600 font-bold">상세보기 →</span>
-                 </div>
-               </div>
-             `;
-           }).join('')}
-         </div>
-       </div>
+    <!-- 2. 특수목적대 6장 -->
+    <div class="bg-white p-5 rounded-xl border border-purple-200 space-y-2">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-purple-700 text-sm">특수목적대 / 전문대 6장 현황</h3>
+        <span class="text-[11px] text-slate-400">💡 카드를 클릭하면 3개년 선 그래프가 열리고, [수정]으로 직접 기입할 수 있습니다.</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        ${[1,2,3,4,5,6].map(num => {
+          const c = specList.find(x => x.slot_num === num) || {};
+          const isRecRequired = (c.recommendation === 'O');
+          const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
+          const diag = calculateAdmissionDiag(c.my_score, cutVal);
+          return `
+            <div onclick="openCardDetailModal('special', ${num})" class="p-3.5 rounded-xl border text-xs flex flex-col justify-between space-y-2 transition cursor-pointer hover:shadow-md hover:border-purple-400 ${isRecRequired ? 'bg-purple-50/60 border-purple-300' : 'bg-slate-50 border-slate-200'}">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold text-purple-600">${num}지망</span>
+                  <div class="flex items-center gap-1.5">
+                    ${getDiagBadgeHtml(diag)}
+                    ${isRecRequired ? '<span class="px-1.5 py-0.5 bg-purple-600 text-white rounded font-black text-[9px]">추천 O</span>' : ''}
+                    <button onclick="openTeacherCardEditModal('special', ${num}, event)" class="px-2 py-0.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded text-[10px] font-bold transition">✏️ 수정</button>
+                  </div>
+                </div>
+                <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
+                <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                <div class="text-slate-500">비고: ${escapeHtml(c.memo) || '-'}</div>
+              </div>
+              <div class="pt-2 border-t flex items-center justify-between text-[11px]">
+                <span class="text-slate-500">산출내신: <b class="text-indigo-600">${c.my_score ? c.my_score + '등급' : '-'}</b></span>
+                <span class="text-purple-600 font-bold">상세보기 →</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
 
-       <!-- 3. 정시 3장 (가·나·다군 - 백분위 기반 클릭 지원) -->
-       <div class="bg-white p-5 rounded-xl border border-amber-200 space-y-2">
-         <div class="flex items-center justify-between">
-           <h3 class="font-bold text-amber-700 text-sm">정시 3장 (가 · 나 · 다 군) 지망 현황</h3>
-           <span class="text-[11px] text-slate-400">💡 카드를 클릭하면 3개년 백분위컷 선 그래프가 열립니다.</span>
-         </div>
-         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-           ${[1, 2, 3].map(num => {
-             const c = jeongsiList.find(x => x.slot_num === num) || {};
-             const isRecRequired = (c.recommendation === 'O');
-             const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
-             const diag = calculateJeongsiDiag(c.my_score, cutVal);
-             return `
-               <div onclick="openCardDetailModal('jeongsi', ${num})" class="p-3.5 rounded-xl border text-xs flex flex-col justify-between space-y-2 transition cursor-pointer hover:shadow-md hover:border-amber-400 ${isRecRequired ? 'bg-amber-50 border-amber-300' : 'bg-amber-50/40 border-amber-200'}">
-                 <div>
-                   <div class="flex items-center justify-between mb-1">
-                     <span class="font-bold text-amber-700">${jeongsiNames[num]}</span>
-                     <div class="flex items-center gap-1">${getDiagBadgeHtml(diag)}${isRecRequired ? '<span class="px-1.5 py-0.5 bg-amber-600 text-white rounded font-black text-[9px]">추천 O</span>' : ''}</div>
-                   </div>
-                   <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
-                   <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
-                   <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
-                   <div class="text-slate-600">환산점수/비고: ${escapeHtml(c.memo) || '-'}</div>
-                 </div>
-                 <div class="pt-2 border-t flex items-center justify-between text-[11px]">
-                   <span class="text-slate-500">모평백분위: <b class="text-indigo-600">${c.my_score ? c.my_score + '%' : '-'}</b></span>
-                   <span class="text-amber-700 font-bold">상세보기 →</span>
-                 </div>
-               </div>
-             `;
-           }).join('')}
-         </div>
-       </div>
-     `;
-     lucide.createIcons();
-   }
+    <!-- 3. 정시 3장 -->
+    <div class="bg-white p-5 rounded-xl border border-amber-200 space-y-2">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-amber-700 text-sm">정시 3장 (가 · 나 · 다 군) 지망 현황</h3>
+        <span class="text-[11px] text-slate-400">💡 카드를 클릭하면 3개년 백분위컷 선 그래프가 열립니다.</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        ${[1, 2, 3].map(num => {
+          const c = jeongsiList.find(x => x.slot_num === num) || {};
+          const isRecRequired = (c.recommendation === 'O');
+          const cutVal = (c.cutoffs && c.cutoffs[2]) || (c.cutoffs && c.cutoffs[1]);
+          const diag = calculateJeongsiDiag(c.my_score, cutVal);
+          return `
+            <div onclick="openCardDetailModal('jeongsi', ${num})" class="p-3.5 rounded-xl border text-xs flex flex-col justify-between space-y-2 transition cursor-pointer hover:shadow-md hover:border-amber-400 ${isRecRequired ? 'bg-amber-50 border-amber-300' : 'bg-amber-50/40 border-amber-200'}">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold text-amber-700">${jeongsiNames[num]}</span>
+                  <div class="flex items-center gap-1.5">
+                    ${getDiagBadgeHtml(diag)}
+                    ${isRecRequired ? '<span class="px-1.5 py-0.5 bg-amber-600 text-white rounded font-black text-[9px]">추천 O</span>' : ''}
+                    <button onclick="openTeacherCardEditModal('jeongsi', ${num}, event)" class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded text-[10px] font-bold transition">✏️️ 수정</button>
+                  </div>
+                </div>
+                <div class="font-black text-slate-800 text-sm mt-0.5">${c.university ? escapeHtml(c.university) : '<span class="text-slate-400 font-normal">미입력</span>'}</div>
+                <div class="text-slate-700 mt-1">학과: <b class="text-slate-800">${escapeHtml(c.department) || '-'}</b></div>
+                <div class="text-slate-500">전형: ${escapeHtml(c.admission_type) || '-'}</div>
+                <div class="text-slate-600">환산점수/비고: ${escapeHtml(c.memo) || '-'}</div>
+              </div>
+              <div class="pt-2 border-t flex items-center justify-between text-[11px]">
+                <span class="text-slate-500">모평백분위: <b class="text-indigo-600">${c.my_score ? c.my_score + '%' : '-'}</b></span>
+                <span class="text-amber-700 font-bold">상세보기 →</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  lucide.createIcons();
+}
 
 function openCardDetailModal(slotType, slotNum) {
   const card = currentTeacherCardsCache.find(c => c.slot_type === slotType && c.slot_num === slotNum);
@@ -2750,73 +2748,6 @@ function closeCardDetailModal() {
       const { error } = await supabaseClient.from('student_surveys').upsert(surveyObj);
       if (error) return alert('기초조사표 저장 실패: ' + error.message);
       alert('선생님이 입력하신 학생 기초조사서가 성공적으로 저장되었습니다!');
-    }
-
-      const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', studentId).single();
-      if (!data) {
-        card.innerHTML = '<p class="text-center text-slate-400 py-12">해당 학생이 아직 작성한 기초조사서가 없습니다.</p>';
-        return;
-      }
-
-      // ★ 선택과목 배지 생성 (2학년: 초록 배지, 3학년: 파랑 배지)
-      const g2Subjects = (data.selected_subjects && data.selected_subjects.grade2) ? data.selected_subjects.grade2 : [];
-      const g3Subjects = (data.selected_subjects && data.selected_subjects.grade3) ? data.selected_subjects.grade3 : [];
-
-      const g2Html = g2Subjects.length > 0
-        ? g2Subjects.map(s => `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold inline-flex items-center gap-1 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${escapeHtml(s)}</span>`).join(' ')
-        : '<span class="text-slate-400 text-xs italic">선택된 2학년 과목 없음</span>';
-
-      const g3Html = g3Subjects.length > 0
-        ? g3Subjects.map(s => `<span class="px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg text-xs font-bold inline-flex items-center gap-1 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>${escapeHtml(s)}</span>`).join(' ')
-        : '<span class="text-slate-400 text-xs italic">선택된 3학년 과목 없음</span>';
-
-      card.innerHTML = `
-        <div class="space-y-4 text-xs">
-          <!-- 기본 인적사항 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
-            <div>부모님 연락처: <b>${escapeHtml(data.father_name) || '-'}</b> (${escapeHtml(data.father_phone) || '-'}), <b>${escapeHtml(data.mother_name) || '-'}</b> (${escapeHtml(data.mother_phone) || '-'})</div>
-            <div>학생 본인 연락처: <b class="text-blue-600 font-bold">${escapeHtml(data.student_phone) || '-'}</b></div>
-            <div>형제/자매 관계: <b>${escapeHtml(data.siblings) || '-'}</b></div>
-            <div class="md:col-span-2">실거주 주소: <b>${escapeHtml(data.address) || '-'}</b></div>
-          </div>
-
-          <!-- 진로희망 및 특이사항 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
-              <span class="text-[11px] font-bold text-slate-500 block mb-1">🎯 희망 진로 / 진학 희망 학과</span>
-              <p class="text-sm font-black text-slate-800">${escapeHtml(data.career_hope) || '미입력'}</p>
-            </div>
-            <div class="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200 shadow-xs">
-              <span class="text-[11px] font-bold text-amber-800 block mb-1">💡 담임선생님 공유 특이사항 (건강, 배려사항 등)</span>
-              <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">${escapeHtml(data.special_notes) || '특이사항 없음'}</p>
-            </div>
-          </div>
-
-          <!-- ★ [복구 완료] 선택과목 카드 영역 -->
-          <div class="space-y-3 pt-2">
-            <div class="bg-white p-4 rounded-xl border border-emerald-200 shadow-xs space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-black text-emerald-900 flex items-center gap-1.5">
-                  <i data-lucide="check-square" class="w-4 h-4 text-emerald-600"></i> [2학년] 학교 이수 선택과목
-                </span>
-                <span class="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">${g2Subjects.length}과목 이수</span>
-              </div>
-              <div class="flex flex-wrap gap-1.5 pt-1">${g2Html}</div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-xs space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-black text-blue-900 flex items-center gap-1.5">
-                  <i data-lucide="check-square" class="w-4 h-4 text-blue-600"></i> [3학년] 현재 이수 중인 선택과목
-                </span>
-                <span class="text-[11px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">${g3Subjects.length}과목 이수 중</span>
-              </div>
-              <div class="flex flex-wrap gap-1.5 pt-1">${g3Html}</div>
-            </div>
-          </div>
-        </div>
-      `;
-      lucide.createIcons();
     }
 
 // =================================================================
@@ -5763,7 +5694,9 @@ function closeCalendarEventDetail() {
         { id: 'newFolderModal', closeFn: closeNewFolderModal },
         { id: 'cardDetailModal', closeFn: closeCardDetailModal },
         { id: 'calendarEventDetailModal', closeFn: closeCalendarEventDetail },
-
+        { id: 'teacherCardEditModal', closeFn: closeTeacherCardEditModal },
+        { id: 'songRecommendModal', closeFn: closeSongRecommendModal },
+        { id: 'dailySongManageModal', closeFn: closeDailySongManageModal }
       ];
 
       allModals.forEach(m => {
