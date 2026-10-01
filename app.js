@@ -354,6 +354,24 @@ if (isTeacher) {
   document.getElementById('teacherSchedulePickerWrapper')?.classList.remove('hidden');
   document.getElementById('teacherMinCheckPickerWrapper')?.classList.remove('hidden');
 
+  // [교사 로그인 시]
+  document.getElementById('teacherOnlyAdmissionMaterials')?.classList.remove('hidden');
+  document.getElementById('mobileTeacherOnlyAdmissionMaterials')?.classList.remove('hidden');
+  document.getElementById('manageDailySongBtn')?.classList.remove('hidden');
+
+  loadUsersData();
+  loadTeacherStudentSelects();
+  loadTeacherCounselRequests();
+} else {
+  document.getElementById('teacherApprovalMenuWrapper').classList.add('hidden');
+  document.getElementById('postNoticeBtn').classList.add('hidden');
+  
+  // [학생 로그인 시: 교사 전용 입시자료 3종 메뉴 완벽 차단]
+  document.getElementById('teacherOnlyAdmissionMaterials')?.classList.add('hidden');
+  document.getElementById('mobileTeacherOnlyAdmissionMaterials')?.classList.add('hidden');
+  document.getElementById('manageDailySongBtn')?.classList.add('hidden');
+
+    
   // [교사 전용 등록 버튼 활성화]
   document.getElementById('addCalendarEventBtn')?.classList.remove('hidden');
   document.getElementById('addAlbumFolderBtn')?.classList.remove('hidden');
@@ -409,6 +427,7 @@ if (isTeacher) {
 
       changeView('home');
       loadHomeDashboardData();
+        loadDailySong();
       loadAlbumFolders();
       renderCalendar();
       loadExamSchedules();
@@ -467,7 +486,19 @@ if (isTeacher) {
         document.getElementById('authScreen').classList.remove('hidden');
       }
     }
- 
+
+    function changeView(viewId) {
+      // [보안] 학생이 모의평가/간담회/설명회에 접근 시 차단
+      const teacherOnlyViews = ['mockDocEval', 'teacherForum', 'admissionBriefing'];
+      if (!isCurrentTeacher() && teacherOnlyViews.includes(viewId)) {
+        alert('이 자료는 선생님만 열람할 수 있는 비공개 입시자료입니다.');
+        return;
+      }
+
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById('view-' + viewId);
+      if (target) target.classList.remove('hidden');
+
     function changeView(viewId) {
       document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
       const target = document.getElementById('view-' + viewId);
@@ -1853,6 +1884,130 @@ let modalCutChartInstance = null;
        return;
      }
 
+    // [교사 직접 입력] 입시카드 수정 팝업 열기
+    function openTeacherCardEditModal(slotType, slotNum, e) {
+      if (e) e.stopPropagation();
+      const studentId = pickerSelectedStudentId['counsel'] || document.getElementById('teacherStudentSelect')?.value;
+      if (!studentId) return alert('선택된 학생이 없습니다.');
+
+      const targetStudent = allGrade3Students.find(s => s.id === studentId);
+      const studentName = targetStudent?.name || '학생';
+      const studentNo = targetStudent?.student_no || '';
+
+      const card = currentTeacherCardsCache.find(c => c.slot_type === slotType && c.slot_num === slotNum) || {};
+
+      document.getElementById('teacherEditSlotType').value = slotType;
+      document.getElementById('teacherEditSlotNum').value = slotNum;
+
+      const typeLabels = { susi: '일반 수시', special: '특목/전문대', jeongsi: '정시' };
+      const isJeongsi = (slotType === 'jeongsi');
+      const jNames = { 1: '가군', 2: '나군', 3: '다군' };
+
+      document.getElementById('teacherEditCardSlotBadge').innerText = isJeongsi ? `정시 (${jNames[slotNum]})` : `${typeLabels[slotType]} ${slotNum}지망`;
+      document.getElementById('teacherEditCardStudentInfo').innerText = `수정 대상 학생: [${studentName}] (${studentNo})`;
+
+      document.getElementById('teacherEditUniv').value = card.university || '';
+      document.getElementById('teacherEditDept').value = card.department || '';
+      document.getElementById('teacherEditType').value = card.admission_type || '';
+      document.getElementById('teacherEditMinMemo').value = (slotType === 'susi' ? card.min_criteria : card.memo) || '';
+      document.getElementById('teacherEditMinLabel').innerText = (slotType === 'susi') ? '수능최저기준 (예: 3합 7)' : '환산점수 / 비고 (예: 712.5점)';
+      document.getElementById('teacherEditRec').value = card.recommendation || 'X';
+
+      document.getElementById('teacherEditMyScore').value = card.my_score ?? '';
+      document.getElementById('teacherEditMyScoreLabel').innerText = isJeongsi ? '모평 백분위 (국·수·탐 평균 %)' : '학교별 산출내신 (등급)';
+      document.getElementById('teacherEditCutLabel').innerText = isJeongsi ? '🎯 3개년 70% 백분위컷 (%)' : '🎯 3개년 70% 입결컷 (등급)';
+
+      const comp = card.comp_rates || [];
+      const cuts = card.cutoffs || [];
+      document.getElementById('teacherEditComp1').value = comp[0] ?? '';
+      document.getElementById('teacherEditComp2').value = comp[1] ?? '';
+      document.getElementById('teacherEditComp3').value = comp[2] ?? '';
+      document.getElementById('teacherEditCut1').value = cuts[0] ?? '';
+      document.getElementById('teacherEditCut2').value = cuts[1] ?? '';
+      document.getElementById('teacherEditCut3').value = cuts[2] ?? '';
+
+      document.getElementById('teacherEditRecLast').value = card.recruit_last ?? '';
+      document.getElementById('teacherEditRecCurr').value = card.recruit_curr ?? '';
+
+      document.getElementById('teacherCardEditModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeTeacherCardEditModal() {
+      document.getElementById('teacherCardEditModal').classList.add('hidden');
+    }
+
+    async function saveCardByTeacher() {
+      const studentId = pickerSelectedStudentId['counsel'] || document.getElementById('teacherStudentSelect')?.value;
+      if (!studentId) return alert('선택된 학생이 없습니다.');
+
+      const targetStudent = allGrade3Students.find(s => s.id === studentId);
+      const slotType = document.getElementById('teacherEditSlotType').value;
+      const slotNum = parseInt(document.getElementById('teacherEditSlotNum').value);
+
+      const comp1 = parseFloat(document.getElementById('teacherEditComp1').value) || null;
+      const comp2 = parseFloat(document.getElementById('teacherEditComp2').value) || null;
+      const comp3 = parseFloat(document.getElementById('teacherEditComp3').value) || null;
+
+      const cut1 = parseFloat(document.getElementById('teacherEditCut1').value) || null;
+      const cut2 = parseFloat(document.getElementById('teacherEditCut2').value) || null;
+      const cut3 = parseFloat(document.getElementById('teacherEditCut3').value) || null;
+
+      const recLast = parseInt(document.getElementById('teacherEditRecLast').value) || null;
+      const recCurr = parseInt(document.getElementById('teacherEditRecCurr').value) || null;
+      const myScore = parseFloat(document.getElementById('teacherEditMyScore').value) || null;
+
+      let diag;
+      if (slotType === 'jeongsi') {
+        diag = calculateJeongsiDiag(myScore, cut3 || cut2 || cut1);
+      } else {
+        diag = calculateAdmissionDiag(myScore, cut3 || cut2 || cut1);
+      }
+
+      const record = {
+        user_id: studentId,
+        student_no: targetStudent?.student_no || '',
+        student_name: targetStudent?.name || '',
+        slot_type: slotType,
+        slot_num: slotNum,
+        university: document.getElementById('teacherEditUniv').value.trim(),
+        department: document.getElementById('teacherEditDept').value.trim(),
+        admission_type: document.getElementById('teacherEditType').value.trim(),
+        recommendation: document.getElementById('teacherEditRec').value,
+        comp_rates: [comp1, comp2, comp3],
+        cutoffs: [cut1, cut2, cut3],
+        recruit_last: recLast,
+        recruit_curr: recCurr,
+        my_score: myScore,
+        diag_result: diag.text
+      };
+
+      if (slotType === 'susi') {
+        record.min_criteria = document.getElementById('teacherEditMinMemo').value.trim();
+      } else {
+        record.memo = document.getElementById('teacherEditMinMemo').value.trim();
+      }
+
+      const saveBtn = document.getElementById('teacherCardSaveBtn');
+      saveBtn.innerText = '저장 중...';
+      saveBtn.disabled = true;
+
+      const { error } = await supabaseClient
+        .from('applications_12')
+        .upsert([record], { onConflict: 'user_id,slot_type,slot_num' });
+
+      saveBtn.innerText = '선생님 권한으로 카드 저장';
+      saveBtn.disabled = false;
+
+      if (error) return alert('카드 저장 실패: ' + error.message);
+
+      alert(`[${targetStudent?.name}] 학생의 ${slotNum}지망 카드가 안전하게 저장되었습니다!`);
+      closeTeacherCardEditModal();
+      loadStudent12CardsForTeacher(studentId);
+      renderMinimumCheckAnalysis();
+    }
+
+       
      const { data: cards } = await supabaseClient.from('applications_12').select('*').eq('user_id', studentId);
      currentTeacherCardsCache = cards || [];
 
@@ -2260,20 +2415,167 @@ function closeCardDetailModal() {
       else teacherChartInstance = newChart;
     }
 
+    let currentTeacherMockTargetId = null;
+
     async function loadStudentMockForTeacher(directStudentId) {
-const studentId = directStudentId || document.getElementById('mockStudentSelect')?.value;
+      const studentId = directStudentId || document.getElementById('mockStudentSelect')?.value;
       const container = document.getElementById('teacherMockContainer');
       if (!studentId) {
         container.innerHTML = '<p class="text-center text-slate-400 py-12 bg-white rounded-xl border">학생을 선택해주세요.</p>';
         return;
       }
+
+      currentTeacherMockTargetId = studentId;
+      const targetStudent = allGrade3Students.find(s => s.id === studentId);
+      const studentName = targetStudent?.name || '해당 학생';
+
       container.innerHTML = `
+        <!-- 상단: 교사 직접 성적 입력 및 수정 카드 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-xs">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-3">
+            <div>
+              <span class="font-black text-slate-800 text-sm flex items-center gap-1.5">
+                <i data-lucide="edit-3" class="w-4 h-4 text-blue-600"></i> [${escapeHtml(studentName)}] 모의고사 성적 직접 입력·수정
+              </span>
+              <p class="text-[11px] text-slate-500 mt-0.5">선생님이 회차별 원점수, 표점, 백분위, 등급을 직접 기입하고 저장할 수 있습니다.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="teacherMockRoundSelect" onchange="loadTeacherMockScoresForRound()" class="px-2.5 py-1.5 border rounded-lg font-bold text-blue-600 bg-slate-50 outline-none">
+                <option value="3월학평">3월 학력평가</option>
+                <option value="5월학평">5월 학력평가</option>
+                <option value="6월모평">6월 모의평가</option>
+                <option value="7월학평">7월 학력평가</option>
+                <option value="9월모평" selected>9월 모의평가</option>
+                <option value="10월학평">10월 학력평가</option>
+                <option value="수능">수능</option>
+              </select>
+              <button onclick="saveTeacherMockScores()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-sm transition">
+                이 회차 성적 저장
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 border-b text-slate-600 font-semibold">
+                <tr>
+                  <th class="p-2">영역</th>
+                  <th class="p-2">세부과목</th>
+                  <th class="p-2 w-20">원점수</th>
+                  <th class="p-2 w-20">표준점수</th>
+                  <th class="p-2 w-24">백분위(%)</th>
+                  <th class="p-2 w-20">등급</th>
+                </tr>
+              </thead>
+              <tbody id="teacherMockTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 하단: 백분위 변동 추이 그래프 -->
         <div class="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
           <h3 class="font-bold text-slate-800 text-sm">회차별 백분위 변동 추이</h3>
           <div class="h-72 w-full"><canvas id="teacherMockChartCanvas"></canvas></div>
         </div>
       `;
+      lucide.createIcons();
+      renderTeacherMockInputRows();
+      loadTeacherMockScoresForRound();
       renderMockChart(studentId, 'teacherMockChartCanvas');
+    }
+
+    function renderTeacherMockInputRows() {
+      const tbody = document.getElementById('teacherMockTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = SUBJECT_ROWS.map(s => `
+        <tr>
+          <td class="p-2 font-bold text-slate-700">${s.name}</td>
+          <td class="p-2">
+            <select id="t_mock_subj_${s.key}" class="px-2 py-1 border rounded bg-white text-xs">
+              ${s.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+            </select>
+          </td>
+          <td class="p-2"><input type="number" id="t_mock_raw_${s.key}" placeholder="0~100" class="w-full px-2 py-1 border rounded text-xs"></td>
+          <td class="p-2"><input type="number" id="t_mock_std_${s.key}" placeholder="표점" class="w-full px-2 py-1 border rounded text-xs"></td>
+          <td class="p-2"><input type="number" step="0.01" id="t_mock_pct_${s.key}" placeholder="백분위" class="w-full px-2 py-1 border rounded text-xs font-bold text-blue-600"></td>
+          <td class="p-2"><input type="number" id="t_mock_grd_${s.key}" placeholder="등급" min="1" max="9" class="w-full px-2 py-1 border rounded text-xs font-bold"></td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadTeacherMockScoresForRound() {
+      if (!currentTeacherMockTargetId) return;
+      const round = document.getElementById('teacherMockRoundSelect').value;
+
+      SUBJECT_ROWS.forEach(s => {
+        const r = document.getElementById(`t_mock_raw_${s.key}`);
+        const st = document.getElementById(`t_mock_std_${s.key}`);
+        const p = document.getElementById(`t_mock_pct_${s.key}`);
+        const g = document.getElementById(`t_mock_grd_${s.key}`);
+        if (r) r.value = '';
+        if (st) st.value = '';
+        if (p) p.value = '';
+        if (g) g.value = '';
+      });
+
+      const { data: scores } = await supabaseClient.from('mock_scores').select('*').eq('user_id', currentTeacherMockTargetId).eq('exam_round', round);
+
+      if (scores) {
+        scores.forEach(row => {
+          const s = SUBJECT_ROWS.find(item => item.key === row.subject_key);
+          if (s) {
+            const selSubj = document.getElementById(`t_mock_subj_${s.key}`);
+            if (selSubj) selSubj.value = row.subject_name;
+            const r = document.getElementById(`t_mock_raw_${s.key}`);
+            const st = document.getElementById(`t_mock_std_${s.key}`);
+            const p = document.getElementById(`t_mock_pct_${s.key}`);
+            const g = document.getElementById(`t_mock_grd_${s.key}`);
+            if (r) r.value = row.raw_score ?? '';
+            if (st) st.value = row.standard_score ?? '';
+            if (p) p.value = row.percentile ?? '';
+            if (g) g.value = row.grade ?? '';
+          }
+        });
+      }
+    }
+
+    async function saveTeacherMockScores() {
+      if (!currentTeacherMockTargetId) return alert('선택된 학생이 없습니다.');
+      const round = document.getElementById('teacherMockRoundSelect').value;
+      const records = [];
+
+      SUBJECT_ROWS.forEach(s => {
+        const subjName = document.getElementById(`t_mock_subj_${s.key}`)?.value;
+        const raw = document.getElementById(`t_mock_raw_${s.key}`)?.value;
+        const std = document.getElementById(`t_mock_std_${s.key}`)?.value;
+        const pct = document.getElementById(`t_mock_pct_${s.key}`)?.value;
+        const grd = document.getElementById(`t_mock_grd_${s.key}`)?.value;
+
+        if (raw || std || pct || grd) {
+          records.push({
+            user_id: currentTeacherMockTargetId,
+            exam_round: round,
+            subject_key: s.key,
+            subject_name: subjName,
+            raw_score: raw ? parseInt(raw) : null,
+            standard_score: std ? parseInt(std) : null,
+            percentile: pct ? parseFloat(pct) : null,
+            grade: grd ? parseInt(grd) : null
+          });
+        }
+      });
+
+      if (records.length === 0) return alert('입력된 점수가 없습니다.');
+
+      const { error } = await supabaseClient
+        .from('mock_scores')
+        .upsert(records, { onConflict: 'user_id,exam_round,subject_key' });
+
+      if (error) return alert('성적 저장 실패: ' + error.message);
+
+      alert(`${round} 모의고사 성적이 선생님 권한으로 성공적으로 저장되었습니다!`);
+      renderMockChart(currentTeacherMockTargetId, 'teacherMockChartCanvas');
+      renderMinimumCheckAnalysis();
     }
 
     async function loadMySurveyData() {
@@ -2327,12 +2629,128 @@ const studentId = directStudentId || document.getElementById('mockStudentSelect'
       alert('기초조사서가 성공적으로 저장되었습니다!');
     }
 
+    let currentTeacherSurveyTargetId = null;
+
     async function loadStudentSurveyForTeacher(targetStudentId) {
       const studentId = targetStudentId || document.getElementById('surveyStudentSelect')?.value;
       const card = document.getElementById('surveyTeacherDetailCard');
       if (!studentId || !card) return;
 
+      currentTeacherSurveyTargetId = studentId;
       card.innerHTML = '<p class="text-center text-slate-400 py-12">학생 기초조사서 및 이수 선택과목을 불러오는 중...</p>';
+
+      const targetStudent = allGrade3Students.find(s => s.id === studentId);
+      const studentName = targetStudent?.name || '해당 학생';
+      const studentNo = targetStudent?.student_no || '';
+
+      const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', studentId).single();
+      const surv = data || {};
+      const g2 = surv.selected_subjects?.grade2 || [];
+      const g3 = surv.selected_subjects?.grade3 || [];
+
+      const g2Options = ['기하','인공지능 수학','영어권 문화','일본어Ⅰ','중국어Ⅰ','한문Ⅰ','정보','생활과 윤리','한국지리','사회·문화','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ'];
+      const g3Options = ['화법과 작문','언어와 매체','확률과 통계','미적분','영어 독해와 작문','생명과학Ⅱ','사회문제 탐구','고전과 윤리'];
+
+      card.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex flex-wrap items-center justify-between border-b pb-3 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+            <div>
+              <span class="font-black text-slate-800 text-sm">[${escapeHtml(studentName)}] 학생 기초조사표</span>
+              <span class="text-slate-500 ml-1 font-mono">(${studentNo})</span>
+              <p class="text-[11px] text-blue-600 mt-0.5 font-bold">💡 선생님이 인적사항이나 선택과목을 직접 입력·수정 후 저장할 수 있습니다.</p>
+            </div>
+            <button onclick="saveStudentSurveyByTeacher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-sm transition flex items-center gap-1.5">
+              <i data-lucide="save" class="w-4 h-4"></i> 담임 수정사항 저장
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">아버지 성함 및 연락처</label>
+              <div class="flex gap-2">
+                <input type="text" id="t_surv_father_name" value="${escapeHtml(surv.father_name || '')}" placeholder="성함" class="w-1/3 p-2 border rounded-lg bg-white">
+                <input type="text" id="t_surv_father_phone" value="${escapeHtml(surv.father_phone || '')}" placeholder="연락처" class="w-2/3 p-2 border rounded-lg bg-white">
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">어머니 성함 및 연락처</label>
+              <div class="flex gap-2">
+                <input type="text" id="t_surv_mother_name" value="${escapeHtml(surv.mother_name || '')}" placeholder="성함" class="w-1/3 p-2 border rounded-lg bg-white">
+                <input type="text" id="t_surv_mother_phone" value="${escapeHtml(surv.mother_phone || '')}" placeholder="연락처" class="w-2/3 p-2 border rounded-lg bg-white">
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">학생 본인 연락처</label>
+              <input type="text" id="t_surv_student_phone" value="${escapeHtml(surv.student_phone || '')}" placeholder="010-0000-0000" class="w-full p-2 border rounded-lg bg-white font-bold text-blue-600">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">형제/자매 관계</label>
+              <input type="text" id="t_surv_siblings" value="${escapeHtml(surv.siblings || '')}" placeholder="예: 2남 중 장남" class="w-full p-2 border rounded-lg bg-white">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block font-semibold text-slate-600 mb-1">실거주 주소</label>
+              <input type="text" id="t_surv_address" value="${escapeHtml(surv.address || '')}" placeholder="도로명 주소" class="w-full p-2 border rounded-lg bg-white">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">🎯 희망 진로 / 진학 희망 학과</label>
+              <input type="text" id="t_surv_career" value="${escapeHtml(surv.career_hope || '')}" placeholder="예: 국어교육과, 전자공학과" class="w-full p-2.5 border rounded-xl bg-white font-bold text-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold text-amber-800 mb-1">💡 담임 메모 / 학생 특이사항 (건강, 배려사항)</label>
+              <textarea id="t_surv_notes" rows="2" placeholder="상담 시 유의점이나 건강/가정환경 메모" class="w-full p-2 border rounded-xl bg-amber-50/40 border-amber-200">${escapeHtml(surv.special_notes || '')}</textarea>
+            </div>
+          </div>
+
+          <div class="p-3.5 bg-emerald-50/50 rounded-xl border border-emerald-200 space-y-2">
+            <span class="font-bold text-emerald-900 block">[2학년] 학교 이수 선택과목</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 bg-white p-2.5 rounded-lg border border-emerald-100">
+              ${g2Options.map(opt => `
+                <label class="inline-flex items-center gap-1 text-[11px]"><input type="checkbox" name="t_grade2_sub" value="${opt}" ${g2.includes(opt)?'checked':''}> ${opt}</label>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-3.5 bg-blue-50/50 rounded-xl border border-blue-200 space-y-2">
+            <span class="font-bold text-blue-900 block">[3학년] 현재 이수 중인 선택과목</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-white p-2.5 rounded-lg border border-blue-100">
+              ${g3Options.map(opt => `
+                <label class="inline-flex items-center gap-1 text-[11px]"><input type="checkbox" name="t_grade3_sub" value="${opt}" ${g3.includes(opt)?'checked':''}> ${opt}</label>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    async function saveStudentSurveyByTeacher() {
+      if (!currentTeacherSurveyTargetId) return alert('학생이 선택되지 않았습니다.');
+
+      const g2Selected = Array.from(document.querySelectorAll('input[name="t_grade2_sub"]:checked')).map(c => c.value);
+      const g3Selected = Array.from(document.querySelectorAll('input[name="t_grade3_sub"]:checked')).map(c => c.value);
+
+      const surveyObj = {
+        user_id: currentTeacherSurveyTargetId,
+        father_name: document.getElementById('t_surv_father_name').value.trim(),
+        father_phone: document.getElementById('t_surv_father_phone').value.trim(),
+        mother_name: document.getElementById('t_surv_mother_name').value.trim(),
+        mother_phone: document.getElementById('t_surv_mother_phone').value.trim(),
+        student_phone: document.getElementById('t_surv_student_phone').value.trim(),
+        siblings: document.getElementById('t_surv_siblings').value.trim(),
+        address: document.getElementById('t_surv_address').value.trim(),
+        career_hope: document.getElementById('t_surv_career').value.trim(),
+        special_notes: document.getElementById('t_surv_notes').value.trim(),
+        selected_subjects: { grade2: g2Selected, grade3: g3Selected },
+        updated_at: new Date()
+      };
+
+      const { error } = await supabaseClient.from('student_surveys').upsert(surveyObj);
+      if (error) return alert('기초조사표 저장 실패: ' + error.message);
+      alert('선생님이 입력하신 학생 기초조사서가 성공적으로 저장되었습니다!');
+    }
 
       const { data } = await supabaseClient.from('student_surveys').select('*').eq('user_id', studentId).single();
       if (!data) {
@@ -5717,3 +6135,168 @@ function closeCalendarEventDetail() {
       `);
       printWindow.document.close();
     }
+
+// =================================================================
+// 💡 [신규] 오늘의 노래 추천 및 관리 로직
+// =================================================================
+let currentDailySong = null;
+
+async function loadDailySong() {
+  try {
+    const { data, error } = await supabaseClient.from('daily_songs').select('*').eq('id', 'current').single();
+    if (!error && data && data.title) {
+      currentDailySong = data;
+      document.getElementById('dailySongTitle').innerText = data.title;
+      document.getElementById('dailySongArtist').innerText = data.artist ? `아티스트: ${data.artist}` : '추천곡 재생 가능';
+      document.getElementById('dailySongRecommender').innerText = data.recommender ? `추천: ${data.recommender}` : '담임선생님 추천';
+      const playBtn = document.getElementById('playDailySongBtn');
+      if (playBtn) playBtn.classList.remove('hidden');
+    }
+  } catch (e) {
+    console.warn('오늘의 노래 조회 예외:', e);
+  }
+}
+
+function playDailySong() {
+  if (!currentDailySong || !currentDailySong.youtube_url) return alert('등록된 노래 링크가 없습니다.');
+  const ytId = getYouTubeId(currentDailySong.youtube_url);
+  if (!ytId) {
+    // 유튜브 일반 링크 또는 유튜브 뮤직 링크 새창 열기
+    window.open(currentDailySong.youtube_url, '_blank');
+    return;
+  }
+  document.getElementById('ytModalTitle').innerText = `🎵 오늘의 노래 : ${currentDailySong.title} (${currentDailySong.artist || ''})`;
+  document.getElementById('ytIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+  document.getElementById('youtubePlayerModal').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function openSongRecommendModal() {
+  document.getElementById('songRecTitle').value = '';
+  document.getElementById('songRecArtist').value = '';
+  document.getElementById('songRecYoutube').value = '';
+  document.getElementById('songRecReason').value = '';
+  document.getElementById('songRecommendModal').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function closeSongRecommendModal() {
+  document.getElementById('songRecommendModal').classList.add('hidden');
+}
+
+async function submitSongRecommendation() {
+  const title = document.getElementById('songRecTitle').value.trim();
+  const artist = document.getElementById('songRecArtist').value.trim();
+  const youtubeUrl = document.getElementById('songRecYoutube').value.trim();
+  const reason = document.getElementById('songRecReason').value.trim();
+
+  if (!title) return alert('노래 제목을 입력해주세요.');
+
+  const submitBtn = document.getElementById('songRecSubmitBtn');
+  submitBtn.innerText = '보내는 중...';
+  submitBtn.disabled = true;
+
+  try {
+    const { error } = await supabaseClient.from('song_recommendations').insert([{
+      student_id: currentUser?.id,
+      student_name: currentProfile?.name || '학생',
+      student_no: currentProfile?.student_no || '',
+      song_title: title,
+      artist: artist,
+      youtube_url: youtubeUrl,
+      reason: reason
+    }]);
+
+    if (error) throw error;
+    alert('담임선생님께 오늘의 노래 추천이 성공적으로 전달되었습니다! 🎶');
+    closeSongRecommendModal();
+  } catch (err) {
+    alert('노래 추천 저장 실패: ' + err.message);
+  } finally {
+    submitBtn.innerText = '추천곡 보내기';
+    submitBtn.disabled = false;
+  }
+}
+
+function openDailySongManageModal() {
+  if (currentDailySong) {
+    document.getElementById('manageSongTitle').value = currentDailySong.title || '';
+    document.getElementById('manageSongArtist').value = currentDailySong.artist || '';
+    document.getElementById('manageSongRecommender').value = currentDailySong.recommender || '';
+    document.getElementById('manageSongYoutube').value = currentDailySong.youtube_url || '';
+  }
+  document.getElementById('dailySongManageModal').classList.remove('hidden');
+  loadSongRecommendations();
+  lucide.createIcons();
+}
+
+function closeDailySongManageModal() {
+  document.getElementById('dailySongManageModal').classList.add('hidden');
+}
+
+async function loadSongRecommendations() {
+  const container = document.getElementById('recommendedSongList');
+  if (!container) return;
+  container.innerHTML = '<p class="text-center text-slate-400 py-6">추천곡 목록을 불러오는 중...</p>';
+
+  const { data, error } = await supabaseClient
+    .from('song_recommendations')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = '<p class="text-center text-slate-400 py-6">학생들이 보낸 추천곡이 아직 없습니다.</p>';
+    return;
+  }
+
+  container.innerHTML = data.map(item => `
+    <div class="p-2.5 bg-slate-50 hover:bg-purple-50/60 rounded-xl border border-slate-200 transition flex items-center justify-between gap-2">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-slate-800 text-xs truncate">${escapeHtml(item.song_title)}</span>
+          <span class="text-[10px] text-slate-400 truncate">(${escapeHtml(item.artist || '아티스트 미입력')})</span>
+        </div>
+        <p class="text-[10px] text-purple-700 font-semibold mt-0.5 truncate">
+          추천자: ${escapeHtml(item.student_name)} (${escapeHtml(item.student_no)}) ${item.reason ? '• ' + escapeHtml(item.reason) : ''}
+        </p>
+      </div>
+      <button onclick="pickRecommendationToInput('${escapeHtml(item.song_title)}', '${escapeHtml(item.artist || '')}', '${escapeHtml(item.student_name)}', '${encodeURI(item.youtube_url || '')}')" class="px-2.5 py-1 bg-white hover:bg-purple-600 hover:text-white border border-purple-200 rounded-lg text-[11px] font-bold text-purple-700 transition shrink-0">
+        선정 채택
+      </button>
+    </div>
+  `).join('');
+}
+
+function pickRecommendationToInput(title, artist, studentName, youtubeUrl) {
+  document.getElementById('manageSongTitle').value = title;
+  document.getElementById('manageSongArtist').value = artist;
+  document.getElementById('manageSongRecommender').value = studentName;
+  document.getElementById('manageSongYoutube').value = youtubeUrl;
+  alert(`[${title}] 곡 정보가 위 입력창에 채워졌습니다. 링크를 확인하신 후 [오늘의 노래로 등록] 버튼을 눌러주세요!`);
+}
+
+async function saveDailySongDirect() {
+  const title = document.getElementById('manageSongTitle').value.trim();
+  const artist = document.getElementById('manageSongArtist').value.trim();
+  const recommender = document.getElementById('manageSongRecommender').value.trim();
+  const youtubeUrl = document.getElementById('manageSongYoutube').value.trim();
+
+  if (!title) return alert('노래 제목을 입력해주세요.');
+
+  const songData = {
+    id: 'current',
+    title: title,
+    artist: artist,
+    recommender: recommender,
+    youtube_url: youtubeUrl,
+    updated_at: new Date()
+  };
+
+  const { error } = await supabaseClient.from('daily_songs').upsert([songData]);
+  if (error) return alert('오늘의 노래 저장 실패: ' + error.message);
+
+  alert(`오늘의 노래 [${title}]이(가) 메인 화면에 등록되었습니다! 🎵`);
+  closeDailySongManageModal();
+  loadDailySong();
+}
