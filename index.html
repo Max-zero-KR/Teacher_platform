@@ -13,6 +13,12 @@
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     * { font-family: 'Pretendard', sans-serif; }
     .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 700; }
+        .vertical-text {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      letter-spacing: 0.35rem;
+    }
+
     /* 드롭다운 호버 애니메이션 */
     .dropdown-menu {
       transition: all 0.2s ease-in-out;
@@ -145,6 +151,10 @@
 
             <div class="dropdown-menu absolute left-0 top-full pt-1.5 w-48 hidden group-hover:block z-50">
               <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 space-y-1">
+                <button onclick="changeView('seating')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                  <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-blue-500"></i>
+                  <span>자리배치표</span>
+                </button>
                 <button onclick="changeView(isCurrentTeacher() ? 'teacherSurvey' : 'studentSurvey')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between">
                   <span class="flex items-center gap-2"><i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-blue-500"></i> 기초조사서</span>
                 </button>
@@ -330,6 +340,10 @@
           <button onclick="navAndClose(isCurrentTeacher() ? 'teacherSurvey' : 'studentSurvey')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
             <i data-lucide="clipboard-list" class="w-4 h-4 text-blue-500"></i> 기초조사서
           </button>
+                    <button onclick="navAndClose('seating')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-blue-500"></i> 자리배치표
+          </button>
+
           <button onclick="navAndClose(isCurrentTeacher() ? 'counselRequests' : 'myCounsel')" class="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center justify-between">
             <span class="flex items-center gap-2"><i data-lucide="message-square" class="w-4 h-4 text-blue-500"></i> 상담 신청 관리</span>
           </button>
@@ -744,6 +758,233 @@
         </div>
       </section>
 
+      <!-- ======================================================= -->
+      <!-- [학급지도: 자리배치표] -->
+      <!-- ======================================================= -->
+      <section id="view-seating" class="view-panel hidden space-y-4">
+        <!-- 1. 상단 컨트롤 바 -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-xs" id="seatingClassBadge">3-2</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-base font-bold text-slate-900" id="seatingLiveTitle">자리배치표</h2>
+                <span id="seatingPeriodBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 배정 진행 중
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-500">학생은 빈 책상을 클릭해 본인 자리를 선택할 수 있습니다.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <span class="px-1.5 font-bold text-slate-500 text-[11px]">시점:</span>
+              <button onclick="setSeatingViewMode('student')" id="btnViewStudent" class="px-2.5 py-1.5 rounded-lg font-bold transition bg-white text-blue-600 shadow-xs flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> 학생 기준
+              </button>
+              <button onclick="setSeatingViewMode('teacher')" id="btnViewTeacher" class="px-2.5 py-1.5 rounded-lg font-bold transition text-slate-500 hover:text-slate-800 flex items-center gap-1">
+                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> 교탁 기준 (반전)
+              </button>
+            </div>
+
+            <button id="btnToggleSeatingSetting" onclick="toggleSeatingSettingPanel()" class="hidden px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl font-bold transition flex items-center gap-1.5">
+              <i data-lucide="sliders" class="w-3.5 h-3.5"></i> 교실 구조 설정
+            </button>
+
+            <button onclick="printSeatingChart()" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition flex items-center gap-1.5 shadow-xs">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i> A4 가로 인쇄
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. 교사용 간편 설정창 -->
+        <div id="seatingTeacherPanel" class="hidden bg-white p-4 rounded-2xl border border-purple-200 shadow-sm space-y-3 text-xs">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b pb-2.5">
+            <span class="font-bold text-purple-900 flex items-center gap-1.5">
+              <i data-lucide="settings" class="w-4 h-4 text-purple-600"></i> 학급 정보 & 교실 구조 설정 (담임교사 전용)
+            </span>
+            <div class="flex items-center gap-2">
+              <button onclick="shuffleUnassignedSeats()" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold transition flex items-center gap-1">
+                <i data-lucide="shuffle" class="w-3.5 h-3.5"></i> 미신청자 랜덤 배정
+              </button>
+              <button onclick="saveSeatingSettingsByTeacher()" class="px-3.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition flex items-center gap-1 shadow-xs">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i> 설정 저장
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">학년</label>
+              <input type="text" id="cfgGrade" value="3" class="w-full p-1.5 border rounded-lg text-center font-bold">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">반</label>
+              <input type="text" id="cfgClass" value="2" class="w-full p-1.5 border rounded-lg text-center font-bold">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">적용 기간 (달력)</label>
+              <div class="flex items-center gap-1">
+                <input type="date" id="cfgStartDate" class="w-full p-1.5 border rounded-lg text-xs font-bold text-slate-700 bg-white">
+                <span class="text-slate-400 font-bold">~</span>
+                <input type="date" id="cfgEndDate" class="w-full p-1.5 border rounded-lg text-xs font-bold text-slate-700 bg-white">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">담임 성함</label>
+              <input type="text" id="cfgTeacher" placeholder="담임 성함" class="w-full p-1.5 border rounded-lg font-bold text-slate-800">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">반장 이름</label>
+              <input type="text" id="cfgPresident" placeholder="반장" class="w-full p-1.5 border rounded-lg font-bold text-blue-700">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-100 items-center">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">부반장 이름</label>
+              <input type="text" id="cfgVice" placeholder="부반장" class="w-full p-1.5 border rounded-lg font-bold text-blue-700">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">창문·복도 위치</label>
+              <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 w-full">
+                <button type="button" onclick="setSeatingWallOrientation('leftHallway')" id="btnWallLeftHallway" class="flex-1 py-1 rounded-md font-bold transition text-[11px] bg-blue-600 text-white">좌 복도 / 우 창문</button>
+                <button type="button" onclick="setSeatingWallOrientation('leftWindow')" id="btnWallLeftWindow" class="flex-1 py-1 rounded-md font-bold transition text-[11px] text-slate-600 hover:text-blue-600">좌 창문 / 우 복도</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">책상 대형</label>
+              <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 w-full">
+                <button type="button" onclick="setSeatingLayout('pair')" id="btnLayoutPair" class="flex-1 py-1 rounded-md font-bold transition text-[11px] bg-purple-600 text-white">2인 짝꿍 대형</button>
+                <button type="button" onclick="setSeatingLayout('single')" id="btnLayoutSingle" class="flex-1 py-1 rounded-md font-bold transition text-[11px] text-slate-600 hover:text-purple-600">1인 단독 대형</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">총 책상 수 (최대 40석)</label>
+              <div class="flex items-center gap-1.5">
+                <input type="number" id="seatCountInput" value="30" min="12" max="40" onchange="changeSeatingCount(this.value)" class="w-20 p-1.5 border rounded-lg text-center font-bold text-slate-800">
+                <span class="text-slate-500 font-medium">개 (6열 줄맞춤)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 학생 전용 안내 바 -->
+        <div id="seatingStudentBar" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+          <div class="p-3 bg-blue-50/80 border border-blue-200 rounded-xl flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-blue-900">내 현재 자리:</span>
+              <span id="mySeatStatusText" class="font-black text-blue-700 text-sm">미선택</span>
+            </div>
+            <button onclick="cancelMySeatChoice()" id="btnCancelMySeat" class="hidden px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg font-bold transition text-[11px]">
+              선택 취소
+            </button>
+          </div>
+          <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center gap-2 text-amber-900">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600 shrink-0"></i>
+            <span><strong>안내:</strong> 고정석 및 <b class="text-slate-800 underline">이동수업 전용 좌석</b>은 선택할 수 없습니다.</span>
+          </div>
+        </div>
+
+        <!-- 4. 메인 배치도 & 명렬표 컨테이너 -->
+        <div class="bg-white rounded-2xl p-4 md:p-6 border border-slate-200 shadow-sm space-y-4" id="seatingMainBoard">
+          <div class="border-b-2 border-slate-900 pb-3 flex justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-2.5 h-7 bg-slate-900 rounded-xs"></div>
+              <div>
+                <h3 id="seatingBoardMainTitle" class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
+                  3학년 2반 자리배치표
+                </h3>
+                <span class="text-[11px] text-slate-500 font-medium" id="seatingViewModeIndicator">
+                  [학생 기준 시점] 칠판 앞쪽
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center divide-x divide-slate-300 bg-slate-50 border border-slate-300 rounded-lg p-0.5 text-xs">
+              <div class="px-3 py-1 text-center">
+                <span class="text-[10px] text-slate-500 block leading-tight font-semibold">담임</span>
+                <span id="dispSeatingTeacher" class="font-bold text-slate-900 text-xs">-</span>
+              </div>
+              <div class="px-3 py-1 text-center">
+                <span class="text-[10px] text-blue-600 block leading-tight font-semibold">반장</span>
+                <span id="dispSeatingPresident" class="font-bold text-blue-900 text-xs">-</span>
+              </div>
+              <div class="px-3 py-1 text-center">
+                <span class="text-[10px] text-blue-600 block leading-tight font-semibold">부반장</span>
+                <span id="dispSeatingVice" class="font-bold text-blue-900 text-xs">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col lg:flex-row items-stretch gap-4">
+            <div class="flex-1 bg-slate-50/60 p-3 rounded-xl border border-slate-200 flex flex-col justify-between space-y-3">
+              <div id="seatingTopBoardArea" class="w-full max-w-md mx-auto"></div>
+
+              <div class="flex items-stretch justify-center gap-2.5 w-full my-auto py-2">
+                <div id="seatingLeftWall" class="w-8 rounded-lg border flex flex-col items-center justify-center gap-1 select-none shrink-0 py-4"></div>
+                <div id="seatingDeskGrid" class="flex-1 flex flex-col justify-between gap-2 w-full"></div>
+                <div id="seatingRightWall" class="w-8 rounded-lg border flex flex-col items-center justify-center gap-1 select-none shrink-0 py-4"></div>
+              </div>
+
+              <div id="seatingBottomBoardArea" class="w-full max-w-md mx-auto"></div>
+
+              <div class="pt-2 border-t border-slate-200 flex flex-wrap justify-between items-center text-[11px] text-slate-500 gap-2">
+                <div class="flex items-center gap-3">
+                  <span class="flex items-center gap-1"><span class="w-3 h-3 rounded border border-slate-300 bg-white"></span> 빈자리</span>
+                  <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-600 text-white text-[8px] flex items-center justify-center font-bold">✔</span> 내자리</span>
+                  <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-purple-100 border border-purple-300 text-purple-700 text-[8px] flex items-center justify-center font-bold">🔒</span> 고정석</span>
+                  <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-400 text-slate-700 text-[8px] flex items-center justify-center font-bold">🎒</span> 이동수업</span>
+                </div>
+                <span>배정 현황: <b id="seatingFilledCount" class="text-blue-600 font-bold">0</b> / <span id="seatingTotalCount">30</span>석</span>
+              </div>
+            </div>
+
+            <div class="w-full lg:w-80 shrink-0 bg-white rounded-xl border border-slate-300 flex flex-col overflow-hidden">
+              <div class="bg-slate-100 border-b border-slate-300 py-1.5 px-3 text-center font-bold text-xs text-slate-800">
+                학급 명렬표 (출석번호 순)
+              </div>
+              <div class="flex-1 overflow-x-auto">
+                <table class="w-full text-left border-collapse text-[11px]">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-300 text-slate-700 font-bold text-[10.5px]">
+                      <th class="py-1 px-1.5 text-center w-8 border-r border-slate-300">번호</th>
+                      <th class="py-1 px-2 border-r border-slate-400 text-center">이름</th>
+                      <th class="py-1 px-1.5 text-center w-8 border-r border-slate-300">번호</th>
+                      <th class="py-1 px-2 text-center">이름</th>
+                    </tr>
+                  </thead>
+                  <tbody id="seatingRosterTableBody" class="divide-y divide-slate-200"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-3">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-black text-amber-950 text-xs flex items-center gap-1.5">
+                <i data-lucide="message-square-quote" class="w-3.5 h-3.5 text-amber-600"></i> 담임선생님의 한마디
+              </span>
+              <button id="btnEditSeatingMessage" onclick="toggleEditSeatingMessage()" class="hidden text-[11px] font-bold text-amber-700 hover:underline">
+                내용 수정
+              </button>
+            </div>
+            <p id="seatingMessageDisplay" class="text-xs text-amber-950 leading-relaxed font-medium pl-1">
+              새로운 자리에서 옆 짝꿍과 서로 존중하고 협력하며 알찬 한 달을 보냅시다.
+            </p>
+            <div id="seatingMessageInputArea" class="hidden space-y-1.5 pt-2">
+              <textarea id="seatingMessageInput" rows="2" class="w-full p-2 text-xs border border-amber-300 rounded-lg outline-none bg-white"></textarea>
+              <div class="flex justify-end gap-1.5">
+                <button onclick="toggleEditSeatingMessage()" class="px-2.5 py-1 bg-slate-100 rounded text-slate-600 font-bold text-[11px]">취소</button>
+                <button onclick="saveSeatingMessageOnly()" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-bold text-[11px]">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
       <!-- ======================================================= -->
       <!-- 4. [학급지도: 기초조사서] (학생용 작성 / 교사용 열람) -->
       <!-- ======================================================= -->
@@ -2447,6 +2688,46 @@
     </div>
   </div>
 
+  <!-- [모달: 교사용 좌석 배정 및 이동수업 전용 지정 모달] -->
+  <div id="teacherSeatModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-3.5 text-xs">
+      <div class="flex justify-between items-center pb-2 border-b">
+        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+          <i data-lucide="sliders" class="w-4 h-4 text-purple-600"></i> 좌석 관리 (<span id="modalSeatNumberText">0</span>번 책상)
+        </h3>
+        <button onclick="closeSeatModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="p-2.5 bg-slate-100 rounded-lg border border-slate-300 flex items-center gap-2">
+          <input type="checkbox" id="modalMovingSeatCheck" onchange="toggleMovingOption(this.checked)" class="w-4 h-4 text-slate-700 rounded cursor-pointer">
+          <label for="modalMovingSeatCheck" class="font-bold text-slate-800 cursor-pointer">
+            🎒 이동수업 전용 좌석 지정
+          </label>
+        </div>
+
+        <div id="modalStudentSelectContainer">
+          <label class="block font-semibold text-slate-700 mb-1">배정할 학생 선택</label>
+          <select id="modalSeatStudentSelect" class="w-full p-2 border rounded-lg bg-white font-bold text-slate-800 outline-none">
+          </select>
+        </div>
+
+        <div id="modalLockContainer" class="p-2.5 bg-purple-50 rounded-lg border border-purple-200 flex items-center gap-2">
+          <input type="checkbox" id="modalLockSeatCheck" class="w-4 h-4 text-purple-600 rounded cursor-pointer">
+          <label for="modalLockSeatCheck" class="font-bold text-purple-900 cursor-pointer">
+            🔒 교사 고정석 지정 (학생 임의 변경 불가)
+          </label>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t">
+        <button onclick="closeSeatModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold">취소</button>
+        <button onclick="saveSeatModalAssignment()" class="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold shadow-xs">적용 및 저장</button>
+      </div>
+    </div>
+  </div>
+
+  
   <!-- [모달: 학생 노래 추천하기 모달] -->
   <div id="songRecommendModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-3 text-xs">
