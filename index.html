@@ -800,6 +800,12 @@
 
         <!-- 2. 교사용 간편 설정창 -->
         <div id="seatingTeacherPanel" class="hidden bg-white p-4 rounded-2xl border border-purple-200 shadow-sm space-y-3 text-xs">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2 border-b pb-3">
+<label>학생 신청 시작 (한국시간)<input type="datetime-local" id="cfgApplicationStart" class="w-full p-2 border rounded-lg"></label>
+<label>학생 신청 마감 (한국시간)<input type="datetime-local" id="cfgApplicationEnd" class="w-full p-2 border rounded-lg"></label>
+<p class="md:col-span-2">시작·마감을 모두 입력하고 설정 저장을 누르세요. 미설정 시 학생 신청은 닫힙니다. 기간 밖에는 교사만 변경할 수 있습니다.</p>
+</div>
+
           <div class="flex flex-wrap items-center justify-between gap-3 border-b pb-2.5">
             <span class="font-bold text-purple-900 flex items-center gap-1.5">
               <i data-lucide="settings" class="w-4 h-4 text-purple-600"></i> 학급 정보 & 교실 구조 설정 (담임교사 전용)
@@ -871,7 +877,8 @@
         </div>
 
         <!-- 3. 학생 전용 안내 바 -->
-        <div id="seatingStudentBar" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+        <p id="seatingApplicationStatus" class="text-xs font-bold text-blue-700"></p>
+<div id="seatingStudentBar" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
           <div class="p-3 bg-blue-50/80 border border-blue-200 rounded-xl flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="font-bold text-blue-900">내 현재 자리:</span>

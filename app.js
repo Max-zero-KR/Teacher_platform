@@ -6466,6 +6466,13 @@ async function loadSeatingData() {
   seatingAssignments = currentSeatingDoc.assignments || {};
 
   const sStart = document.getElementById('cfgStartDate');
+  document.getElementById('cfgApplicationStart').value = seatingISOToInput(currentSeatingDoc.application_start);
+  document.getElementById('cfgApplicationEnd').value = seatingISOToInput(currentSeatingDoc.application_end);
+  const status = document.getElementById('seatingApplicationStatus');
+  const open = seatingApplicationOpen();
+  status.innerText = currentSeatingDoc.application_start && currentSeatingDoc.application_end
+    ? `학생 신청 ${open ? '진행 중' : '닫힘'} · ${seatingISOToInput(currentSeatingDoc.application_start).replace('T',' ')} ~ ${seatingISOToInput(currentSeatingDoc.application_end).replace('T',' ')} (한국시간)`
+    : '학생 신청기간 미설정: 교사만 변경 가능합니다.';
   const sEnd = document.getElementById('cfgEndDate');
   if (sStart) sStart.value = currentSeatingDoc.period_start || '';
   if (sEnd) sEnd.value = currentSeatingDoc.period_end || '';
@@ -6753,6 +6760,7 @@ async function cancelMySeatChoice() {
   if (confirm('현재 선택한 좌석을 취소할까요?')) await submitMySeatingChoice(null);
 }
 async function submitMySeatingChoice(num) {
+  if (!seatingApplicationOpen()) { alert('학생 신청기간이 아닙니다. 담임선생님께 문의하세요.'); return; }
   const targetClass = Number(activeClassNum === 'all' ? 2 : activeClassNum);
   const { error } = await supabaseClient.rpc('seating2026_choose', { p_class: targetClass, p_seat: num });
   if (error) alert('자리 선택 실패: ' + error.message);
@@ -6842,6 +6850,10 @@ function changeSeatingCount(val) {
 }
 
 async function saveSeatingSettingsByTeacher() {
+  const start = seatingInputToISO('cfgApplicationStart'), end = seatingInputToISO('cfgApplicationEnd');
+  if ((start && !end) || (!start && end) || (start && new Date(start) >= new Date(end))) {
+    alert('신청 시작과 마감을 함께 입력하고, 마감은 시작 이후로 설정하세요.'); return;
+  }
   if (!isCurrentTeacher()) return;
   const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
 
@@ -6850,6 +6862,8 @@ async function saveSeatingSettingsByTeacher() {
     grade: parseInt(document.getElementById('cfgGrade')?.value) || 3,
     period_start: document.getElementById('cfgStartDate')?.value || '',
     period_end: document.getElementById('cfgEndDate')?.value || '',
+    application_start: seatingInputToISO('cfgApplicationStart'),
+    application_end: seatingInputToISO('cfgApplicationEnd'),
     teacher_name: document.getElementById('cfgTeacher')?.value.trim() || '',
     president_name: document.getElementById('cfgPresident')?.value.trim() || '',
     vice_name: document.getElementById('cfgVice')?.value.trim() || '',
@@ -7013,144 +7027,45 @@ async function saveSeatingMessageOnly() {
   await saveSeatingSettingsByTeacher();
 }
 
+function seatingInputToISO(id) {
+  const value = document.getElementById(id)?.value;
+  return value ? new Date(value + ':00+09:00').toISOString() : null;
+}
+function seatingISOToInput(value) {
+  return value ? new Date(new Date(value).getTime()+9*3600000).toISOString().slice(0,16) : '';
+}
+function seatingApplicationOpen() {
+  const d=currentSeatingDoc;
+  return !!(d?.application_start && d?.application_end && Date.now()>=new Date(d.application_start).getTime() && Date.now()<=new Date(d.application_end).getTime());
+}
 function printSeatingChart() {
-  const mainBoardHtml = document.getElementById('seatingMainBoard')?.innerHTML;
-  if (!mainBoardHtml) return;
-
-  const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
-  const printWindow = window.open('', '_blank', 'width=1150,height=850');
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-      <meta charset="UTF-8">
-      <title>3학년 ${targetClass}반 자리배치표</title>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        * { 
-          font-family: 'Pretendard', sans-serif;
-          box-sizing: border-box !important;
-          page-break-inside: avoid !important;
-          break-inside: avoid !important;
-        }
-
-        .vertical-text { 
-          writing-mode: vertical-rl; 
-          text-orientation: upright; 
-          letter-spacing: 0.3rem; 
-        }
-
-        /* A4 가로 규격 및 여백 최소화 */
-        @page { 
-          size: A4 landscape; 
-          margin: 5mm 7mm !important; 
-        }
-
-        html, body { 
-          width: 100% !important; 
-          height: 100% !important; 
-          margin: 0 !important; 
-          padding: 0 !important; 
-          background: white !important; 
-          overflow: hidden !important; 
-          -webkit-print-color-adjust: exact; 
-          print-color-adjust: exact; 
-        }
-
-        /* 1페이지 맞춤 전용 높이 컨테이너 (넘침 원천 차단) */
-        .print-page-wrapper {
-          width: 100% !important;
-          height: 100vh !important;
-          max-height: 196mm !important;
-          display: flex !important;
-          flex-direction: column !important;
-          justify-content: space-between !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          border: none !important;
-        }
-
-        /* 1. 상단 타이틀 컴팩트화 */
-        .border-b-2 {
-          padding-bottom: 4px !important;
-          margin-bottom: 2px !important;
-        }
-        #seatingBoardMainTitle {
-          font-size: 19px !important;
-          line-height: 1.2 !important;
-        }
-
-        /* 2. [핵심] 배치도와 명렬표가 아래로 떨어지지 않고 반드시 '좌우 나란히' 배치되도록 강제 고정 */
-        .flex.flex-col.lg\:flex-row {
-          display: flex !important;
-          flex-direction: row !important;
-          align-items: stretch !important;
-          gap: 10px !important;
-          flex: 1 !important;
-          min-height: 0 !important;
-          margin: 3px 0 !important;
-        }
-        .w-full.lg\:w-80 {
-          width: 290px !important;
-          max-width: 290px !important;
-          flex-shrink: 0 !important;
-        }
-
-        /* 3. 책상 매트릭스 높이 최적화 (높이 압축) */
-        #seatingDeskGrid {
-          gap: 4px !important;
-        }
-        #seatingDeskGrid button, #seatingDeskGrid .min-h-\[46px\] {
-          min-height: 37px !important;
-          height: 37px !important;
-          padding: 1px 2px !important;
-        }
-
-        /* 칠판, 교실뒤편 바 높이 압축 */
-        #seatingTopBoardArea div, #seatingBottomBoardArea div {
-          padding-top: 3px !important;
-          padding-bottom: 3px !important;
-        }
-
-        /* 4. 우측 명렬표 줄 간격 최적화 */
-        #seatingRosterTableBody td {
-          padding: 1.5px 3px !important;
-          font-size: 10.5px !important;
-        }
-
-        /* 5. 하단 담임 한마디 상자 압축 (1페이지 안착) */
-        .bg-amber-50\/60 {
-          padding: 5px 8px !important;
-          margin-top: 2px !important;
-          background: #fffdf8 !important;
-          border: 1.2px solid #cbd5e1 !important;
-        }
-        #seatingMessageDisplay {
-          font-size: 11px !important;
-          line-height: 1.35 !important;
-        }
-
-        /* 인쇄 시 불필요한 수정 버튼 숨김 */
-        #btnEditSeatingMessage, #seatingMessageInputArea {
-          display: none !important;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="print-page-wrapper">
-        ${mainBoardHtml}
-      </div>
-      <script>
-        window.onload = function() {
-          setTimeout(function() {
-            window.print();
-          }, 250);
-        };
-      </script>
-    </body>
-    </html>
-  `);
-  printWindow.document.close();
+  if (!currentSeatingDoc) return;
+  const w=window.open('', '_blank', 'width=1150,height=850');
+  if (!w) { alert('인쇄 창이 차단되었습니다. 팝업을 허용해 주세요.'); return; }
+  const d=currentSeatingDoc, cls=Number(activeClassNum==='all'?2:activeClassNum);
+  const esc=escapeHtml;
+  const students=allGrade3Students.filter(x=>Number(x.class_num)===cls).sort((a,b)=>String(a.student_no).localeCompare(String(b.student_no)));
+  const columns=students.length<=20?1:2, half=Math.ceil(students.length/columns);
+  let roster='';
+  for(let i=0;i<half;i++) { roster+='<tr>'; for(let j=0;j<columns;j++) { const x=students[i+j*half]; roster+=`<td>${x?esc(String(x.student_no).slice(-2)):''}</td><td>${x?esc(x.name):''}</td>`; } roster+='</tr>'; }
+  let matrix=[];
+  for(let i=0;i<Math.ceil(seatingTotalSeats/6);i++) matrix.push(Array.from({length:6},(_,j)=>i*6+j+1));
+  if(seatingViewMode==='teacher') matrix=matrix.reverse().map(x=>x.reverse());
+  const seats=matrix.map(row=>'<div class="seatrow">'+row.map((n,i)=>{
+    const x=seatingAssignments[n]||{}, name=x.isMoving?'이동수업':x.name||'빈자리';
+    return n>seatingTotalSeats?'<div class="seat empty"></div>':`<div class="seat ${x.locked?'fixed':''}" style="${seatingLayoutMode==='pair' && i%2===1 && i<5?'margin-right:5mm':''}"><small>${n}${x.locked?' · 고정':''}</small><strong>${esc(name)}</strong></div>`;
+  }).join('')+'</div>').join('');
+  const wall=seatingWallOrientation==='leftHallway'?['복도','창문']:['창문','복도'];
+  if(seatingViewMode==='teacher') wall.reverse();
+  const front=seatingViewMode==='teacher'?'교실 뒤편':'칠판 · 교탁', back=seatingViewMode==='teacher'?'칠판 · 교탁':'교실 뒤편';
+  w.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>자리배치표</title><style>
+  @page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}body{font-family:Arial,'맑은 고딕',sans-serif;margin:0;color:#172033;font-size:11px;print-color-adjust:exact}
+  header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #172033;padding-bottom:3mm;margin-bottom:3mm}h1{font-size:21px;margin:0}header p{margin:2mm 0 0;font-size:11px}.layout{display:grid;grid-template-columns:minmax(0,1fr) ${columns===1?'42':'70'}mm;gap:5mm;align-items:start}
+  .board{border:1px solid #94a3b8;border-radius:3mm;padding:3mm}.bar{text-align:center;background:#e2e8f0;padding:2mm;margin:0 9mm}.room{display:flex;gap:3mm;margin:3mm 0}.wall{width:6mm;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;background:#f1f5f9;border:1px solid #cbd5e1}.desks{flex:1}.seatrow{display:flex;gap:2mm;margin-bottom:2mm}.seat{flex:1;min-width:0;border:1px solid #94a3b8;border-radius:2mm;height:13mm;display:flex;flex-direction:column;align-items:center;justify-content:center}.seat small{font-size:9px;color:#64748b}.seat strong{font-size:12px;overflow-wrap:anywhere}.seat.empty{visibility:hidden}.fixed{background:#f3e8ff}table{width:100%;border-collapse:collapse}th,td{border:1px solid #94a3b8;padding:1.1mm;text-align:center;font-size:11px}th{background:#e2e8f0}caption{font-weight:bold;margin-bottom:2mm}
+  footer{margin-top:4mm;border:1px solid #cbd5e1;background:#fffdf5;padding:3mm;break-inside:avoid}footer h2{font-size:12px;margin:0 0 2mm}footer p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:12px}
+  </style></head><body><header><div><h1>${esc(d.grade||3)}학년 ${cls}반 자리배치표</h1><p>${esc(d.period_start||'')} ~ ${esc(d.period_end||'')} · ${seatingViewMode==='teacher'?'교탁':'학생'} 기준</p></div><div>담임 ${esc(d.teacher_name||'-')} · 반장 ${esc(d.president_name||'-')} · 부반장 ${esc(d.vice_name||'-')}</div></header>
+  <div class="layout"><div class="board"><div class="bar">${front}</div><div class="room"><div class="wall">${wall[0]}</div><div class="desks">${seats}</div><div class="wall">${wall[1]}</div></div><div class="bar">${back}</div></div><table><caption>학급 명렬표</caption><thead><tr>${'<th>번호</th><th>이름</th>'.repeat(columns)}</tr></thead><tbody>${roster}</tbody></table></div>
+  <footer><h2>담임선생님의 한마디</h2><p>${esc(d.teacher_message||'')}</p></footer></body></html>`);
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},300);
 }
