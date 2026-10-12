@@ -3918,22 +3918,78 @@ function openEditUserModal(userId) {
     // =================================================================
     // 💡 학급 앨범 로직
     // =================================================================
+// 학년부장/관리자: 화면별 학급 폴더 선택 (상단 전체 학급 필터와 독립)
+let classFolderSelection = { seating: 1, album: 1 };
+let seatingLoadVersion = 0, albumLoadVersion = 0, albumPhotoVersion = 0;
+let seatingClassLoading = false;
+function getFeatureClass(type) {
+  if (currentProfile?.role === 'admin' && activeClassNum === 'all') return classFolderSelection[type];
+  return Number(activeClassNum === 'all' ? (currentProfile?.class_num || 2) : activeClassNum);
+}
+function renderFeatureClassFolders(type) {
+  const anchor = document.getElementById(type === 'album' ? 'albumFolderTabs' : 'seatingLiveTitle');
+  if (!anchor) return;
+  let box = document.getElementById('classFolders_' + type);
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'classFolders_' + type;
+    if (type === 'album') anchor.before(box);
+    else {
+      const view = document.getElementById('view-seating') || anchor.closest('section');
+      if (view) view.prepend(box); else anchor.parentElement.before(box);
+    }
+  }
+  const visible = currentProfile?.role === 'admin' && activeClassNum === 'all';
+  box.className = visible ? 'space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4' : 'hidden';
+  if (!visible) { box.innerHTML = ''; return; }
+  box.innerHTML = '<p class="text-xs font-bold text-slate-500">학급 폴더 선택 (3학년 전체 모드)</p><div class="flex gap-2 overflow-x-auto pb-1">' +
+    Array.from({length:10}, (_,i) => i+1).map(c => {
+      const selected = c === getFeatureClass(type);
+      return `<button type="button" onclick="selectFeatureClass('${type}', ${c})" aria-pressed="${selected}" class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 ${selected ? 'bg-blue-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-700 hover:bg-blue-50'}"><i data-lucide="${selected ? 'folder-open' : 'folder'}" class="w-4 h-4"></i>3-${c}반</button>`;
+    }).join('') + '</div>';
+  lucide.createIcons();
+}
+function selectFeatureClass(type, cls) {
+  if (currentProfile?.role !== 'admin' || activeClassNum !== 'all' || !Number.isInteger(cls) || cls < 1 || cls > 10) return;
+  classFolderSelection[type] = cls;
+  if (type === 'seating') {
+    closeSeatModal();
+    document.getElementById('seatingTeacherPanel')?.classList.add('hidden');
+    loadSeatingData();
+  } else {
+    activeFolderId = null;
+    currentFolderList = [];
+    currentAlbumPhotos = [];
+    renderAlbumPhotos();
+    loadAlbumFolders();
+  }
+}
+
     async function loadAlbumFolders() {
-      let fQuery = supabaseClient.from('album_folders').select('*').order('created_at', { ascending: true });
-      if (activeClassNum !== 'all') {
-        fQuery = fQuery.or(`class_num.eq.${activeClassNum},class_num.eq.0,class_num.is.null`);
-      }
-      const { data: folders } = await fQuery;
+      const request = ++albumLoadVersion;
+      const cls = getFeatureClass('album');
+      renderFeatureClassFolders('album');
+      const header = document.getElementById('albumHeaderTitle');
+      if (header) header.innerHTML = `<i data-lucide="camera" class="w-5 h-5 text-blue-600"></i> 3학년 ${cls === 0 ? '공용' : cls + '반'} 학급 앨범`;
+      const savedFolderId = activeFolderId;
+      activeFolderId = null;
+      ++albumPhotoVersion;
+      currentAlbumPhotos = []; renderAlbumPhotos();
       const tabContainer = document.getElementById('albumFolderTabs');
-      
+      const { data: folders, error } = await supabaseClient.from('album_folders').select('*')
+        .or(`class_num.eq.${cls},class_num.eq.0,class_num.is.null`).order('created_at', { ascending: true });
+      if (request !== albumLoadVersion || cls !== getFeatureClass('album')) return;
+      if (error) {
+        currentFolderList = []; currentAlbumPhotos = []; renderAlbumPhotos();
+        tabContainer.innerHTML = '<p class="text-rose-600 text-xs">앨범 폴더를 불러오지 못했습니다.</p>';
+        alert('앨범 폴더 조회 실패: ' + error.message); return;
+      }
       if (!folders || folders.length === 0) {
-        const cls = (activeClassNum === 'all') ? 2 : activeClassNum;
-        const { data: newF } = await supabaseClient.from('album_folders').insert([{ name: '기본 앨범', class_num: cls }]).select().single();
-        if (newF) activeFolderId = newF.id;
-        loadAlbumFolders();
+        currentFolderList = []; currentAlbumPhotos = []; renderAlbumPhotos();
+        tabContainer.innerHTML = '<p class="text-slate-500 text-xs">이 학급에 생성된 앨범 폴더가 없습니다. 새 폴더를 만들어 주세요.</p>';
         return;
       }
-
+      activeFolderId = folders.some(f => f.id === savedFolderId) ? savedFolderId : null;
       if (!activeFolderId || !folders.some(f => f.id === activeFolderId)) {
         activeFolderId = folders[0].id;
       }
@@ -3943,7 +3999,7 @@ currentFolderList = folders || []; // 폴더 보관함에 보관
 tabContainer.innerHTML = folders.map(f => `
   <div class="inline-flex items-center rounded-xl border transition ${f.id === activeFolderId ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}">
     <button onclick="selectAlbumFolder('${f.id}')" class="px-3.5 py-2 font-bold whitespace-nowrap flex items-center gap-1.5 text-xs">
-      <i data-lucide="folder" class="w-3.5 h-3.5"></i> ${escapeHtml(f.name)}
+      <i data-lucide="folder" class="w-3.5 h-3.5"></i> ${escapeHtml(f.name)}${f.class_num == null || Number(f.class_num) === 0 ? ' (공용)' : ''}
     </button>
     ${isCurrentTeacher() ? `
       <button onclick="deleteAlbumFolder('${f.id}')" title="폴더 삭제" class="pr-2.5 pl-1 py-2 opacity-60 hover:opacity-100 hover:text-rose-300 transition">
@@ -3969,10 +4025,13 @@ tabContainer.innerHTML = folders.map(f => `
     }
 
     async function loadAlbumPhotos() {
-      if (!activeFolderId) return;
-      const { data: photos } = await supabaseClient.from('album_photos').select('*').eq('folder_id', activeFolderId);
-      currentAlbumPhotos = photos || [];
+      const folderId = activeFolderId, request = ++albumPhotoVersion;
+      if (!folderId) { currentAlbumPhotos = []; renderAlbumPhotos(); return; }
+      const { data: photos, error } = await supabaseClient.from('album_photos').select('*').eq('folder_id', folderId);
+      if (request !== albumPhotoVersion || folderId !== activeFolderId) return;
+      currentAlbumPhotos = error ? [] : (photos || []);
       renderAlbumPhotos();
+      if (error) alert('앨범 사진 조회 실패: ' + error.message);
     }
 
     function renderAlbumPhotos() {
@@ -4018,10 +4077,13 @@ tabContainer.innerHTML = folders.map(f => `
       document.getElementById('newFolderModal').classList.add('hidden');
     }
     async function createAlbumFolder() {
+      if (!isCurrentTeacher()) return;
       const name = document.getElementById('newFolderName').value.trim();
       if (!name) return alert('폴더 이름을 입력해주세요.');
-      const cls = (activeClassNum === 'all') ? 2 : activeClassNum;
-      const { data } = await supabaseClient.from('album_folders').insert([{ name, class_num: cls }]).select().single();
+      const cls = getFeatureClass('album');
+      const { data, error } = await supabaseClient.from('album_folders').insert([{ name, class_num: cls }]).select().single();
+      if (error) return alert('폴더 생성 실패: ' + error.message);
+      if (cls !== getFeatureClass('album')) return;
       if (data) {
         activeFolderId = data.id;
         closeNewFolderModal();
@@ -6411,7 +6473,12 @@ let currentSeatingDoc = null;
 let selectedModalSeatNum = null;
 
 async function loadSeatingData() {
-  const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
+  const request = ++seatingLoadVersion;
+  seatingClassLoading = true;
+  renderFeatureClassFolders('seating');
+  currentSeatingDoc = null; seatingAssignments = {};
+  document.getElementById('seatingGrid')?.replaceChildren();
+  const targetClass = getFeatureClass('seating');
   const isTeacher = isCurrentTeacher();
 
   const badgeEl = document.getElementById('seatingClassBadge');
@@ -6435,7 +6502,9 @@ async function loadSeatingData() {
     .eq('class_num', targetClass)
     .maybeSingle();
 
+  if (request !== seatingLoadVersion || targetClass !== getFeatureClass('seating')) return;
   if (error) { alert('자리배치 불러오기 실패: ' + error.message); return; }
+  seatingClassLoading = false;
   if (!data) {
     const today = new Date();
     const y = today.getFullYear();
@@ -6447,7 +6516,7 @@ async function loadSeatingData() {
       grade: 3,
       period_start: `${y}-${m}-01`,
       period_end: `${y}-${m}-${lastDay}`,
-      teacher_name: isTeacher ? currentProfile.name : '담임교사',
+      teacher_name: currentProfile?.role === 'teacher' ? currentProfile.name : '',
       president_name: '',
       vice_name: '',
       teacher_message: '새로운 자리에서 옆 짝꿍과 서로 존중하고 협력하며 알찬 한 달을 보냅시다.',
@@ -6493,7 +6562,7 @@ async function loadSeatingData() {
 }
 
 function renderSeatingAll() {
-  const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
+  const targetClass = getFeatureClass('seating');
   const g = currentSeatingDoc?.grade || 3;
   const sStart = currentSeatingDoc?.period_start;
   const sEnd = currentSeatingDoc?.period_end;
@@ -6683,7 +6752,7 @@ function renderSeatingRoster() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
+  const targetClass = getFeatureClass('seating');
   const classStudents = allGrade3Students.filter(s => (s.class_num || 2) === targetClass);
 
   const rosterRows = Math.min(20, Math.max(15, Math.ceil(seatingTotalSeats / 2)));
@@ -6750,6 +6819,7 @@ function updateSeatingStudentStatus() {
 }
 
 async function onSeatClick(num) {
+  if (seatingClassLoading || !currentSeatingDoc || Number(currentSeatingDoc.class_num) !== getFeatureClass('seating')) return;
   if (isCurrentTeacher()) { openSeatModal(num); return; }
   if (currentProfile?.role !== 'student') { alert('학생 계정만 자리를 선택할 수 있습니다.'); return; }
   const mine = seatingAssignments[num]?.user_id === currentUser?.id;
@@ -6761,14 +6831,15 @@ async function cancelMySeatChoice() {
 }
 async function submitMySeatingChoice(num) {
   if (!seatingApplicationOpen()) { alert('학생 신청기간이 아닙니다. 담임선생님께 문의하세요.'); return; }
-  const targetClass = Number(activeClassNum === 'all' ? 2 : activeClassNum);
+  const targetClass = getFeatureClass('seating');
   const { error } = await supabaseClient.rpc('seating2026_choose', { p_class: targetClass, p_seat: num });
   if (error) alert('자리 선택 실패: ' + error.message);
   await loadSeatingData();
 }
 
 async function syncSeatingAssignmentsToDB() {
-  const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
+  if (seatingClassLoading || !currentSeatingDoc || Number(currentSeatingDoc.class_num) !== getFeatureClass('seating')) return;
+  const targetClass = getFeatureClass('seating');
   currentSeatingDoc.assignments = seatingAssignments;
   currentSeatingDoc.updated_at = new Date();
 
@@ -6850,12 +6921,13 @@ function changeSeatingCount(val) {
 }
 
 async function saveSeatingSettingsByTeacher() {
+  if (seatingClassLoading || !currentSeatingDoc || Number(currentSeatingDoc.class_num) !== getFeatureClass('seating')) return;
   const start = seatingInputToISO('cfgApplicationStart'), end = seatingInputToISO('cfgApplicationEnd');
   if ((start && !end) || (!start && end) || (start && new Date(start) >= new Date(end))) {
     alert('신청 시작과 마감을 함께 입력하고, 마감은 시작 이후로 설정하세요.'); return;
   }
   if (!isCurrentTeacher()) return;
-  const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
+  const targetClass = getFeatureClass('seating');
 
   const doc = {
     class_num: targetClass,
@@ -6890,8 +6962,9 @@ async function saveSeatingSettingsByTeacher() {
 }
 
 async function shuffleUnassignedSeats() {
+  if (seatingClassLoading || !currentSeatingDoc || Number(currentSeatingDoc.class_num) !== getFeatureClass('seating')) return;
   if (!confirm('아직 자리를 정하지 않은 학생들을 빈 책상에 무작위로 자동 배정할까요?')) return;
-  const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
+  const targetClass = getFeatureClass('seating');
   const classStudents = allGrade3Students.filter(s => (s.class_num || 2) === targetClass);
 
   const assignedUserIds = Object.values(seatingAssignments).map(a => a.user_id || a.name).filter(Boolean);
@@ -6918,6 +6991,7 @@ async function shuffleUnassignedSeats() {
 }
 
 function openSeatModal(num) {
+  if (seatingClassLoading || !currentSeatingDoc || Number(currentSeatingDoc.class_num) !== getFeatureClass('seating')) return;
   selectedModalSeatNum = num;
   const numSpan = document.getElementById('modalSeatNumberText');
   if (numSpan) numSpan.innerText = num;
@@ -6928,7 +7002,7 @@ function openSeatModal(num) {
   if (movingCheck) movingCheck.checked = isMoving;
   toggleMovingOption(isMoving);
 
-  const targetClass = (activeClassNum === 'all') ? 2 : activeClassNum;
+  const targetClass = getFeatureClass('seating');
   const classStudents = allGrade3Students.filter(s => (s.class_num || 2) === targetClass);
 
   const sel = document.getElementById('modalSeatStudentSelect');
@@ -6967,6 +7041,7 @@ function toggleMovingOption(isMoving) {
 }
 
 async function saveSeatModalAssignment() {
+  if (seatingClassLoading || !currentSeatingDoc || Number(currentSeatingDoc.class_num) !== getFeatureClass('seating')) return;
   if (!selectedModalSeatNum) return;
   const isMoving = document.getElementById('modalMovingSeatCheck')?.checked;
 
@@ -7039,10 +7114,11 @@ function seatingApplicationOpen() {
   return !!(d?.application_start && d?.application_end && Date.now()>=new Date(d.application_start).getTime() && Date.now()<=new Date(d.application_end).getTime());
 }
 function printSeatingChart() {
+  if (seatingClassLoading || !currentSeatingDoc || Number(currentSeatingDoc.class_num) !== getFeatureClass('seating')) return;
   if (!currentSeatingDoc) return;
   const w=window.open('', '_blank', 'width=1150,height=850');
   if (!w) { alert('인쇄 창이 차단되었습니다. 팝업을 허용해 주세요.'); return; }
-  const d=currentSeatingDoc, cls=Number(activeClassNum==='all'?2:activeClassNum);
+  const d=currentSeatingDoc, cls=getFeatureClass('seating');
   const esc=escapeHtml;
   const students=allGrade3Students.filter(x=>Number(x.class_num)===cls).sort((a,b)=>String(a.student_no).localeCompare(String(b.student_no)));
   const columns=students.length<=20?1:2, half=Math.ceil(students.length/columns);
