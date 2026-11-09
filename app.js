@@ -477,15 +477,15 @@ function navAndClose(viewId) {
 
       if (activeClassNum === 'all') {
         badge.innerText = '3-전체';
-        badge.className = 'w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-sm';
-        title.innerText = `${activeSchoolYear}학년도 3학년 전체 진학 관리`;
-        roleBadge.innerText = `${activeSchoolYear}학년도 학년부장 / 총괄 교무실`;
+        badge.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-sm shrink-0';
+        title.innerText = '3학년 전체 진학 관리';
+        roleBadge.innerText = '학년부장 / 총괄 교무실';
         homeLabel.innerText = `${activeSchoolYear}학년도 3학년 전체 포털`;
       } else {
         badge.innerText = `3-${activeClassNum}`;
-        badge.className = 'w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-sm';
-        title.innerText = `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 진학 플랫폼`;
-        roleBadge.innerText = currentProfile.role === 'student' ? `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 학생 포털` : `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 교무실`;
+        badge.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-sm shrink-0';
+        title.innerText = `3학년 ${activeClassNum}반 진학 플랫폼`;
+        roleBadge.innerText = currentProfile.role === 'student' ? `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 학생 포털` : `3학년 ${activeClassNum}반 교무실`;
         homeLabel.innerText = `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 포털`;
       }
 

@@ -142,16 +142,8 @@
         <div class="flex items-center gap-2 sm:gap-3 min-w-0">
           <div id="headerClassBadge" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-sm shrink-0">3-2</div>
           <div class="min-w-0">
-            <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 sm:gap-2">
               <h1 id="headerMainTitle" class="font-black text-slate-800 text-sm sm:text-base leading-tight whitespace-nowrap truncate">3학년 2반 진학 플랫폼</h1>
-              <select id="headerYearSwitcher" onchange="switchSchoolYear(this.value)" class="hidden text-[11px] sm:text-xs bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold px-1.5 py-0.5 rounded-lg outline-none shrink-0" title="조회 학년도 전환">
-                <option value="2025">📅 2025학년도</option>
-                <option value="2026" selected>📅 2026학년도</option>
-                <option value="2027">📅 2027학년도</option>
-                <option value="2028">📅 2028학년도</option>
-                <option value="2029">📅 2029학년도</option>
-                <option value="2030">📅 2030학년도</option>
-              </select>
               <select id="adminClassSwitcher" onchange="switchAdminViewClass(this.value)" class="hidden text-[11px] sm:text-xs bg-blue-50 border border-blue-200 text-blue-700 font-bold px-1.5 py-0.5 rounded-lg outline-none shrink-0">
                 <option value="all">🌐 3학년 전체</option>
                 <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option>
@@ -159,20 +151,30 @@
                 <option value="9">9반</option><option value="10">10반</option>
               </select>
             </div>
-            <p id="userRoleBadge" class="text-[10px] sm:text-[11px] font-semibold text-blue-600 whitespace-nowrap truncate">3학년 2반 교무실</p>
+            <div class="flex items-center gap-1.5 mt-0.5 whitespace-nowrap">
+              <select id="headerYearSwitcher" onchange="switchSchoolYear(this.value)" class="hidden text-[10px] sm:text-[11px] bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold px-1.5 py-0 rounded outline-none shrink-0 cursor-pointer" title="조회 학년도 전환">
+                <option value="2025">2025학년도</option>
+                <option value="2026" selected>2026학년도</option>
+                <option value="2027">2027학년도</option>
+                <option value="2028">2028학년도</option>
+                <option value="2029">2029학년도</option>
+                <option value="2030">2030학년도</option>
+              </select>
+              <p id="userRoleBadge" class="text-[10px] sm:text-[11px] font-semibold text-blue-600 whitespace-nowrap truncate">3학년 2반 교무실</p>
+            </div>
           </div>
         </div>
 
         <!-- 데스크톱 전용 메뉴 (lg 이상에서만 표시) -->
-        <nav id="navMenu" class="hidden lg:flex items-center gap-1 text-sm font-medium">
+        <nav id="navMenu" class="hidden lg:flex items-center gap-1 text-sm font-medium whitespace-nowrap shrink-0">
           <!-- 1. 메인 홈 -->
-          <button onclick="changeView('home')" class="nav-btn px-3 py-2 rounded-lg text-blue-600 bg-blue-50 font-bold flex items-center gap-1" data-view="home">
+          <button onclick="changeView('home')" class="nav-btn whitespace-nowrap shrink-0 px-3 py-2 rounded-lg text-blue-600 bg-blue-50 font-bold flex items-center gap-1" data-view="home">
             <i data-lucide="home" class="w-4 h-4"></i> 메인 홈
           </button>
 
 <!-- 2. 학급지도 (Hover 드롭다운) -->
           <div class="relative group">
-            <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
+            <button class="nav-btn whitespace-nowrap shrink-0 px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
               <i data-lucide="users" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
               <span>학급지도</span>
               <span id="counselNavBadge" class="hidden bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
@@ -198,7 +200,7 @@
           
           <!-- 3. 입시지도 (Hover 드롭다운) -->
           <div class="relative group">
-            <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
+            <button class="nav-btn whitespace-nowrap shrink-0 px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
               <i data-lucide="compass" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
               <span>입시지도</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
@@ -228,7 +230,7 @@
 
 <!-- 4. 입시자료 (Hover 드롭다운 - 7개 메뉴) -->
 <div class="relative group">
-  <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
+  <button class="nav-btn whitespace-nowrap shrink-0 px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
     <i data-lucide="book-open" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
     <span>입시자료</span>
     <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
@@ -274,7 +276,7 @@
 
           <!-- 4-1. 학습자료 (Hover 드롭다운) -->
           <div class="relative group">
-            <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
+            <button class="nav-btn whitespace-nowrap shrink-0 px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
               <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
               <span>학습자료</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
@@ -305,7 +307,7 @@
           
           <!-- 5. 학사 및 학급 공통 메뉴 -->
           <div class="relative group">
-            <button class="nav-btn px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
+            <button class="nav-btn whitespace-nowrap shrink-0 px-3 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-slate-100 flex items-center gap-1.5 transition">
               <i data-lucide="school" class="w-4 h-4 text-slate-500 group-hover:text-blue-600"></i>
               <span>학사·학급</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200"></i>
