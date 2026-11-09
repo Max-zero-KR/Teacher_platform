@@ -20,6 +20,12 @@ function escapeHtml(str) {
     let currentCounselList = [];
     let activeSchoolYear = 2026;
     let activeClassNum = 2;
+
+    // 기존 데이터(school_year가 NULL이거나 컬럼이 아직 없는 경우)를 2026학년도로 안전하게 자동 인식하는 도우미
+    function isTargetSchoolYear(row) {
+      const rowYear = Number(row?.school_year) || 2026;
+      return rowYear === Number(activeSchoolYear);
+    }
     let isGradeHeadOrAdmin = false;
 
     let lastGeneratedResults = [];
@@ -629,18 +635,18 @@ function updateSuneungDday() {
       updateSuneungDday();
       document.getElementById('homeWelcomeMessage').innerText = `반가워요, ${currentProfile.name} ${currentProfile.role === 'student' ? '학생' : '선생님'}!`;
 
-      // 1. 공통 조회 쿼리 준비 (선택된 학년도 activeSchoolYear 기준 필터링)
-      let noticeQuery = supabaseClient.from('class_notices').select('*').eq('school_year', activeSchoolYear).order('created_at', { ascending: false }).limit(5);
+      // 1. 공통 조회 쿼리 준비 (기존 NULL 데이터도 유실 없이 불러온 뒤 학년도 필터 적용)
+      let noticeQuery = supabaseClient.from('class_notices').select('*').order('created_at', { ascending: false }).limit(50);
       if (activeClassNum !== 'all') {
         noticeQuery = noticeQuery.eq('class_num', activeClassNum);
       }
 
-      let calQ = supabaseClient.from('calendar_events').select('*').eq('school_year', activeSchoolYear).order('event_date', { ascending: true }).limit(3);
+      let calQ = supabaseClient.from('calendar_events').select('*').order('event_date', { ascending: true }).limit(100);
       if (activeClassNum !== 'all') {
         calQ = calQ.or(`class_num.eq.${activeClassNum},class_num.eq.0,class_num.is.null`);
       }
 
-      let folderQ = supabaseClient.from('album_folders').select('id').eq('school_year', activeSchoolYear);
+      let folderQ = supabaseClient.from('album_folders').select('*');
       if (activeClassNum !== 'all') {
         folderQ = folderQ.or(`class_num.eq.${activeClassNum},class_num.is.null`);
       }
@@ -652,8 +658,8 @@ function updateSuneungDday() {
         folderQ
       ]);
 
-      // 알림장 렌더링
-      const notices = noticeRes.data;
+      // 알림장 렌더링 (선택 학년도 필터)
+      const notices = (noticeRes.data || []).filter(isTargetSchoolYear).slice(0, 5);
       currentNoticeList = notices || [];
       const noticeListEl = document.getElementById('homeNoticeList');
       if (!notices || notices.length === 0) {
@@ -672,8 +678,8 @@ function updateSuneungDday() {
         `).join('');
       }
 
-      // 학사 일정 렌더링
-      const recentEvents = calRes.data;
+      // 학사 일정 렌더링 (선택 학년도 필터)
+      const recentEvents = (calRes.data || []).filter(isTargetSchoolYear).slice(0, 3);
       const calPreviewEl = document.getElementById('homeCalendarPreview');
       if (recentEvents && recentEvents.length > 0) {
         calPreviewEl.innerHTML = recentEvents.map(e => `
@@ -721,18 +727,21 @@ function updateSuneungDday() {
       }
 
       if (currentProfile.role === 'admin' || currentProfile.role === 'teacher') {
-        let studentQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('role', 'student').eq('is_approved', true).eq('school_year', activeSchoolYear);
+        let studentQ = supabaseClient.from('profiles').select('*').eq('role', 'student').eq('is_approved', true);
         if (activeClassNum !== 'all') studentQ = studentQ.eq('class_num', activeClassNum);
 
-        let counselQ = supabaseClient.from('counsel_requests').select('id', { count: 'exact' }).eq('status', 'pending').eq('school_year', activeSchoolYear);
+        let counselQ = supabaseClient.from('counsel_requests').select('*').eq('status', 'pending');
         if (activeClassNum !== 'all') counselQ = counselQ.eq('class_num', activeClassNum);
-        let pendingQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('is_approved', false).eq('school_year', activeSchoolYear);
+        let pendingQ = supabaseClient.from('profiles').select('*').eq('is_approved', false);
         if (activeClassNum !== 'all') pendingQ = pendingQ.eq('class_num', activeClassNum);
 
         const [stdCntRes, cCntRes, pCntRes] = await Promise.all([studentQ, counselQ, pendingQ]);
 
-        document.getElementById('homeTeacherStatStudents').innerText = (stdCntRes.count || 0) + '명';
-        const cCount = cCntRes.count || 0;
+        const stdCount = (stdCntRes.data || []).filter(isTargetSchoolYear).length;
+        const cCount = (cCntRes.data || []).filter(isTargetSchoolYear).length;
+        const pCount = (pCntRes.data || []).filter(isTargetSchoolYear).length;
+
+        document.getElementById('homeTeacherStatStudents').innerText = stdCount + '명';
         document.getElementById('homeTeacherStatCounsel').innerText = cCount + '건';
 
         const navBadge = document.getElementById('counselNavBadge');
@@ -747,11 +756,11 @@ function updateSuneungDday() {
           dropBadge.classList.add('hidden');
         }
 
-        document.getElementById('homeTeacherStatPending').innerText = (pCntRes.count || 0) + '명';
+        document.getElementById('homeTeacherStatPending').innerText = pCount + '명';
       }
 
       // 4. 학급 앨범 사진 불러오기
-      const classFolders = folderRes.data;
+      const classFolders = (folderRes.data || []).filter(isTargetSchoolYear);
       let recentPhotos = [];
       if (classFolders && classFolders.length > 0) {
         const folderIds = classFolders.map(f => f.id);
@@ -900,14 +909,14 @@ async function loadTeacherCounselRequests() {
      let counselQuery = supabaseClient
        .from('counsel_requests')
        .select('*')
-       .eq('school_year', activeSchoolYear)
        .order('created_at', { ascending: false });
 
      // 담임선생님은 자기 반 학생 상담만 보이도록 안전 필터 적용
      if (activeClassNum !== 'all') {
        counselQuery = counselQuery.eq('class_num', activeClassNum);
      }
-     const { data: list, error } = await counselQuery;
+     const { data: rawList, error } = await counselQuery;
+     const list = (rawList || []).filter(isTargetSchoolYear);
 
   if (error || !list || list.length === 0) {
     currentCounselList = [];
@@ -985,20 +994,20 @@ async function confirmCounselRequest(requestId) {
   const targetPeriod = targetItem.target_period;
   const studentName = targetItem.student_name;
 
-  const { data: existingConfirmed } = await supabaseClient
+  const { data: rawConfirmed } = await supabaseClient
     .from('counsel_requests')
     .select('*')
-    .eq('school_year', activeSchoolYear)
     .eq('target_date', targetDate)
     .eq('target_period', targetPeriod)
     .eq('status', 'confirmed')
     .neq('id', requestId);
+  const existingConfirmed = (rawConfirmed || []).filter(isTargetSchoolYear);
 
-  const { data: existingEvents } = await supabaseClient
+  const { data: rawEvents } = await supabaseClient
     .from('calendar_events')
     .select('*')
-    .eq('school_year', activeSchoolYear)
     .eq('event_date', targetDate);
+  const existingEvents = (rawEvents || []).filter(isTargetSchoolYear);
 
   let conflictWarning = '';
   if (existingConfirmed && existingConfirmed.length > 0) {
@@ -1135,7 +1144,7 @@ async function loadExamSchedules() {
     }
   }
 
-  let q = supabaseClient.from('admission_schedules').select('*').eq('school_year', activeSchoolYear).order('exam_date', { ascending: true });
+  let q = supabaseClient.from('admission_schedules').select('*').order('exam_date', { ascending: true });
   if (queryTargetUserId) {
     q = q.eq('user_id', queryTargetUserId);
   } else if (isCurrentTeacher() && activeClassNum !== 'all') {
@@ -1149,7 +1158,7 @@ async function loadExamSchedules() {
     console.error('일정 로드 실패:', error);
     currentSchedules = [];
   } else {
-    currentSchedules = data || [];
+    currentSchedules = (data || []).filter(isTargetSchoolYear);
   }
 
   renderExamScheduleCards();
@@ -3693,10 +3702,9 @@ function selectPickerClass(pickerType, classNum) {
         .select('*')
         .eq('role', 'student')
         .eq('is_approved', true)
-        .eq('school_year', activeSchoolYear)
         .order('student_no');
 
-      allGrade3Students = allStudents || [];
+      allGrade3Students = (allStudents || []).filter(isTargetSchoolYear);
 
       // 2. 현재 선택된 학급 모드에 맞게 내부 select 옵션 채우기 (기존 호환 유지)
       let filtered = allGrade3Students;
@@ -3729,11 +3737,12 @@ function selectPickerClass(pickerType, classNum) {
     }
 
     async function loadUsersData() {
-      let pendingQuery = supabaseClient.from('profiles').select('*').eq('is_approved', false).eq('school_year', activeSchoolYear).order('created_at', { ascending: false });
+      let pendingQuery = supabaseClient.from('profiles').select('*').eq('is_approved', false).order('created_at', { ascending: false });
       if (activeClassNum !== 'all') {
         pendingQuery = pendingQuery.eq('class_num', activeClassNum);
       }
-      const { data: pendingList } = await pendingQuery;
+      const { data: rawPendingList } = await pendingQuery;
+      const pendingList = (rawPendingList || []).filter(isTargetSchoolYear);
       const pendingTbody = document.getElementById('pendingUserTableBody');
       const badge = document.getElementById('pendingCountBadge');
 
@@ -3770,12 +3779,12 @@ pendingTbody.innerHTML = pendingList.map(u => `
         .from('profiles')
         .select('*')
         .eq('is_approved', true)
-        .or(`school_year.eq.${activeSchoolYear},role.eq.teacher,role.eq.admin`)
         .order('class_num');
       if (activeClassNum !== 'all') {
         approvedQuery = approvedQuery.eq('class_num', activeClassNum);
       }
-      const { data: approvedList } = await approvedQuery;
+      const { data: rawApprovedList } = await approvedQuery;
+      const approvedList = (rawApprovedList || []).filter(u => u.role === 'teacher' || u.role === 'admin' || isTargetSchoolYear(u));
       currentApprovedUserList = approvedList || []; // 안전 보관함에 저장
       const approvedTbody = document.getElementById('approvedUserTableBody');
 
@@ -4106,8 +4115,7 @@ function selectFeatureClass(type, cls) {
       ++albumPhotoVersion;
       currentAlbumPhotos = []; renderAlbumPhotos();
       const tabContainer = document.getElementById('albumFolderTabs');
-      const { data: folders, error } = await supabaseClient.from('album_folders').select('*')
-        .eq('school_year', activeSchoolYear)
+      const { data: rawFolders, error } = await supabaseClient.from('album_folders').select('*')
         .or(`class_num.eq.${cls},class_num.eq.0,class_num.is.null`).order('created_at', { ascending: true });
       if (request !== albumLoadVersion || cls !== getFeatureClass('album')) return;
       if (error) {
@@ -4115,6 +4123,7 @@ function selectFeatureClass(type, cls) {
         tabContainer.innerHTML = '<p class="text-rose-600 text-xs">앨범 폴더를 불러오지 못했습니다.</p>';
         alert('앨범 폴더 조회 실패: ' + error.message); return;
       }
+      const folders = (rawFolders || []).filter(isTargetSchoolYear);
       if (!folders || folders.length === 0) {
         currentFolderList = []; currentAlbumPhotos = []; renderAlbumPhotos();
         tabContainer.innerHTML = '<p class="text-slate-500 text-xs">이 학급에 생성된 앨범 폴더가 없습니다. 새 폴더를 만들어 주세요.</p>';
@@ -4582,12 +4591,12 @@ async function renderCalendar() {
     labelEl.innerText = year + '. ' + String(month + 1).padStart(2, '0');
   }
 
-  let calQuery = supabaseClient.from('calendar_events').select('*').eq('school_year', activeSchoolYear);
+  let calQuery = supabaseClient.from('calendar_events').select('*');
   if (activeClassNum !== 'all') {
     calQuery = calQuery.or('class_num.eq.' + activeClassNum + ',class_num.eq.0,class_num.is.null');
   }
   const { data: events } = await calQuery;
-  currentMonthCalendarEvents = events || [];
+  currentMonthCalendarEvents = (events || []).filter(isTargetSchoolYear);
 
   const firstDayIndex = new Date(year, month, 1).getDay();
   const lastDate = new Date(year, month + 1, 0).getDate();
@@ -6528,12 +6537,12 @@ async function loadSongRecommendations() {
   if (!container) return;
   container.innerHTML = '<p class="text-center text-slate-400 py-6">추천곡 목록을 불러오는 중...</p>';
 
-  const { data, error } = await supabaseClient
+  const { data: rawSongs, error } = await supabaseClient
     .from('song_recommendations')
     .select('*')
-    .eq('school_year', activeSchoolYear)
     .order('created_at', { ascending: false })
-    .limit(30);
+    .limit(100);
+  const data = (rawSongs || []).filter(isTargetSchoolYear).slice(0, 30);
 
   if (error || !data || data.length === 0) {
     container.innerHTML = '<p class="text-center text-slate-400 py-6">접수된 학생 추천곡이 아직 없습니다.</p>';
@@ -6652,12 +6661,11 @@ async function loadSeatingData() {
     if (panel) panel.classList.add('hidden');
   }
 
-  const { data, error } = await supabaseClient
+  const { data: rawSeats, error } = await supabaseClient
     .from('seating_charts')
     .select('*')
-    .eq('school_year', activeSchoolYear)
-    .eq('class_num', targetClass)
-    .maybeSingle();
+    .eq('class_num', targetClass);
+  const data = (rawSeats || []).find(isTargetSchoolYear) || null;
 
   if (request !== seatingLoadVersion || targetClass !== getFeatureClass('seating')) return;
   if (error) { alert('자리배치 불러오기 실패: ' + error.message); return; }
