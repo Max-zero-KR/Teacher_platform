@@ -1,8 +1,8 @@
 // =================================================================
     // 💡 Supabase 접속 정보 및 전역 상태
     // =================================================================
-    const SB_URL = 'https://jbhilrrmrpdujlohowbm.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaGlscnJtcnBkdWpsb2hvd2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NTc4MjAsImV4cCI6MjEwNzIzMzgyMH0.TwvJ9kfrGwizZvbfodQNp_a-3jSb0H4p9GzuHdUCcG8';
+    const SB_URL = 'https://vmkfmwbzsdlietprgtyt.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZta2Ztd2J6c2RsaWV0cHJndHl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQxMjIsImV4cCI6MjEwNTUwMDEyMn0.eqkdTi2LzOkVA715lyy2VMfiNio4umT-LwImPv7LaWQ';
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
 function escapeHtml(str) {
