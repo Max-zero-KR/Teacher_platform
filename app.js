@@ -1,8 +1,8 @@
-    // =================================================================
+// =================================================================
     // 💡 Supabase 접속 정보 및 전역 상태
     // =================================================================
-    const SB_URL = 'https://vmkfmwbzsdlietprgtyt.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZta2Ztd2J6c2RsaWV0cHJndHl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQxMjIsImV4cCI6MjEwNTUwMDEyMn0.eqkdTi2LzOkVA715lyy2VMfiNio4umT-LwImPv7LaWQ';
+    const SB_URL = 'https://jbhilrrmrpdujlohowbm.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaGlscnJtcnBkdWpsb2hvd2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NTc4MjAsImV4cCI6MjEwNzIzMzgyMH0.TwvJ9kfrGwizZvbfodQNp_a-3jSb0H4p9GzuHdUCcG8';
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
 function escapeHtml(str) {
@@ -18,6 +18,7 @@ function escapeHtml(str) {
     let currentUser = null;
     let currentProfile = null;
     let currentCounselList = [];
+    let activeSchoolYear = 2026;
     let activeClassNum = 2;
     let isGradeHeadOrAdmin = false;
 
@@ -102,9 +103,13 @@ function getDiagBadgeHtml(diag) {
       return currentProfile && (currentProfile.role === 'teacher' || currentProfile.role === 'admin');
     }
 
-    function toAuthEmail(rawId) {
+    function toAuthEmail(rawId, yearPrefix = null) {
       const clean = rawId.trim().toLowerCase();
-      return clean.includes('@') ? clean : `${clean}@school.net`;
+      if (clean.includes('@')) return clean;
+      if (yearPrefix && !clean.startsWith(`${yearPrefix}_`)) {
+        return `${yearPrefix}_${clean}@school.net`;
+      }
+      return `${clean}@school.net`;
     }
 
     function autoDetectClassFromNo() {
@@ -206,6 +211,7 @@ function navAndClose(viewId) {
       const role = document.getElementById('regRole').value;
       const name = document.getElementById('regName').value.trim();
       const pw = document.getElementById('regPw').value;
+      const regYear = parseInt(document.getElementById('regSchoolYear')?.value) || activeSchoolYear || 2026;
       
       let rawId = '';
       let studentNo = null;
@@ -231,7 +237,8 @@ function navAndClose(viewId) {
       regBtn.innerText = '가입 신청 처리 중...';
       regBtn.disabled = true;
 
-      const authEmail = toAuthEmail(rawId);
+      const storedEmailId = (role === 'student') ? `${regYear}_${rawId}` : rawId;
+      const authEmail = (role === 'student') ? toAuthEmail(rawId, regYear) : toAuthEmail(rawId);
       const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: authEmail, password: pw });
 
       if (authError) {
@@ -244,15 +251,16 @@ function navAndClose(viewId) {
       if (authData.user) {
         await supabaseClient.from('profiles').insert([{
           id: authData.user.id,
-          email: rawId,
+          email: storedEmailId,
           name: name,
           role: role === 'head' ? 'admin' : role,
           student_no: studentNo,
           class_num: classNum,
+          school_year: regYear,
           is_approved: false,
           needs_pw_change: false
         }]);
-        alert(`가입 신청 완료! [${classNum === 0 ? '전체' : classNum + '반'} / 아이디: ${rawId}] 담임선생님이 승인하면 로그인할 수 있습니다.`);
+        alert(`가입 신청 완료! [${regYear}학년도 ${classNum === 0 ? '전체' : classNum + '반'} / 아이디: ${rawId}] 담임선생님이 승인하면 로그인할 수 있습니다.`);
         switchAuthTab('login');
       }
       regBtn.innerText = '가입 신청 완료';
@@ -263,12 +271,26 @@ function navAndClose(viewId) {
       e.preventDefault();
       const rawId = document.getElementById('loginUserId').value.trim();
       const pw = document.getElementById('loginPw').value;
+      const loginYear = parseInt(document.getElementById('loginSchoolYear')?.value) || 2026;
       const btn = document.getElementById('loginSubmitBtn');
       btn.innerText = '로그인 중...';
       btn.disabled = true;
 
-      const authEmail = toAuthEmail(rawId);
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email: authEmail, password: pw });
+      // 1차 시도: 선택한 학년도 접두어 이메일 (신규 학년도 학생 계정)
+      let { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: toAuthEmail(rawId, loginYear),
+        password: pw
+      });
+
+      // 2차 자동 호환 시도: 기존 2026 학생 계정 또는 교사·관리자 단일 아이디
+      if (error) {
+        const fallbackRes = await supabaseClient.auth.signInWithPassword({
+          email: toAuthEmail(rawId),
+          password: pw
+        });
+        data = fallbackRes.data;
+        error = fallbackRes.error;
+      }
 
       if (error) {
         alert('로그인 실패: 아이디(학번) 또는 비밀번호를 다시 확인해주세요.');
@@ -337,6 +359,22 @@ function navAndClose(viewId) {
 
       isGradeHeadOrAdmin = (currentProfile.role === 'admin' || !currentProfile.class_num || currentProfile.class_num === 0);
       activeClassNum = (isGradeHeadOrAdmin && currentProfile.class_num === 0) ? 'all' : (currentProfile.class_num || 2);
+      const selectedLoginYear = parseInt(document.getElementById('loginSchoolYear')?.value) || 2026;
+      if (currentProfile.role === 'student') {
+        activeSchoolYear = currentProfile.school_year || selectedLoginYear || 2026;
+      } else {
+        activeSchoolYear = selectedLoginYear || currentProfile.school_year || 2026;
+      }
+
+      const yearSwitcher = document.getElementById('headerYearSwitcher');
+      if (yearSwitcher) {
+        if (currentProfile.role === 'admin' || currentProfile.role === 'teacher') {
+          yearSwitcher.classList.remove('hidden');
+          yearSwitcher.value = String(activeSchoolYear);
+        } else {
+          yearSwitcher.classList.add('hidden');
+        }
+      }
 
       updateHeaderClassDisplay();
 
@@ -440,19 +478,36 @@ function navAndClose(viewId) {
       if (activeClassNum === 'all') {
         badge.innerText = '3-전체';
         badge.className = 'w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-sm';
-        title.innerText = '3학년 전체 진학 관리';
-        roleBadge.innerText = '학년부장 / 총괄 교무실';
-        homeLabel.innerText = '3학년 전체 포털';
+        title.innerText = `${activeSchoolYear}학년도 3학년 전체 진학 관리`;
+        roleBadge.innerText = `${activeSchoolYear}학년도 학년부장 / 총괄 교무실`;
+        homeLabel.innerText = `${activeSchoolYear}학년도 3학년 전체 포털`;
       } else {
         badge.innerText = `3-${activeClassNum}`;
         badge.className = 'w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-sm';
-        title.innerText = `3학년 ${activeClassNum}반 진학 플랫폼`;
-        roleBadge.innerText = currentProfile.role === 'student' ? `3학년 ${activeClassNum}반 학생 포털` : `3학년 ${activeClassNum}반 교무실`;
-        homeLabel.innerText = `3학년 ${activeClassNum}반 포털`;
+        title.innerText = `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 진학 플랫폼`;
+        roleBadge.innerText = currentProfile.role === 'student' ? `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 학생 포털` : `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 교무실`;
+        homeLabel.innerText = `${activeSchoolYear}학년도 3학년 ${activeClassNum}반 포털`;
       }
 
-      document.getElementById('albumHeaderTitle').innerHTML = `<i data-lucide="camera" class="w-5 h-5 text-blue-600"></i> ${activeClassNum === 'all' ? '3학년 전체' : activeClassNum + '반'} 학급 앨범`;
-   document.getElementById('calendarHeaderTitle').innerHTML = `<i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> ${activeClassNum === 'all' ? '3학년 학사' : activeClassNum + '반 학사'} & 상담 달력`;
+      document.getElementById('albumHeaderTitle').innerHTML = `<i data-lucide="camera" class="w-5 h-5 text-blue-600"></i> ${activeSchoolYear}학년도 ${activeClassNum === 'all' ? '3학년 전체' : activeClassNum + '반'} 학급 앨범`;
+      document.getElementById('calendarHeaderTitle').innerHTML = `<i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> ${activeSchoolYear}학년도 ${activeClassNum === 'all' ? '3학년 학사' : activeClassNum + '반 학사'} & 상담 달력`;
+    }
+
+    function switchSchoolYear(val) {
+      activeSchoolYear = parseInt(val) || 2026;
+      pickerSelectedStudentId = { survey: null, counsel: null, mock: null, schedules: 'all', minCheck: null };
+      updateHeaderClassDisplay();
+      loadHomeDashboardData();
+      loadDailySong();
+      loadTeacherStudentSelects();
+      loadAlbumFolders();
+      renderCalendar();
+      loadUsersData();
+      loadTeacherCounselRequests();
+      loadExamSchedules();
+      renderMinimumCheckAnalysis();
+      loadSeatingData();
+      lucide.createIcons();
     }
 
     function switchAdminViewClass(val) {
@@ -466,7 +521,7 @@ function navAndClose(viewId) {
       loadTeacherCounselRequests();
       loadExamSchedules();
       renderMinimumCheckAnalysis();
-      if (!document.getElementById('view-seating')?.classList.contains('hidden')) loadSeatingData();
+           loadSeatingData();
       lucide.createIcons();
     }
 
@@ -506,41 +561,50 @@ function navAndClose(viewId) {
         loadTeacherForumsData();
       } else if (viewId === 'admissionBriefing') {
         loadBriefingFoldersData();
-      } else if (viewId === 'seating') {
-        loadSeatingData();
+             } else if (viewId === 'seating') {
+     loadSeatingData();
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
       lucide.createIcons();
     }
 
-    // 수능 D-Day 자동 계산 (2027 수능일: 2026-11-19)
+// 수능일(11월 셋째 주 목요일) 자동 계산 도우미
 function getSuneungDate(year) {
-  // 11월 1일의 요일을 구해서 셋째 주 목요일 계산
   const novFirst = new Date(year, 10, 1);
-  const dayOfWeek = novFirst.getDay(); // 0(일) ~ 4(목) ~ 6(토)
+  const dayOfWeek = novFirst.getDay();
   const firstThursday = 1 + ((4 - dayOfWeek + 7) % 7);
   const thirdThursday = firstThursday + 14;
   return new Date(year, 10, thirdThursday, 0, 0, 0);
+}
+
+// 현재 날짜 기준 목표 대입 학년도 자동 반환 (수능 끝나면 자동으로 다음 학년도)
+function getTargetAdmissionYear() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let examYear = today.getFullYear();
+  if (today > getSuneungDate(examYear)) {
+    examYear += 1;
+  }
+  return examYear + 1;
 }
 
 function updateSuneungDday() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  let targetYear = today.getFullYear();
-  let suneungDate = getSuneungDate(targetYear);
+  let examYear = today.getFullYear();
+  let suneungDate = getSuneungDate(examYear);
 
-  // 올해 수능이 이미 지났다면 자동으로 내년 수능일을 타겟으로 설정
   if (today > suneungDate) {
-    targetYear += 1;
-    suneungDate = getSuneungDate(targetYear);
+    examYear += 1;
+    suneungDate = getSuneungDate(examYear);
   }
 
-  // 상단 라벨 문구도 대입 학년도에 맞춰 자동 갱신 (예: 2026년 치르는 시험 = 2027 수능)
+  const admYear = examYear + 1;
   const ddayLabel = document.querySelector('#homeDdayCount')?.previousElementSibling;
   if (ddayLabel) {
-    ddayLabel.innerText = `${targetYear + 1} 수능 D-Day`;
+    ddayLabel.innerText = `${admYear} 수능 D-Day`;
   }
 
   const diffDays = Math.ceil((suneungDate - today) / (1000 * 60 * 60 * 24));
@@ -565,18 +629,18 @@ function updateSuneungDday() {
       updateSuneungDday();
       document.getElementById('homeWelcomeMessage').innerText = `반가워요, ${currentProfile.name} ${currentProfile.role === 'student' ? '학생' : '선생님'}!`;
 
-      // 1. 공통 조회 쿼리 준비 (아직 서버에 보내지 않고 준비만 함)
-      let noticeQuery = supabaseClient.from('class_notices').select('*').order('created_at', { ascending: false }).limit(5);
+      // 1. 공통 조회 쿼리 준비 (선택된 학년도 activeSchoolYear 기준 필터링)
+      let noticeQuery = supabaseClient.from('class_notices').select('*').eq('school_year', activeSchoolYear).order('created_at', { ascending: false }).limit(5);
       if (activeClassNum !== 'all') {
         noticeQuery = noticeQuery.eq('class_num', activeClassNum);
       }
 
-      let calQ = supabaseClient.from('calendar_events').select('*').order('event_date', { ascending: true }).limit(3);
+      let calQ = supabaseClient.from('calendar_events').select('*').eq('school_year', activeSchoolYear).order('event_date', { ascending: true }).limit(3);
       if (activeClassNum !== 'all') {
         calQ = calQ.or(`class_num.eq.${activeClassNum},class_num.eq.0,class_num.is.null`);
       }
 
-      let folderQ = supabaseClient.from('album_folders').select('id');
+      let folderQ = supabaseClient.from('album_folders').select('id').eq('school_year', activeSchoolYear);
       if (activeClassNum !== 'all') {
         folderQ = folderQ.or(`class_num.eq.${activeClassNum},class_num.is.null`);
       }
@@ -657,11 +721,13 @@ function updateSuneungDday() {
       }
 
       if (currentProfile.role === 'admin' || currentProfile.role === 'teacher') {
-        let studentQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('role', 'student').eq('is_approved', true);
+        let studentQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('role', 'student').eq('is_approved', true).eq('school_year', activeSchoolYear);
         if (activeClassNum !== 'all') studentQ = studentQ.eq('class_num', activeClassNum);
 
-        let counselQ = supabaseClient.from('counsel_requests').select('id', { count: 'exact' }).eq('status', 'pending');
-        let pendingQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('is_approved', false);
+        let counselQ = supabaseClient.from('counsel_requests').select('id', { count: 'exact' }).eq('status', 'pending').eq('school_year', activeSchoolYear);
+        if (activeClassNum !== 'all') counselQ = counselQ.eq('class_num', activeClassNum);
+        let pendingQ = supabaseClient.from('profiles').select('id', { count: 'exact' }).eq('is_approved', false).eq('school_year', activeSchoolYear);
+        if (activeClassNum !== 'all') pendingQ = pendingQ.eq('class_num', activeClassNum);
 
         const [stdCntRes, cCntRes, pCntRes] = await Promise.all([studentQ, counselQ, pendingQ]);
 
@@ -806,6 +872,7 @@ function updateSuneungDday() {
         else alert('알림장이 성공적으로 수정되었습니다!');
       } else {
         const { error } = await supabaseClient.from('class_notices').insert([{
+          school_year: activeSchoolYear,
           class_num: targetClass,
           title: title,
           content: content,
@@ -833,6 +900,7 @@ async function loadTeacherCounselRequests() {
      let counselQuery = supabaseClient
        .from('counsel_requests')
        .select('*')
+       .eq('school_year', activeSchoolYear)
        .order('created_at', { ascending: false });
 
      // 담임선생님은 자기 반 학생 상담만 보이도록 안전 필터 적용
@@ -920,6 +988,7 @@ async function confirmCounselRequest(requestId) {
   const { data: existingConfirmed } = await supabaseClient
     .from('counsel_requests')
     .select('*')
+    .eq('school_year', activeSchoolYear)
     .eq('target_date', targetDate)
     .eq('target_period', targetPeriod)
     .eq('status', 'confirmed')
@@ -928,6 +997,7 @@ async function confirmCounselRequest(requestId) {
   const { data: existingEvents } = await supabaseClient
     .from('calendar_events')
     .select('*')
+    .eq('school_year', activeSchoolYear)
     .eq('event_date', targetDate);
 
   let conflictWarning = '';
@@ -965,6 +1035,7 @@ async function confirmCounselRequest(requestId) {
 
   // 상담 일정 등록 시 학생 본인 ID(target_user_id)를 함께 기록하여 본인 달력에도 표시되게 함!
   await supabaseClient.from('calendar_events').insert([{
+    school_year: activeSchoolYear,
     event_date: targetDate,
     category: 'counsel',
     title: `[상담] ${studentName} (${targetPeriod})`,
@@ -1064,7 +1135,7 @@ async function loadExamSchedules() {
     }
   }
 
-  let q = supabaseClient.from('admission_schedules').select('*').order('exam_date', { ascending: true });
+  let q = supabaseClient.from('admission_schedules').select('*').eq('school_year', activeSchoolYear).order('exam_date', { ascending: true });
   if (queryTargetUserId) {
     q = q.eq('user_id', queryTargetUserId);
   } else if (isCurrentTeacher() && activeClassNum !== 'all') {
@@ -1101,6 +1172,7 @@ async function submitExamSchedule() {
   submitBtn.disabled = true;
 
   const newRecord = {
+    school_year: activeSchoolYear,
     user_id: currentUser.id,
     student_name: currentProfile.name,
     student_no: currentProfile.student_no || '',
@@ -1685,17 +1757,41 @@ async function autoFetchMockScoreForJeongsi(slotNum) {
   const t1 = scores.find(s => s.subject_key === 'tam1')?.percentile;
   const t2 = scores.find(s => s.subject_key === 'tam2')?.percentile;
 
-  // [수정] 숫자가 아닌 값(NaN)이나 빈 칸을 더 안전하게 걸러내어 계산 튕김 방지
-  const pList = [k, m, t1, t2]
-    .map(v => (v !== null && v !== undefined && v !== '') ? Number(v) : NaN)
-    .filter(v => !isNaN(v) && v > 0);
+// 유효한 백분위 추출 도우미
+  const getValidPct = (val) => {
+    if (val === null || val === undefined || val === '') return null;
+    const num = Number(val);
+    return (!isNaN(num) && num > 0) ? num : null;
+  };
 
-  if (pList.length === 0) {
-    alert(`[${round}]에 등록된 백분위 성적이 없습니다.`);
+  const korPct = getValidPct(k);
+  const matPct = getValidPct(m);
+  const t1Pct = getValidPct(t1);
+  const t2Pct = getValidPct(t2);
+
+  // 탐구는 2과목 평균(또는 1과목)으로 먼저 합산하여 1개 영역으로 환산
+  let tamAvg = null;
+  if (t1Pct !== null && t2Pct !== null) {
+    tamAvg = (t1Pct + t2Pct) / 2;
+  } else if (t1Pct !== null) {
+    tamAvg = t1Pct;
+  } else if (t2Pct !== null) {
+    tamAvg = t2Pct;
+  }
+
+  // 국어, 수학, 탐구(평균) 중 응시한 영역들의 단순 평균 산출 (국·수·탐 표준 300체제)
+  const validAreas = [];
+  if (korPct !== null) validAreas.push(korPct);
+  if (matPct !== null) validAreas.push(matPct);
+  if (tamAvg !== null) validAreas.push(tamAvg);
+
+  if (validAreas.length === 0) {
+    alert(`[${round}]에 등록된 유효한 백분위 성적이 없습니다.`);
     return;
   }
 
-  const avg = (pList.reduce((a, b) => a + b, 0) / pList.length).toFixed(2);
+  const avg = (validAreas.reduce((a, b) => a + b, 0) / validAreas.length).toFixed(2);
+
   const targetInput = document.getElementById(`jeongsi_myscore_${slotNum}`);
   if (targetInput) {
     targetInput.value = avg;
@@ -1796,6 +1892,7 @@ async function saveStudent12Cards() {
       }
 
       const record = {
+        school_year: activeSchoolYear,
         user_id: currentUser.id,
         student_no: currentProfile.student_no,
         student_name: currentProfile.name,
@@ -1846,6 +1943,7 @@ async function saveStudent12Cards() {
       const detail = document.getElementById('counselDetail').value.trim();
 
       await supabaseClient.from('counsel_requests').insert([{
+        school_year: activeSchoolYear,
         user_id: currentUser.id,
         student_no: currentProfile.student_no,
         student_name: currentProfile.name,
@@ -1947,6 +2045,7 @@ async function saveCardByTeacher() {
   }
 
   const record = {
+    school_year: activeSchoolYear,
     user_id: studentId,
     student_no: targetStudent?.student_no || '',
     student_name: targetStudent?.name || '',
@@ -2193,7 +2292,8 @@ function closeCardDetailModal() {
 }
     
    function renderModalCharts(compRates, cutoffs, myScore, isJeongsi = false) {
-     const years = ['2025', '2026', '2027'];
+     const targetYear = getTargetAdmissionYear();
+     const years = [String(targetYear - 2), String(targetYear - 1), String(targetYear)];
 
      // 1) 경쟁률 차트
      const compCanvas = document.getElementById('cardCompChart');
@@ -2270,12 +2370,12 @@ function closeCardDetailModal() {
    }
       
     const SUBJECT_ROWS = [
-      { key: 'korean', name: '국어', options: ['화법과 작문', '언어와 매체'] },
-      { key: 'math', name: '수학', options: ['확률과 통계', '미적분', '기하'] },
+      { key: 'korean', name: '국어', options: ['공통(독서·문학·화법과언어)'] },
+      { key: 'math', name: '수학', options: ['공통(대수·미적분Ⅰ·확통)'] },
       { key: 'english', name: '영어', options: ['영어(절대)'] },
       { key: 'history', name: '한국사', options: ['한국사(절대)'] },
-      { key: 'tam1', name: '탐구1', options: ['생활과 윤리','윤리와 사상','한국지리','세계지리','사회·문화','경제','정치와 법','동아시아사','세계사','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학II','화학II','생명과학II','지구과학II'] },
-      { key: 'tam2', name: '탐구2', options: ['생활과 윤리','윤리와 사상','한국지리','세계지리','사회·문화','경제','정치와 법','동아시아사','세계사','물리학Ⅰ','화학Ⅰ','생명과학Ⅰ','지구과학Ⅰ','물리학II','화학II','생명과학II','지구과학II'] }
+      { key: 'tam1', name: '통합사회', options: ['통합사회'] },
+      { key: 'tam2', name: '통합과학', options: ['통합과학'] }
     ];
 
 // [절대평가 등급 자동 계산 만능 도우미: 영어 100점 / 한국사 50점 만점]
@@ -2447,6 +2547,7 @@ async function saveMockScores() {
 
     if (raw || std || pct || grd) {
       records.push({
+        school_year: activeSchoolYear,
         user_id: currentUser.id,
         exam_round: round,
         subject_key: s.key,
@@ -2690,6 +2791,7 @@ async function saveTeacherMockScores() {
 
     if (raw || std || pct || grd) {
       records.push({
+        school_year: activeSchoolYear,
         user_id: currentTeacherMockTargetId,
         exam_round: round,
         subject_key: s.key,
@@ -2724,8 +2826,6 @@ async function saveTeacherMockScores() {
         document.getElementById('surv_mother_name').value = data.mother_name || '';
         document.getElementById('surv_mother_phone').value = data.mother_phone || '';
         document.getElementById('surv_student_phone').value = data.student_phone || '';
-        document.getElementById('surv_siblings').value = data.siblings || '';
-        document.getElementById('surv_address').value = data.address || '';
         document.getElementById('surv_career').value = data.career_hope || '';
         document.getElementById('surv_notes').value = data.special_notes || '';
 
@@ -2749,15 +2849,14 @@ async function saveTeacherMockScores() {
       const g3Selected = Array.from(document.querySelectorAll('input[name="grade3_sub"]:checked')).map(c => c.value);
 
       const surveyObj = {
+        school_year: activeSchoolYear,
         user_id: currentUser.id,
         father_name: document.getElementById('surv_father_name').value.trim(),
         father_phone: document.getElementById('surv_father_phone').value.trim(),
         mother_name: document.getElementById('surv_mother_name').value.trim(),
         mother_phone: document.getElementById('surv_mother_phone').value.trim(),
-        student_phone: document.getElementById('surv_student_phone').value.trim(),
-        siblings: document.getElementById('surv_siblings').value.trim(),
-        address: document.getElementById('surv_address').value.trim(),
-        career_hope: document.getElementById('surv_career').value.trim(),
+student_phone: document.getElementById('surv_student_phone').value.trim(),
+      career_hope: document.getElementById('surv_career').value.trim(),
         special_notes: document.getElementById('surv_notes').value.trim(),
         selected_subjects: { grade2: g2Selected, grade3: g3Selected },
         updated_at: new Date()
@@ -2802,34 +2901,35 @@ async function saveTeacherMockScores() {
             </button>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">아버지 성함 및 연락처</label>
-              <div class="flex gap-2">
-                <input type="text" id="t_surv_father_name" value="${escapeHtml(surv.father_name || '')}" placeholder="성함" class="w-1/3 p-2 border rounded-lg bg-white">
-                <input type="text" id="t_surv_father_phone" value="${escapeHtml(surv.father_phone || '')}" placeholder="연락처" class="w-2/3 p-2 border rounded-lg bg-white">
-              </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-semibold text-slate-600">아버지 연락처</label>
+              ${surv.father_phone ? `<a href="tel:${surv.father_phone}" class="text-[10px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold">📞 통화</a>` : ''}
             </div>
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">어머니 성함 및 연락처</label>
-              <div class="flex gap-2">
-                <input type="text" id="t_surv_mother_name" value="${escapeHtml(surv.mother_name || '')}" placeholder="성함" class="w-1/3 p-2 border rounded-lg bg-white">
-                <input type="text" id="t_surv_mother_phone" value="${escapeHtml(surv.mother_phone || '')}" placeholder="연락처" class="w-2/3 p-2 border rounded-lg bg-white">
-              </div>
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">학생 본인 연락처</label>
-              <input type="text" id="t_surv_student_phone" value="${escapeHtml(surv.student_phone || '')}" placeholder="010-0000-0000" class="w-full p-2 border rounded-lg bg-white font-bold text-blue-600">
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">형제/자매 관계</label>
-              <input type="text" id="t_surv_siblings" value="${escapeHtml(surv.siblings || '')}" placeholder="예: 2남 중 장남" class="w-full p-2 border rounded-lg bg-white">
-            </div>
-            <div class="md:col-span-2">
-              <label class="block font-semibold text-slate-600 mb-1">실거주 주소</label>
-              <input type="text" id="t_surv_address" value="${escapeHtml(surv.address || '')}" placeholder="도로명 주소" class="w-full p-2 border rounded-lg bg-white">
+            <div class="flex gap-1.5">
+              <input type="text" id="t_surv_father_name" value="${escapeHtml(surv.father_name || '')}" placeholder="성함" class="w-1/3 p-2 border rounded-lg bg-white">
+              <input type="text" id="t_surv_father_phone" value="${escapeHtml(surv.father_phone || '')}" placeholder="010-0000-0000" class="w-2/3 p-2 border rounded-lg bg-white">
             </div>
           </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-semibold text-slate-600">어머니 연락처</label>
+              ${surv.mother_phone ? `<a href="tel:${surv.mother_phone}" class="text-[10px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold">📞 통화</a>` : ''}
+            </div>
+            <div class="flex gap-1.5">
+              <input type="text" id="t_surv_mother_name" value="${escapeHtml(surv.mother_name || '')}" placeholder="성함" class="w-1/3 p-2 border rounded-lg bg-white">
+              <input type="text" id="t_surv_mother_phone" value="${escapeHtml(surv.mother_phone || '')}" placeholder="010-0000-0000" class="w-2/3 p-2 border rounded-lg bg-white">
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-semibold text-slate-600">학생 본인 연락처</label>
+              ${surv.student_phone ? `<a href="tel:${surv.student_phone}" class="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded font-bold">📞 통화</a>` : ''}
+            </div>
+            <input type="text" id="t_surv_student_phone" value="${escapeHtml(surv.student_phone || '')}" placeholder="010-0000-0000" class="w-full p-2 border rounded-lg bg-white font-bold text-blue-600">
+          </div>
+        </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
@@ -2871,15 +2971,14 @@ async function saveTeacherMockScores() {
       const g3Selected = Array.from(document.querySelectorAll('input[name="t_grade3_sub"]:checked')).map(c => c.value);
 
       const surveyObj = {
+        school_year: activeSchoolYear,
         user_id: currentTeacherSurveyTargetId,
         father_name: document.getElementById('t_surv_father_name').value.trim(),
         father_phone: document.getElementById('t_surv_father_phone').value.trim(),
         mother_name: document.getElementById('t_surv_mother_name').value.trim(),
         mother_phone: document.getElementById('t_surv_mother_phone').value.trim(),
-        student_phone: document.getElementById('t_surv_student_phone').value.trim(),
-        siblings: document.getElementById('t_surv_siblings').value.trim(),
-        address: document.getElementById('t_surv_address').value.trim(),
-        career_hope: document.getElementById('t_surv_career').value.trim(),
+student_phone: document.getElementById('t_surv_student_phone').value.trim(),
+      career_hope: document.getElementById('t_surv_career').value.trim(),
         special_notes: document.getElementById('t_surv_notes').value.trim(),
         selected_subjects: { grade2: g2Selected, grade3: g3Selected },
         updated_at: new Date()
@@ -3594,6 +3693,7 @@ function selectPickerClass(pickerType, classNum) {
         .select('*')
         .eq('role', 'student')
         .eq('is_approved', true)
+        .eq('school_year', activeSchoolYear)
         .order('student_no');
 
       allGrade3Students = allStudents || [];
@@ -3629,7 +3729,7 @@ function selectPickerClass(pickerType, classNum) {
     }
 
     async function loadUsersData() {
-      let pendingQuery = supabaseClient.from('profiles').select('*').eq('is_approved', false).order('created_at', { ascending: false });
+      let pendingQuery = supabaseClient.from('profiles').select('*').eq('is_approved', false).eq('school_year', activeSchoolYear).order('created_at', { ascending: false });
       if (activeClassNum !== 'all') {
         pendingQuery = pendingQuery.eq('class_num', activeClassNum);
       }
@@ -3666,7 +3766,12 @@ pendingTbody.innerHTML = pendingList.map(u => `
         `).join('');
       }
 
-      let approvedQuery = supabaseClient.from('profiles').select('*').eq('is_approved', true).order('class_num');
+      let approvedQuery = supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('is_approved', true)
+        .or(`school_year.eq.${activeSchoolYear},role.eq.teacher,role.eq.admin`)
+        .order('class_num');
       if (activeClassNum !== 'all') {
         approvedQuery = approvedQuery.eq('class_num', activeClassNum);
       }
@@ -3763,7 +3868,9 @@ function openEditUserModal(userId) {
   if (!u) return alert('회원 정보를 찾을 수 없습니다.');
 
   document.getElementById('modalUserId').value = u.id;
-  document.getElementById('modalUserRawId').value = u.student_no || u.email || '';
+  document.getElementById('modalUserRawId').value = u.student_no || (u.email ? u.email.replace(/^\d{4}_/, '') : '');
+  const yearEl = document.getElementById('modalUserSchoolYear');
+  if (yearEl) yearEl.value = u.school_year || activeSchoolYear || 2026;
   document.getElementById('modalUserClassNum').value = (u.class_num !== null && u.class_num !== undefined) ? u.class_num : 2;
   document.getElementById('modalUserRole').value = u.role || 'student';
   document.getElementById('modalUserPw').value = '';
@@ -3779,6 +3886,7 @@ function openEditUserModal(userId) {
     async function submitUserEdit() {
       const userId = document.getElementById('modalUserId').value;
       const newRawId = document.getElementById('modalUserRawId').value.trim();
+      const newSchoolYear = parseInt(document.getElementById('modalUserSchoolYear')?.value) || activeSchoolYear || 2026;
       const newClassNum = parseInt(document.getElementById('modalUserClassNum').value) || 0;
       const newRole = document.getElementById('modalUserRole').value;
       const newPw = document.getElementById('modalUserPw').value.trim();
@@ -3787,9 +3895,17 @@ function openEditUserModal(userId) {
       saveBtn.innerText = '저장 중...';
       saveBtn.disabled = true;
 
+      const targetUserObj = currentApprovedUserList.find(item => item.id === userId);
+      const hadYearPrefix = targetUserObj && targetUserObj.email && /^\d{4}_/.test(targetUserObj.email);
+      const authLoginId = (newRole === 'student' && (hadYearPrefix || newSchoolYear > 2026))
+        ? `${newSchoolYear}_${newRawId}`
+        : newRawId;
+
       const updateFields = {
+        school_year: newSchoolYear,
         class_num: newClassNum,
-        role: newRole
+        role: newRole,
+        email: authLoginId
       };
       if (newRole === 'student') {
         updateFields.student_no = newRawId;
@@ -3805,7 +3921,7 @@ function openEditUserModal(userId) {
 
       const { error: rpcError } = await supabaseClient.rpc('admin_update_user_credentials', {
         target_user_id: userId,
-        new_raw_id: newRawId,
+        new_raw_id: authLoginId,
         new_password: newPw || null
       });
 
@@ -3838,10 +3954,14 @@ function openEditUserModal(userId) {
           if (sNo.length >= 3 && sNo.startsWith('3')) {
             cls = parseInt(sNo.substring(1, 3)) || cls;
           }
+          // 학년도별 학번 충돌 방지를 위해 내부 생성 키에 학년도 접두어를 결합
+          const prefixedNo = `${activeSchoolYear}_${sNo}`;
           students.push({
-            student_no: sNo,
+            student_no: prefixedNo,
+            clean_student_no: sNo,
             name: parts.slice(1).join(' ').trim(),
-            class_num: cls
+            class_num: cls,
+            school_year: activeSchoolYear
           });
         }
       }
@@ -3856,9 +3976,19 @@ function openEditUserModal(userId) {
 
       if (error) alert('일괄 생성 실패: ' + error.message);
       else {
-        lastGeneratedResults = results || [];
+        // 생성 직후 profiles의 학번(student_no)을 순수 5자리 학번으로 정리하고 school_year를 현재 학년도로 설정
+        for (const st of students) {
+          await supabaseClient
+            .from('profiles')
+            .update({ student_no: st.clean_student_no, school_year: activeSchoolYear, email: st.student_no })
+            .eq('student_no', st.student_no);
+        }
+        lastGeneratedResults = (results || []).map(r => ({
+          ...r,
+          student_no: r.student_no ? String(r.student_no).replace(/^\d{4}_/, '') : r.student_no
+        }));
         renderBulkResultTable(lastGeneratedResults);
-        alert(`학생 계정 생성이 완료되었습니다!`);
+        alert(`${activeSchoolYear}학년도 학생 계정 생성이 완료되었습니다!`);
         document.getElementById('bulkStudentInput').value = '';
         loadUsersData();
         loadTeacherStudentSelects();
@@ -3970,13 +4100,14 @@ function selectFeatureClass(type, cls) {
       const cls = getFeatureClass('album');
       renderFeatureClassFolders('album');
       const header = document.getElementById('albumHeaderTitle');
-      if (header) header.innerHTML = `<i data-lucide="camera" class="w-5 h-5 text-blue-600"></i> 3학년 ${cls === 0 ? '공용' : cls + '반'} 학급 앨범`;
+      if (header) header.innerHTML = `<i data-lucide="camera" class="w-5 h-5 text-blue-600"></i> ${activeSchoolYear}학년도 3학년 ${cls === 0 ? '공용' : cls + '반'} 학급 앨범`;
       const savedFolderId = activeFolderId;
       activeFolderId = null;
       ++albumPhotoVersion;
       currentAlbumPhotos = []; renderAlbumPhotos();
       const tabContainer = document.getElementById('albumFolderTabs');
       const { data: folders, error } = await supabaseClient.from('album_folders').select('*')
+        .eq('school_year', activeSchoolYear)
         .or(`class_num.eq.${cls},class_num.eq.0,class_num.is.null`).order('created_at', { ascending: true });
       if (request !== albumLoadVersion || cls !== getFeatureClass('album')) return;
       if (error) {
@@ -4081,7 +4212,7 @@ tabContainer.innerHTML = folders.map(f => `
       const name = document.getElementById('newFolderName').value.trim();
       if (!name) return alert('폴더 이름을 입력해주세요.');
       const cls = getFeatureClass('album');
-      const { data, error } = await supabaseClient.from('album_folders').insert([{ name, class_num: cls }]).select().single();
+      const { data, error } = await supabaseClient.from('album_folders').insert([{ name, class_num: cls, school_year: activeSchoolYear }]).select().single();
       if (error) return alert('폴더 생성 실패: ' + error.message);
       if (cls !== getFeatureClass('album')) return;
       if (data) {
@@ -4182,10 +4313,9 @@ async function deleteAlbumFolder(folderId) {
       loadHomeDashboardData();
     }
 
-// [신규] 브라우저 Canvas 기반 자동 리사이징 및 압축 함수
+// [보완] 브라우저 Canvas 기반 리사이징 및 메모리 강제 반환 함수
 function compressImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
   return new Promise((resolve) => {
-    // 이미지 파일이 아니면 원본 그대로 반환
     if (!file.type.startsWith('image/')) {
       return resolve(file);
     }
@@ -4198,7 +4328,6 @@ function compressImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
       let width = img.width;
       let height = img.height;
 
-      // 비율 유지하며 최대 해상도 이내로 축소
       if (width > maxWidth || height > maxHeight) {
         if (width > height) {
           height = Math.round((height * maxWidth) / width);
@@ -4214,15 +4343,15 @@ function compressImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
 
-      // 이미지 부드럽게 렌더링
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, width, height);
 
-      // JPEG 80% 품질 Blob으로 변환
       canvas.toBlob(
         (blob) => {
-          // 압축본이 원본보다 작은 경우에만 압축본 채택
+          // 모바일 메모리 낭비 방지를 위해 캔버스 크기 즉시 초기화
+          canvas.width = 0;
+          canvas.height = 0;
           if (blob && blob.size < file.size) {
             resolve(blob);
           } else {
@@ -4236,7 +4365,7 @@ function compressImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      resolve(file); // 파싱 실패 시 원본 그대로 진행
+      resolve(file);
     };
 
     img.src = objectUrl;
@@ -4262,6 +4391,7 @@ async function handleMultiPhotoUpload(e) {
       const file = files[i];
 
       if (btnText) btnText.innerText = '압축 및 업로드 중 (' + (i + 1) + '/' + files.length + ')...';
+await new Promise(r => setTimeout(r, 80));
       const uploadBlob = await compressImage(file, 1920, 1920, 0.8);
 
       const randomStr = Math.random().toString(36).substring(2, 8);
@@ -4398,6 +4528,7 @@ function openNewEventModal() {
         const m = String(cur.getMonth() + 1).padStart(2, '0');
         const d = String(cur.getDate()).padStart(2, '0');
         records.push({
+          school_year: activeSchoolYear,
           event_date: `${y}-${m}-${d}`,
           category: cat,
           title: title,
@@ -4451,7 +4582,7 @@ async function renderCalendar() {
     labelEl.innerText = year + '. ' + String(month + 1).padStart(2, '0');
   }
 
-  let calQuery = supabaseClient.from('calendar_events').select('*');
+  let calQuery = supabaseClient.from('calendar_events').select('*').eq('school_year', activeSchoolYear);
   if (activeClassNum !== 'all') {
     calQuery = calQuery.or('class_num.eq.' + activeClassNum + ',class_num.eq.0,class_num.is.null');
   }
@@ -5730,7 +5861,7 @@ function closeCalendarEventDetail() {
       document.getElementById('briefingModalTitle').innerHTML = '<i data-lucide="presentation" class="w-4 h-4 text-amber-500"></i> 새 입학설명회 자료 등록';
       document.getElementById('briefingModalFolderLabel').innerText = `대상 폴더: [${currentFolder.name}]`;
       document.getElementById('briefingInputUniv').value = '';
-      document.getElementById('briefingInputTitle').value = '2027학년도 대입전형 주요사항';
+      document.getElementById('briefingInputTitle').value = `${getTargetAdmissionYear()}학년도 대입전형 주요사항`;
       document.getElementById('briefingInputChanges').value = '';
       document.getElementById('briefingInputPdf').value = '';
       document.getElementById('briefingInputDriveVideo').value = '';
@@ -5898,6 +6029,7 @@ function closeCalendarEventDetail() {
         { id: 'calendarEventDetailModal', closeFn: closeCalendarEventDetail },
         { id: 'teacherCardEditModal', closeFn: closeTeacherCardEditModal },
         { id: 'songRecommendModal', closeFn: closeSongRecommendModal },
+             { id: 'teacherSeatModal', closeFn: closeSeatModal },
         { id: 'dailySongManageModal', closeFn: closeDailySongManageModal }
       ];
 
@@ -6265,6 +6397,15 @@ function closeCalendarEventDetail() {
               window.print();
             };
           </script>
+<div style="margin-top: 14px; padding: 10px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 9px; color: #475569; line-height: 1.5;">
+            <b>※ [대입 상담 참고용 유의사항]</b><br>
+            본 입시상담카드의 합격선 진단 결과(안정/소신/상향 등)는 단순 전년도 입결 기준 통계치이며, 대학별 전형 요소(수능최저 충족률, 진로선택과목 반영, 면접 실질 반영비율 등)에 따라 실제 결과와 크게 다를 수 있습니다. 최종 지원 결정은 담임교사 심층 상담 및 당해 연도 모집요강을 확인한 후 수험생과 보호자의 판단하에 진행하시기 바랍니다.
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
         </body>
         </html>
       `);
@@ -6278,7 +6419,12 @@ let currentDailySong = null;
 
 async function loadDailySong() {
   try {
-    const { data, error } = await supabaseClient.from('daily_songs').select('*').eq('id', 'current').single();
+    let { data, error } = await supabaseClient.from('daily_songs').select('*').eq('id', `current_${activeSchoolYear}`).maybeSingle();
+    if ((!data || !data.title) && activeSchoolYear === 2026) {
+      const fallback = await supabaseClient.from('daily_songs').select('*').eq('id', 'current').maybeSingle();
+      data = fallback.data;
+      error = fallback.error;
+    }
     if (!error && data && data.title) {
       currentDailySong = data;
       document.getElementById('dailySongTitle').innerText = data.title;
@@ -6286,6 +6432,13 @@ async function loadDailySong() {
       document.getElementById('dailySongRecommender').innerText = data.recommender ? `추천: ${data.recommender}` : '담임선생님 추천';
       const playBtn = document.getElementById('playDailySongBtn');
       if (playBtn) playBtn.classList.remove('hidden');
+    } else {
+      currentDailySong = null;
+      document.getElementById('dailySongTitle').innerText = '선정된 노래가 없습니다';
+      document.getElementById('dailySongArtist').innerText = '학생들이 추천한 노래 중 담임선생님이 선정한 노래가 이곳에 재생됩니다.';
+      document.getElementById('dailySongRecommender').innerText = '선정 대기 중';
+      const playBtn = document.getElementById('playDailySongBtn');
+      if (playBtn) playBtn.classList.add('hidden');
     }
   } catch (e) {
     console.warn('오늘의 노래 조회 예외:', e);
@@ -6333,6 +6486,7 @@ async function submitSongRecommendation() {
 
   try {
     const { error } = await supabaseClient.from('song_recommendations').insert([{
+      school_year: activeSchoolYear,
       student_id: currentUser?.id,
       student_name: currentProfile?.name || '학생',
       student_no: currentProfile?.student_no || '',
@@ -6377,6 +6531,7 @@ async function loadSongRecommendations() {
   const { data, error } = await supabaseClient
     .from('song_recommendations')
     .select('*')
+    .eq('school_year', activeSchoolYear)
     .order('created_at', { ascending: false })
     .limit(30);
 
@@ -6445,7 +6600,8 @@ async function saveDailySongDirect() {
   if (!title) return alert('노래 제목을 입력해주세요.');
 
   const songData = {
-    id: 'current',
+    id: `current_${activeSchoolYear}`,
+    school_year: activeSchoolYear,
     title: title,
     artist: artist,
     recommender: recommender,
@@ -6499,6 +6655,7 @@ async function loadSeatingData() {
   const { data, error } = await supabaseClient
     .from('seating_charts')
     .select('*')
+    .eq('school_year', activeSchoolYear)
     .eq('class_num', targetClass)
     .maybeSingle();
 
@@ -6512,6 +6669,7 @@ async function loadSeatingData() {
     const lastDay = new Date(y, today.getMonth() + 1, 0).getDate();
 
     currentSeatingDoc = {
+      school_year: activeSchoolYear,
       class_num: targetClass,
       grade: 3,
       period_start: `${y}-${m}-01`,
@@ -6832,31 +6990,76 @@ async function cancelMySeatChoice() {
 async function submitMySeatingChoice(num) {
   if (!seatingApplicationOpen()) { alert('학생 신청기간이 아닙니다. 담임선생님께 문의하세요.'); return; }
   const targetClass = getFeatureClass('seating');
-  const { error } = await supabaseClient.rpc('seating2026_choose', { p_class: targetClass, p_seat: num });
-  if (error) alert('자리 선택 실패: ' + error.message);
+
+  if (num !== null) {
+    const existing = seatingAssignments[num];
+    if (existing && (existing.isMoving || existing.locked || (existing.user_id && existing.user_id !== currentUser?.id))) {
+      alert('이미 선택되었거나 선택할 수 없는 좌석입니다.');
+      await loadSeatingData();
+      return;
+    }
+  }
+
+  // 기존 본인 좌석 제거
+  for (const [sNum, data] of Object.entries(seatingAssignments)) {
+    if (data && (data.user_id === currentUser?.id || data.name === currentProfile?.name)) {
+      if (data.locked) {
+        alert('교사 고정석은 변경할 수 없습니다.');
+        return;
+      }
+      delete seatingAssignments[sNum];
+    }
+  }
+
+  if (num !== null) {
+    const sNo = currentProfile?.student_no ? parseInt(currentProfile.student_no.slice(-2)) : 0;
+    seatingAssignments[num] = {
+      name: currentProfile?.name || '학생',
+      no: sNo,
+      user_id: currentUser?.id,
+      locked: false
+    };
+  }
+
+  const { error: upErr } = await supabaseClient
+    .from('seating_charts')
+    .update({
+      assignments: seatingAssignments,
+      updated_at: new Date()
+    })
+    .eq('school_year', activeSchoolYear)
+    .eq('class_num', targetClass);
+
+  if (upErr) {
+    // RLS 정책상 직접 UPDATE가 막혀있는 경우 기존 RPC 호출
+    const { error: rpcErr } = await supabaseClient.rpc('seating2027_choose', { p_class: targetClass, p_seat: num });
+    if (rpcErr) alert('자리 선택 실패: ' + rpcErr.message);
+  }
   await loadSeatingData();
 }
 
 async function syncSeatingAssignmentsToDB() {
   if (seatingClassLoading || !currentSeatingDoc || Number(currentSeatingDoc.class_num) !== getFeatureClass('seating')) return;
   const targetClass = getFeatureClass('seating');
+  currentSeatingDoc.school_year = activeSchoolYear;
   currentSeatingDoc.assignments = seatingAssignments;
   currentSeatingDoc.updated_at = new Date();
 
-  // 1) 학생은 주로 자리만 바꾸므로 UPDATE를 우선 안전하게 시도
+  // 1) 학년도 + 반 기준으로 UPDATE를 우선 시도
   let { error } = await supabaseClient
     .from('seating_charts')
     .update({
       assignments: seatingAssignments,
       updated_at: new Date()
     })
+    .eq('school_year', activeSchoolYear)
     .eq('class_num', targetClass);
 
   // 2) 최초 등록이라 행이 없는 경우에만 upsert 실행
   if (error) {
     const res = await supabaseClient
       .from('seating_charts')
-      .upsert([currentSeatingDoc], { onConflict: 'class_num' });
+      .upsert([currentSeatingDoc], { onConflict: 'school_year,class_num' });
     error = res.error;
   }
 
@@ -6930,6 +7133,7 @@ async function saveSeatingSettingsByTeacher() {
   const targetClass = getFeatureClass('seating');
 
   const doc = {
+    school_year: activeSchoolYear,
     class_num: targetClass,
     grade: parseInt(document.getElementById('cfgGrade')?.value) || 3,
     period_start: document.getElementById('cfgStartDate')?.value || '',
@@ -6949,7 +7153,7 @@ async function saveSeatingSettingsByTeacher() {
 
   const { error } = await supabaseClient
     .from('seating_charts')
-    .upsert([doc], { onConflict: 'class_num' });
+    .upsert([doc], { onConflict: 'school_year,class_num' });
 
   if (error) {
     alert('설정 저장 실패: ' + error.message);
